@@ -13,7 +13,6 @@
 
 ## ✨ Hauptfeatures
 
-- 🎯 **Moderne Fullstack-Architektur** - React Frontend + FastAPI Backend
 - 🤖 **Multi-Agent-System** - Intelligente Agent-Orchestrierung
 - 💬 **Interaktive Chat-UI** - Echtzeit-Kommunikation mit Agenten
 - 📊 **Dashboard & Monitoring** - Umfassende System-Überwachung
@@ -21,6 +20,8 @@
 - 🐳 **Docker-Ready** - Vollständige Containerisierung
 - ⚡ **Ein-Klick-Setup** - Automatisierte Installation und Konfiguration
 - 🎨 **Modernes UI/UX** - Tailwind CSS + TypeScript
+- 🎯 **Moderne Fullstack-Architektur** - React Frontend + FastAPI Backend
+ 
 
 ## 🚀 Quick Start
 
