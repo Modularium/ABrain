@@ -14,7 +14,6 @@ SERVICES = {
     "llm_gateway": "mcp.llm_gateway.main",
     "vector_store": "mcp.vector_store.main",
     "routing_agent": "mcp.routing_agent.main",
-    "plugin_agent_service": "mcp.plugin_agent_service.main",
     "worker_dev": "mcp.worker_dev.main",
     "worker_loh": "mcp.worker_loh.main",
     "worker_openhands": "mcp.worker_openhands.main",

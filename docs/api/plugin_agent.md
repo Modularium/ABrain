@@ -3,6 +3,9 @@
 Der Plugin-Agent-Pfad ist historisch und fuer sicherheitsrelevante Integrationen
 nicht mehr freigegeben.
 
+Es gibt dafuer bewusst keine aktuelle OpenAPI-Vertragsdatei mehr, weil der
+Runtime-Pfad nicht als nutzbare Schnittstelle veroeffentlicht werden soll.
+
 ## `POST /execute_tool`
 
 Dieser Endpunkt ist bewusst deaktiviert und liefert `410 Gone`.
