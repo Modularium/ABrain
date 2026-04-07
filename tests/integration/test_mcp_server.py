@@ -1,6 +1,8 @@
-from fastapi.testclient import TestClient
 import importlib.util
 import pathlib
+import pytest
+
+TestClient = pytest.importorskip("fastapi.testclient").TestClient
 
 spec = importlib.util.spec_from_file_location(
     "mcp_server", pathlib.Path("agentnn/mcp/mcp_server.py")
@@ -18,10 +20,6 @@ class DummyConnector:
 
     async def get(self, path: str) -> dict:
         return {"path": path, "context": []}
-
-
-import pytest
-
 
 @pytest.mark.unit
 def test_execute_roundtrip(monkeypatch):
@@ -76,7 +74,5 @@ def test_extended_routes(monkeypatch):
         "/v1/mcp/tool/use",
         json={"tool_name": "t", "input": {}, "context": {}},
     )
-    assert resp.status_code == 200
-    assert resp.json()["echo"] == "/execute_tool"
-
-
+    assert resp.status_code == 410
+    assert resp.json()["detail"]["error_code"] == "legacy_tool_proxy_disabled"

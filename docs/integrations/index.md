@@ -1,6 +1,6 @@
 # Integrations
 
-Dieses Kapitel beschreibt, wie ABrain mit externen Tools gekoppelt werden kann. Neben der Smolitux-UI stehen Erweiterungen für n8n und FlowiseAI bereit. Beide Systeme können ABrain aufrufen und umgekehrt von ABrain aus gesteuert werden. Die Plugins unter `plugins/` bringen dazu konfigurierbare HTTP-Parameter mit.
+Dieses Kapitel beschreibt, wie ABrain mit externen Tools gekoppelt werden kann. Neben der Smolitux-UI stehen Erweiterungen für n8n und FlowiseAI bereit. Beide Systeme können ABrain aufrufen und umgekehrt von ABrain aus gesteuert werden. Historische Plugin-Pfade unter `plugins/` sind kein kanonischer Sicherheits- oder Integrationspfad mehr.
 
 Für die Beispielintegration ist es erforderlich, die TypeScript-Dateien zunächst mit `npm install` und `npx tsc` zu kompilieren. Die erzeugten JavaScript-Dateien werden anschließend vom jeweiligen PluginManager geladen.
 

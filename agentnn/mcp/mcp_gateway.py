@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request, status
 
 from api_gateway.connectors import ServiceConnector
 from core.run_service import run_service
@@ -27,8 +27,21 @@ def create_gateway() -> FastAPI:
 
     @app.post(f"{prefix}/tool/use")
     async def tool_use(request: Request) -> dict:
-        payload = await request.json()
-        return await conn.post("/tool/use", payload)
+        _ = await request.json()
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail={
+                "error_code": "legacy_tool_proxy_disabled",
+                "message": (
+                    "Legacy dynamic tool execution via the MCP gateway is disabled. "
+                    "Use the fixed core tool surface instead."
+                ),
+                "details": {
+                    "canonical_path": "services.core.execute_tool",
+                    "legacy_route": f"{prefix}/tool/use",
+                },
+            },
+        )
 
     @app.post(f"{prefix}/context/save")
     async def save(request: Request) -> dict:

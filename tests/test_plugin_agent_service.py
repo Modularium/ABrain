@@ -1,62 +1,23 @@
-import json
-import urllib.request
+import pytest
 
 from mcp.plugin_agent_service.service import PluginAgentService
 
 
-class FakeResponse:
-    def __init__(self, payload: dict):
-        self._payload = json.dumps(payload).encode()
-
-    def read(self) -> bytes:
-        return self._payload
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc, tb):
-        pass
+pytestmark = pytest.mark.unit
 
 
-def fake_urlopen(req, timeout=0):
-    return FakeResponse({"extract": "Lima"})
-
-
-def test_execute_wikipedia(monkeypatch):
-    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+def test_legacy_plugin_service_rejects_dynamic_execution():
     service = PluginAgentService(plugin_dir="plugins")
-    result = service.execute_tool("wikipedia", {"query": "Peru"}, {})
-    assert "summary" in result or "error" in result
-
-
-def test_execute_filesystem(tmp_path):
-    service = PluginAgentService(plugin_dir="plugins")
-    file_path = tmp_path / "t.txt"
     result = service.execute_tool(
         "filesystem",
-        {"action": "write", "path": str(file_path), "content": "data"},
+        {"action": "write", "path": "note.txt", "content": "data"},
         {},
     )
-    assert result["status"] == "written"
-    read_res = service.execute_tool(
-        "filesystem", {"action": "read", "path": str(file_path)}, {}
-    )
-    assert read_res["content"] == "data"
+
+    assert result["error_code"] == "legacy_tool_proxy_disabled"
+    assert "fixed core tool surface" in result["message"]
 
 
-def test_execute_unknown_tool():
+def test_legacy_plugin_service_lists_no_executable_tools():
     service = PluginAgentService(plugin_dir="plugins")
-    result = service.execute_tool("missing_tool", {}, {})
-    assert result == {"error": "unknown tool"}
-
-
-def test_wikipedia_missing_query():
-    service = PluginAgentService(plugin_dir="plugins")
-    result = service.execute_tool("wikipedia", {}, {})
-    assert result == {"error": "no query"}
-
-
-def test_filesystem_missing_path():
-    service = PluginAgentService(plugin_dir="plugins")
-    result = service.execute_tool("filesystem", {}, {})
-    assert result == {"error": "no path"}
+    assert service.list_tools() == []

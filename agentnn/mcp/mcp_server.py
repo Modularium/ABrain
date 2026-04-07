@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, HTTPException, status
 
 from api_gateway.connectors import ServiceConnector
 from ..storage import context_store
@@ -31,8 +31,6 @@ def create_app() -> FastAPI:
     dispatcher = ServiceConnector(DISPATCHER_URL)
     sessions = ServiceConnector(SESSION_MANAGER_URL)
     registry = ServiceConnector(REGISTRY_URL)
-    tools = ServiceConnector(TOOLS_URL)
-
     @router.get("/ping")
     async def ping() -> dict:
         return {"status": "ok"}
@@ -98,7 +96,21 @@ def create_app() -> FastAPI:
 
     @router.post("/tool/use")
     async def use_tool(payload: dict) -> dict:
-        return await tools.post("/execute_tool", payload)
+        _ = payload
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail={
+                "error_code": "legacy_tool_proxy_disabled",
+                "message": (
+                    "Legacy dynamic tool execution via MCP is disabled. "
+                    "Use the fixed core tool surface instead."
+                ),
+                "details": {
+                    "canonical_path": "services.core.execute_tool",
+                    "legacy_route": "/v1/mcp/tool/use",
+                },
+            },
+        )
 
     @router.post("/session/start")
     async def session_start(payload: dict | None = None) -> dict:

@@ -9,7 +9,7 @@ implemented in `agentnn.mcp.mcp_server` and provides the following endpoints:
   dispatcher and return the result
 - `POST /v1/mcp/task/execute` – alias for `/execute`
 - `POST /v1/mcp/agent/create` – register a new worker agent
-- `POST /v1/mcp/tool/use` – invoke a plugin tool
+- `POST /v1/mcp/tool/use` – historischer Legacy-Pfad, bewusst deaktiviert (`410 Gone`)
 - `POST /v1/mcp/context` – store a context in the session manager
 - `POST /v1/mcp/context/save` – persist a context entry
 - `GET /v1/mcp/context/{session_id}` – retrieve all contexts for a session
@@ -28,8 +28,9 @@ mcp:
   mode: "server"
 ```
 
-When enabled, external tools can interact with Agent‑NN using the official MCP
-schemas. See the official specification for further details.
+When enabled, external tools can interact with ABrain using the official MCP
+schemas for the freigegebenen Kontext- und Dispatch-Pfade. Der historische
+generische Tool-Proxy ist bewusst deaktiviert.
 
 Example request using ``curl``:
 
@@ -62,7 +63,9 @@ agentnn mcp serve --host 0.0.0.0 --port 8090
 
 ### Using external MCP tools
 
-Register remote endpoints and invoke tools directly:
+Register remote endpoints and invoke tools directly ueber freigegebene
+MCP-Schnittstellen. Der historische Route `/v1/mcp/tool/use` ist kein
+verfuegbarer generischer Tool-Proxy mehr.
 
 ```bash
 agentnn mcp register-endpoint demo http://mcp.example.com

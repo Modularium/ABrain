@@ -1,7 +1,8 @@
 # Plugin Architecture
 
-The plugin system enables dynamic extension of worker agents with new tools.
-Each plugin implements a small interface and can be loaded at runtime.
+Die historische Plugin-Architektur bleibt nur noch als Legacy-Bestand im
+Repository. Dynamische Tool-Ausfuehrung ist nicht Teil des gehärteten
+Sicherheitsmodells.
 
 ```mermaid
 graph TD
@@ -9,6 +10,11 @@ graph TD
     A --> C[Routing Agent]
 ```
 
-Plugins are discovered from the `plugins/` directory. They register their name
-and summary via a `manifest.yaml` file. The `PluginAgentService` exposes an API
-that executes a specific tool and returns its result.
+Plugins unter `plugins/` sind kein kanonischer Integrationspfad fuer neue
+sicherheitsrelevante Funktionen. Der `PluginAgentService` bleibt nur als
+historischer Referenzpfad erhalten; generische Tool-Ausfuehrung ist deaktiviert.
+Der kanonische Pfad fuer kontrollierte Integrationen ist:
+
+- `services/core.py`
+- `core/execution/dispatcher.py`
+- `core/tools/*`

@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from .service import PluginAgentService
@@ -16,7 +16,10 @@ class ToolRequest(BaseModel):
 @router.post("/execute_tool")
 async def execute_tool(req: ToolRequest) -> dict:
     result = service.execute_tool(req.tool_name, req.input, req.context)
-    return result
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail=result,
+    )
 
 
 @router.get("/tools")
