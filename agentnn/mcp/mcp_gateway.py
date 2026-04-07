@@ -27,6 +27,7 @@ def create_gateway() -> FastAPI:
 
     @app.post(f"{prefix}/tool/use")
     async def tool_use(request: Request) -> dict:
+        # legacy (disabled): kept only to reject the historical generic tool proxy
         _ = await request.json()
         raise HTTPException(
             status_code=status.HTTP_410_GONE,

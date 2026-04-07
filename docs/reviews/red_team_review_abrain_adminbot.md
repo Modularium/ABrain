@@ -28,7 +28,7 @@ Gezielt geprueft wurden:
 Eigenschaft:
 Fester Tool-Einstieg mit typisierten Inputs, fester Registry, hartem Unknown-Tool-Reject und exakt verdrahtetem AdminBot-Mapping.
 
-### Non-canonical / legacy path
+### Legacy (disabled) path
 
 - `agentnn/mcp/mcp_server.py:97`
 - `agentnn/mcp/mcp_gateway.py:28`
@@ -36,7 +36,7 @@ Fester Tool-Einstieg mit typisierten Inputs, fester Registry, hartem Unknown-Too
 - `mcp/plugin_agent_service/service.py:24`
 
 Eigenschaft:
-Historischer generischer Tool-/Plugin-Pfad ausserhalb des gehärteten Core-Systems.
+Historischer generischer Tool-/Plugin-Pfad ausserhalb des `canonical path`, jetzt `legacy (disabled)`.
 
 ### Externally reachable path
 
@@ -80,7 +80,7 @@ Direkte Python-Callsites. Der kanonische Pfad bleibt erlaubt; der Legacy-Pfad wu
 - Status:
   Sofort gefixt
 
-### LOW — Historical generated OpenAPI artifact still describes the removed legacy route
+### LOW — Historical / legacy (not active runtime path) OpenAPI artifact still described the removed route
 
 - Kategorie: Docs-vs-Implementation Security Mismatch
 - Betroffener Pfad:
@@ -91,7 +91,7 @@ Direkte Python-Callsites. Der kanonische Pfad bleibt erlaubt; der Legacy-Pfad wu
 - Sicherheitsauswirkung:
   Kein direkter Runtime-Impact, aber moegliche Fehlsteuerung fuer Integratoren, die nur das generierte JSON lesen.
 - Minimalfix:
-  Der zentrale Index wurde als Legacy markiert (`docs/api/_openapi_index.md:11`).
+  Der zentrale Index wurde als `historical / legacy (not active runtime path)` markiert (`docs/api/_openapi_index.md:11`).
 - Status:
   Follow-up sinnvoll, aber nicht blocker
 
@@ -217,4 +217,4 @@ Ergebnis:
 
 Urteil:
 
-Der gehärtete Core und der AdminBot-Adapter sind im aktuellen Sicherheitsmodell konsistent. Der einzige bestaetigte ernste Befund war ein paralleler generischer Legacy-Tool-Pfad ausserhalb des Canonical Path. Dieser ist jetzt explizit deaktiviert. AdminBot bleibt weiterhin die Sicherheitsgrenze; ABrain trifft auf dem kanonischen Adapter-Pfad keine eigenen Policy-Entscheidungen.
+Der gehärtete Core und der AdminBot-Adapter sind im aktuellen Sicherheitsmodell konsistent. Der einzige bestaetigte ernste Befund war ein paralleler generischer Tool-Pfad ausserhalb des `canonical path`. Dieser ist jetzt explizit als `legacy (disabled)` behandelt. AdminBot bleibt weiterhin die Sicherheitsgrenze; ABrain trifft auf dem kanonischen Adapter-Pfad keine eigenen Policy-Entscheidungen.

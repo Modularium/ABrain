@@ -12,6 +12,7 @@ This section lists the generated OpenAPI specifications for each MCP microservic
 - [Worker LOH](openapi/worker_loh.json)
 - [Worker OpenHands](openapi/worker_openhands.json)
 
-Nicht mehr als aktive OpenAPI-Spezifikation veroeffentlicht:
+Historical / legacy (not active runtime path), nicht als aktive
+OpenAPI-Spezifikation veroeffentlicht:
 
-- Plugin Agent Service: historischer Legacy-Pfad, generische Tool-Ausfuehrung deaktiviert
+- Plugin Agent Service: `legacy (disabled)`

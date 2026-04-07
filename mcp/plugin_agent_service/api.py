@@ -1,3 +1,5 @@
+"""HTTP wrapper for the legacy (disabled) plugin-agent path."""
+
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 

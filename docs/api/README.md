@@ -2,10 +2,12 @@
 
 Die REST-Schnittstellen der ABrain-Services sind in OpenAPI beschrieben. Diese Seite ist ein kompakter Überblick, keine vollständige Vertragsgarantie für jede historische Route.
 
-Für den gehärteten Integrationspfad sind der laufende OpenAPI-Stand der aktiven FastAPI-Apps sowie die Core-Schicht unter `services/core.py` und `core/*` maßgeblich.
+Für den gehärteten Integrationspfad sind der laufende OpenAPI-Stand der aktiven FastAPI-Apps sowie die Core-Schicht unter `services/core.py` und `core/*` als `canonical path` maßgeblich.
 
-Deaktivierte historische Pfade wie der fruehere Plugin-Agent-Service werden
-nicht mehr als aktuelle OpenAPI-Spezifikation veroeffentlicht.
+Deaktivierte historische Pfade wie der fruehere Plugin-Agent-Service sind
+`legacy (disabled)`; zugehoerige Restdoku ist nur `historical / legacy (not
+active runtime path)` und wird nicht mehr als aktuelle OpenAPI-Spezifikation
+veroeffentlicht.
 
 - Registry: `/agents`, `/register`
 - Dispatcher: `/task`

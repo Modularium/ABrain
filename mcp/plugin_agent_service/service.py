@@ -1,4 +1,4 @@
-"""Legacy service for historical plugin tooling paths.
+"""Legacy (disabled) service for historical plugin tooling paths.
 
 Dynamic plugin execution is intentionally disabled. Security-sensitive
 integrations must use the fixed dispatcher/registry path under
@@ -13,9 +13,9 @@ from typing import Dict
 class PluginAgentService:
     """Expose historical plugin metadata without executing tools.
 
-    This service remains outside the hardened core tool surface. Generic tool
-    execution stays disabled so that callers cannot bypass the fixed tool
-    registry and typed dispatcher.
+    This service remains outside the hardened core tool surface as a
+    ``legacy (disabled)`` path. Generic tool execution stays disabled so that
+    callers cannot bypass the fixed tool registry and typed dispatcher.
     """
 
     def __init__(self, plugin_dir: str = "plugins") -> None:

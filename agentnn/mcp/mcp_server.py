@@ -96,6 +96,7 @@ def create_app() -> FastAPI:
 
     @router.post("/tool/use")
     async def use_tool(payload: dict) -> dict:
+        # legacy (disabled): kept only to reject the historical generic tool proxy
         _ = payload
         raise HTTPException(
             status_code=status.HTTP_410_GONE,

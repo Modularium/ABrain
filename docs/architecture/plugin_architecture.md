@@ -1,6 +1,6 @@
 # Plugin Architecture
 
-Die historische Plugin-Architektur bleibt nur noch als Legacy-Bestand im
+Die historische Plugin-Architektur bleibt nur noch als `legacy (disabled)` im
 Repository. Dynamische Tool-Ausfuehrung ist nicht Teil des gehärteten
 Sicherheitsmodells.
 
@@ -10,10 +10,10 @@ graph TD
     A --> C[Routing Agent]
 ```
 
-Plugins unter `plugins/` sind kein kanonischer Integrationspfad fuer neue
+Plugins unter `plugins/` sind kein `canonical path` fuer neue
 sicherheitsrelevante Funktionen. Der `PluginAgentService` bleibt nur als
-historischer Referenzpfad erhalten; generische Tool-Ausfuehrung ist deaktiviert.
-Der kanonische Pfad fuer kontrollierte Integrationen ist:
+`legacy (disabled)` Referenzpfad erhalten; generische Tool-Ausfuehrung ist
+deaktiviert. Der `canonical path` fuer kontrollierte Integrationen ist:
 
 - `services/core.py`
 - `core/execution/dispatcher.py`

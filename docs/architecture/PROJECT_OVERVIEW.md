@@ -44,6 +44,16 @@ Das SDK und die CLI existieren weiter und nutzen für gehärtete Listen-/Dispatc
 
 Diese Bereiche bleiben Teil des Repositories, sind aber nicht der maßgebliche Referenzpfad für sicherheitsrelevante Integrationen. Führend bleiben die gehärtete Core-Schicht und die explizit dokumentierten AdminBot-Pfade.
 
+## Path Labeling
+
+Fuer spaetere Reviews gilt dieses kurze Schema:
+
+- `canonical path`: aktiver Referenzpfad
+- `legacy (disabled)`: historischer Runtime-Pfad, bewusst nicht aktiv
+- `historical / legacy (not active runtime path)`: historische Doku oder Artefakte ohne aktiven Runtime-Vertrag
+
+Die Kurzreferenz dazu steht in [legacy_labeling_scheme.md](/home/dev/Agent-NN/docs/reviews/legacy_labeling_scheme.md).
+
 ## Aktueller Scope
 
 Stabil und gezielt abgesichert sind aktuell vor allem:
