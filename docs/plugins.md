@@ -1,6 +1,6 @@
 # Plugin System
 
-Agent-NN supports optional service and tool plugins. Plugins live in the top level
+ABrain supports optional service and tool plugins. Plugins live in the top level
 `plugins/` directory and contain a `plugin.py` implementation and a
 `manifest.yaml` metadata file.
 

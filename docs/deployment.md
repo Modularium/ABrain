@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This document explains how to run Agent-NN locally and in production.
+This document explains how to run the current ABrain repository locally and in production. Historical repo and deployment slugs may still use `Agent-NN` or `agent-nn`.
 
 ## System Requirements
 
@@ -50,4 +50,3 @@ Environment variables are loaded from `.env`.
 - **Port already in use**: Adjust the exposed ports or stop the service occupying the port.
 - **Missing environment variables**: Ensure `.env` exists and contains all required entries from `.env.example`.
 - **Frontend not updating**: Rebuild using `build_frontend.sh` and restart the services.
-

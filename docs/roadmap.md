@@ -1,4 +1,4 @@
-# Agent-NN Roadmap
+# ABrain Roadmap
 
 Diese Datei fasst die wichtigsten Schritte der Entwicklungsplanung zusammen.
 Ausführliche To‑Do-Listen befinden sich in `ROADMAP.md`. Historische
@@ -22,7 +22,7 @@ Notizen sind unter `Roadmap.md` archiviert.
 
 ## Phase 5 – Erweiterte Lernmechanismen
 - Feinjustierung vorhandener Modelle via Reinforcement Learning und Few-Shot-Training.
-- Aufbau einer Föderationsschicht, um mehrere Agent-NN-Instanzen zu koordinieren.
+- Aufbau einer Föderationsschicht, um mehrere ABrain-Instanzen zu koordinieren.
 - Unterstützung für komplexe Multi-Agent-Aufgaben mit geteiltem Kontext.
 
 ## Phase 6 – Skalierung & Federation
@@ -39,4 +39,3 @@ Notizen sind unter `Roadmap.md` archiviert.
 - Minimierung technischer Schulden durch klare Modultrennung.
 - Weitere Automatisierung des Trainingsprozesses und Self-Healing der Dienste.
 - Dokumentierte Entscheidungsprozesse in `docs/architecture/` fortführen.
-

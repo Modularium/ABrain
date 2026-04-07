@@ -1,6 +1,6 @@
 # Model Context Protocol Integration
 
-Agent-NN exposes a minimal implementation of the **Model Context Protocol (MCP)**
+ABrain exposes a minimal implementation of the **Model Context Protocol (MCP)**
 to exchange context information with third party services. The MCP server is
 implemented in `agentnn.mcp.mcp_server` and provides the following endpoints:
 

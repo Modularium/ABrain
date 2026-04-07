@@ -1,4 +1,4 @@
-"""Developer SDK for Agent-NN."""
+"""Developer SDK for ABrain."""
 
 from .config import SDKSettings
 from .client.agent_client import AgentClient

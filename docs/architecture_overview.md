@@ -1,6 +1,6 @@
 # Architecture Overview
 
-This document provides a short overview of the services composing the Agent-NN Modular Control Plane.
+This document provides a short overview of the services composing the ABrain Modular Control Plane.
 
 ```mermaid
 graph TD

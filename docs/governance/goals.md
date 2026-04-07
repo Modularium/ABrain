@@ -1,6 +1,6 @@
 # Governance Goals
 
-The Agent-NN modernization embraces the following principles:
+The ABrain modernization embraces the following principles:
 
 - **Openness** – API specifications and code are publicly documented.
 - **Extensibility** – Services and agents can be added without breaking existing contracts.

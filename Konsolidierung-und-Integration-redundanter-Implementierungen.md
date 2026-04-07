@@ -1,5 +1,7 @@
 # Konsolidierung und Integration redundanter Implementierungen
 
+> Status: Historische Analyse- und Konsolidierungsnotiz. Die darin beschriebenen Zielbilder sind nicht automatisch der aktuelle Implementierungsstand des gehärteten ABrain-Kerns.
+
 ## Neuralnetz-Module - Zusammenführung zu einem erweiterten Modell
 
 Es existieren zwei verschiedene Implementierungen des Agent-SelektionsNetzwerks:

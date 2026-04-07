@@ -1,0 +1,55 @@
+name: Core CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  core-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install minimal test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pydantic pytest
+
+      - name: Run hardened core and adapter tests
+        run: |
+          python -m pytest -o python_files='test_*.py' \
+            tests/adapters/test_adminbot_client.py \
+            tests/adapters/test_adminbot_tools.py \
+            tests/core/test_execution_dispatcher.py \
+            tests/core/test_tool_registry.py \
+            tests/services/test_core.py
+
+      - name: Compile core, service and adapter modules
+        run: |
+          python -m py_compile \
+            api/endpoints.py \
+            server/main.py \
+            services/core.py \
+            services/__init__.py \
+            sdk/cli/commands/agent.py \
+            core/__init__.py \
+            core/tools/__init__.py \
+            core/agents/runtime.py \
+            core/execution/dispatcher.py \
+            core/models/adminbot.py \
+            core/models/errors.py \
+            core/models/identity.py \
+            core/models/tooling.py \
+            core/tools/registry.py \
+            core/tools/handlers.py \
+            adapters/adminbot/client.py \
+            adapters/adminbot/service.py

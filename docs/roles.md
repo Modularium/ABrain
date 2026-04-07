@@ -1,6 +1,6 @@
 # Agent Roles
 
-Agent-NN uses simple role labels to control agent behaviour. Every agent profile
+ABrain uses simple role labels to control agent behaviour. Every agent profile
 specifies a `role` such as `writer`, `critic` or `retriever`.
 
 The session manager attaches agents with a role and an optional priority. The

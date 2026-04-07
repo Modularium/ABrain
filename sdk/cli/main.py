@@ -1,4 +1,4 @@
-"""Modular command line interface for Agent-NN."""
+"""Modular command line interface for ABrain."""
 
 from __future__ import annotations
 

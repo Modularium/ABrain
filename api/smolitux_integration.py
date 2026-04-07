@@ -1,4 +1,4 @@
-"""Integration with Smolitux-UI for Agent-NN."""
+"""Integration with Smolitux-UI for ABrain."""
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -13,7 +13,7 @@ from agents.chatbot_agent import ChatbotAgent
 from utils.logging_util import LoggerMixin
 
 class SmolituxIntegration(LoggerMixin):
-    """Integration with Smolitux-UI for Agent-NN."""
+    """Integration with Smolitux-UI for ABrain."""
     
     def __init__(self):
         """Initialize Smolitux integration."""

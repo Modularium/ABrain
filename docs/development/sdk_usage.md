@@ -1,6 +1,6 @@
 # Developer SDK
 
-Das SDK ermöglicht einfachen Zugriff auf die Agent-NN-Services.
+Das SDK ermöglicht einfachen Zugriff auf die ABrain-Services.
 
 ## Installation
 

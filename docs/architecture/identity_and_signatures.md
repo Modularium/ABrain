@@ -1,6 +1,6 @@
 # Identity and Signatures
 
-Agent-NN verwendet digitale Signaturen, um die Herkunft von Antworten
+ABrain verwendet digitale Signaturen, um die Herkunft von Antworten
 nachvollziehbar zu machen. Jeder Agent besitzt ein eigenes Ed25519-Schlüsselpaar
 unter `keys/`. Beim Abschließen einer Aufgabe signiert der Agent die
 zurückgegebenen Felder des `ModelContext`.

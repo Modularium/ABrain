@@ -1,4 +1,4 @@
-"""Core utilities for Agent-NN."""
+"""Core utilities for ABrain."""
 
 try:
     from .logging_utils import LoggingMiddleware, exception_handler, init_logging
@@ -9,14 +9,66 @@ except Exception:  # pragma: no cover - optional deps
     MetricsMiddleware = metrics_router = None
     AuthMiddleware = None
 from .audit_log import AuditLog, AuditEntry
+from .execution import ExecutionDispatcher, maybe_await, run_sync
+from .models import (
+    AdminBotErrorPayload,
+    AdminBotGetHealthInput,
+    AdminBotGetServiceStatusInput,
+    AdminBotGetStatusInput,
+    AdminBotRequestEnvelope,
+    AdminBotRequestedBy,
+    AdminBotStatusTarget,
+    AdminBotSuccessPayload,
+    CoreErrorCode,
+    CoreExecutionError,
+    DispatchTaskToolInput,
+    EmptyToolInput,
+    ListAgentsToolInput,
+    RequesterIdentity,
+    RequesterType,
+    StructuredError,
+    ToolExecutionRequest,
+    ToolExecutionResult,
+)
+from .tools import ToolDefinition, ToolRegistry, build_default_registry
+
+try:  # pragma: no cover - optional heavy legacy deps
+    from .agents import AgentRuntime
+except Exception:  # pragma: no cover - optional heavy legacy deps
+    AgentRuntime = None
 
 __all__ = [
+    "AdminBotErrorPayload",
+    "AdminBotGetHealthInput",
+    "AdminBotGetServiceStatusInput",
+    "AdminBotGetStatusInput",
+    "AdminBotRequestEnvelope",
+    "AdminBotRequestedBy",
+    "AdminBotStatusTarget",
+    "AdminBotSuccessPayload",
+    "AgentRuntime",
     "AuditLog",
     "AuditEntry",
+    "CoreErrorCode",
+    "CoreExecutionError",
+    "DispatchTaskToolInput",
+    "EmptyToolInput",
+    "ExecutionDispatcher",
     "LoggingMiddleware",
+    "ListAgentsToolInput",
+    "RequesterIdentity",
+    "RequesterType",
+    "StructuredError",
+    "ToolDefinition",
+    "ToolExecutionRequest",
+    "ToolExecutionResult",
+    "ToolRegistry",
+    "build_default_registry",
     "exception_handler",
     "init_logging",
+    "maybe_await",
     "MetricsMiddleware",
     "metrics_router",
+    "run_sync",
     "AuthMiddleware",
 ]

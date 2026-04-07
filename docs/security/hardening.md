@@ -1,6 +1,6 @@
 # Security Hardening
 
-Dieses Dokument beschreibt empfohlene Sicherheitsmaßnahmen für die Agent-NN-Services.
+Dieses Dokument beschreibt empfohlene Sicherheitsmaßnahmen für die ABrain-Services.
 
 ## Token-Authentifizierung
 

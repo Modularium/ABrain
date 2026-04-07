@@ -1,5 +1,7 @@
 # TODO-Liste für Agent-NN Entwicklungsplan
 
+> Status: Historische Planungsdatei. Diese Liste beschreibt frühere Konsolidierungsziele und ist nicht die maßgebliche Statusbeschreibung des aktuellen gehärteten ABrain-Repos.
+
 ## Phase 1: Codebase-Konsolidierung & Architektur-Refaktor
 
 ### 1.1 Architektur-Grundlagen

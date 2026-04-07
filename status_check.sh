@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Agent-NN Status Monitor
+# ABrain Status Monitor
 # Überwacht den Status von Frontend und Backend
 
 RED='\033[0;31m'
@@ -39,7 +39,7 @@ test_api() {
     # Test authentication
     local login_response=$(curl -s -X POST http://localhost:8000/auth/login \
         -H "Content-Type: application/json" \
-        -d '{"email":"demo@agent-nn.com","password":"demo"}')
+        -d '{"email":"demo@abrain.local","password":"demo"}')
     
     if echo "$login_response" | grep -q "token"; then
         echo -e "${GREEN}✓ Authentication working${NC}"
@@ -67,7 +67,7 @@ test_api() {
     fi
 }
 
-echo -e "${BLUE}=== Agent-NN Status Monitor ===${NC}"
+echo -e "${BLUE}=== ABrain Status Monitor ===${NC}"
 echo -e "${BLUE}$(date)${NC}"
 echo ""
 
@@ -102,7 +102,7 @@ fi
 
 echo ""
 echo -e "${BLUE}Login Credentials:${NC}"
-echo -e "${YELLOW}Email: demo@agent-nn.com${NC}"
+echo -e "${YELLOW}Email: demo@abrain.local${NC}"
 echo -e "${YELLOW}Password: demo${NC}"
 
 echo ""

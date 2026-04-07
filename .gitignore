@@ -5,12 +5,16 @@ data/
 export/
 embeddings_cache/
 models/
+!core/models/
+!core/models/**
 sessions/
 keys/
 
 # Runtime- und Build-Outputs
 /logs/
 /models/
+!/core/models/
+!/core/models/**
 /mlruns/
 /sessions/
 /__pycache__/
@@ -18,6 +22,9 @@ keys/
 *.log
 *.bak
 *.tmp
+.venv/
+.codex
+.codex/
 .ipynb_checkpoints/
 /frontend/node_modules/
 integrations/n8n-agentnn/node_modules/

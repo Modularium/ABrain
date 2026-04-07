@@ -1,6 +1,6 @@
 # Configuration Reference
 
-This document lists the environment variables used by Agent-NN. Values can be defined in a `.env` file and are loaded via `pydantic-settings`.
+This document lists the environment variables used by ABrain. Values can be defined in a `.env` file and are loaded via `pydantic-settings`.
 
 | Variable | Description |
 | --- | --- |
@@ -27,9 +27,8 @@ This document lists the environment variables used by Agent-NN. Values can be de
 
 ## Loading Configuration
 
-Agent-NN loads configuration values from a `.env` file in the project root. For
+ABrain loads configuration values from a `.env` file in the project root. For
 production deployments use `.env.production`. Unknown keys in these files are
 ignored thanks to `extra="allow"` in the settings model. Values are validated by
 `pydantic-settings`; booleans accept `true`/`false` strings and numeric fields
 must contain valid numbers.
-

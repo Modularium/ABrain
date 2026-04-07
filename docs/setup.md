@@ -1,6 +1,8 @@
 # Setup Guide
 
-Dieser Leitfaden beschreibt die Installation von Agent-NN Schritt für Schritt.
+Dieser Leitfaden beschreibt die Installation des aktuellen ABrain-Stands. Historische Repo- und Clone-Slugs bleiben in den Befehlen vorerst unverändert.
+
+> Für den gehärteten Core- und AdminBot-Referenzpfad ist [`docs/setup/DEVELOPMENT_SETUP.md`](setup/DEVELOPMENT_SETUP.md) die präzisere Quelle. Diese Seite bleibt als allgemeiner Setup-Einstieg erhalten.
 
 ## \ud83d\udd27 Schnelles Setup
 ```bash
@@ -64,4 +66,3 @@ Alle benötigten Variablen sind in `.env.example` dokumentiert. Kopiere diese Da
 
 **Dienste starten nicht**
 : Prüfe mit `docker ps`, ob die Container laufen. F\u00fchre `npm run build` im Frontend aus und nutze `poetry shell` f\u00fcr weitere Python-Befehle.
-

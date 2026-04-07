@@ -1,6 +1,6 @@
 # Entwicklungssetup
 
-Dieses Dokument beschreibt, wie Sie eine lokale Entwicklungsumgebung für Agent-NN einrichten.
+Dieses Dokument beschreibt, wie Sie eine lokale Entwicklungsumgebung für den aktuellen ABrain-Stand einrichten.
 
 ## Voraussetzungen
 

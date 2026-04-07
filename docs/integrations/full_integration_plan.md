@@ -1,4 +1,4 @@
-# Plan zur vollständigen Integration von Agent-NN mit n8n und FlowiseAI
+# Plan zur vollständigen Integration von ABrain mit n8n und FlowiseAI
 
 Dieser Plan beschreibt die nötigen Schritte, um Agent‑NN in beide Richtungen mit n8n und FlowiseAI zu koppeln. Ziel ist es, Workflows zwischen den Systemen auszutauschen und Agent‑NN sowohl als Quelle als auch als Ziel von Automatisierungsflüssen zu verwenden.
 

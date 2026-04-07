@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.1.0",
   "type": "module",
-  "description": "Modern Agent-NN UI with enhanced UX/UI design",
+  "description": "Modern ABrain UI with enhanced UX/UI design",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -57,6 +57,7 @@
     "workbox-window": "^7.3.0"
   },
   "keywords": [
+    "abrain",
     "agent-nn",
     "ai",
     "react",

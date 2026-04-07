@@ -1,7 +1,7 @@
 // @ts-check
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Agent-NN Documentation',
+  title: 'ABrain Documentation',
   url: 'https://ecospheretwork.github.io',
   baseUrl: '/Agent-NN/',
   organizationName: 'EcoSphereNetwork',

@@ -1,4 +1,4 @@
-"""Manage federated Agent-NN nodes."""
+"""Manage federated ABrain nodes."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from core.model_context import ModelContext
 
 @dataclass
 class FederatedNode:
-    """Information about a remote Agent-NN instance."""
+    """Information about a remote ABrain instance."""
 
     name: str
     base_url: str

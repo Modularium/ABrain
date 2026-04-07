@@ -92,7 +92,7 @@ export default function Sidebar({ open, setOpen, collapsed, onToggleCollapse }: 
                   <span className="text-white font-bold text-lg">A</span>
                 </div>
                 <div className="min-w-0">
-                  <h1 className="font-bold text-xl text-gray-900 dark:text-white truncate">Agent-NN</h1>
+                  <h1 className="font-bold text-xl text-gray-900 dark:text-white truncate">ABrain</h1>
                   <p className="text-sm text-gray-500 dark:text-gray-400 truncate">AI Management</p>
                 </div>
               </div>

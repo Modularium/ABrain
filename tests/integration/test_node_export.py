@@ -27,5 +27,5 @@ def test_generate_flowise_nodes(tmp_path):
     assert (outdir / "EchoNode.ts").exists()
     assert data["icon"] == "user"
     assert data["color"] == "#2375ec"
-    assert data["category"] == "Agent-NN"
+    assert data["category"] == "ABrain"
     assert data["tooltip"] == "Simple echo"

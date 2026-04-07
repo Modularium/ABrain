@@ -1,10 +1,12 @@
 # API Reference
 
-This document provides detailed information about the Agent-NN API endpoints.
+This document provides detailed information about the ABrain API endpoints.
+
+> Status: Diese Referenz beschreibt den breiten API-Bestand auf hoher Ebene. Einige Endpunkte gehören zu historischen oder optionalen Pfaden. Für den gehärteten Integrationspfad sind die aktiven FastAPI-Apps und der Core-Dispatcher maßgeblich.
 
 ## Authentication
 
-All API endpoints require authentication using JWT tokens.
+Many API endpoints expect authentication, but the exact mechanism depends on the deployment and active service composition.
 
 ### Login
 

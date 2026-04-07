@@ -1,6 +1,6 @@
-# Agent-NN Dashboard
+# ABrain Dashboard
 
-Ein modernes Dashboard für die Überwachung und Verwaltung des Agent-NN Systems.
+Ein modernes Dashboard für die Überwachung und Verwaltung des ABrain-Systems.
 
 ## Funktionen
 
@@ -51,10 +51,10 @@ Demo-Zugangsdaten:
 ---
 ---
 
-# Agent-NN Dashboard Improvement Project
+# ABrain Dashboard Improvement Project
 
 ## Overview
-We've developed a comprehensive, modern dashboard for the Agent-NN system with a focus on modularity, performance, and user experience. The project is structured with a clear separation between the frontend React application and the backend FastAPI server.
+We've developed a comprehensive, modern dashboard for the ABrain system with a focus on modularity, performance, and user experience. The project is structured with a clear separation between the frontend React application and the backend FastAPI server.
 
 ## Key Improvements
 
@@ -168,4 +168,4 @@ monitoring/api/
 - Integrate with more LLM providers
 
 ## Conclusion
-The improved Agent-NN dashboard provides a robust, user-friendly interface for managing the entire agent system. The modular architecture ensures that the codebase remains maintainable as the system grows and evolves.
+The improved ABrain dashboard provides a robust, user-friendly interface for managing the entire agent system. The modular architecture ensures that the codebase remains maintainable as the system grows and evolves.

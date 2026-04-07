@@ -1,4 +1,4 @@
-"""API models for Agent-NN."""
+"""API models for ABrain."""
 from typing import Dict, Any, Optional, List, Union
 from pydantic import BaseModel, Field
 from datetime import datetime

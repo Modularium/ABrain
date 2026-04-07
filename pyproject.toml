@@ -28,7 +28,7 @@ extend-exclude = [
 [tool.poetry]
 name = "agentnn"
 version = "1.0.0"
-description = "Modular agent execution and neural orchestration framework"
+description = "ABrain modular agent execution and neural orchestration framework"
 authors = ["OpenHands <openhands@all-hands.dev>"]
 license = "MIT"
 readme = "README.md"

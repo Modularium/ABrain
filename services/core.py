@@ -6,7 +6,10 @@ import asyncio
 from typing import Any, Dict
 
 from agentnn.deployment.agent_registry import AgentRegistry
+from core.execution import ExecutionDispatcher
+from core.models import RequesterIdentity, RequesterType, ToolExecutionRequest
 from core.model_context import ModelContext
+from core.tools import build_default_registry
 from managers.agent_optimizer import AgentOptimizer
 from managers.model_manager import ModelManager
 from sdk.client import AgentClient
@@ -15,9 +18,41 @@ __all__ = [
     "create_agent",
     "dispatch_task",
     "evaluate_agent",
+    "execute_tool",
+    "list_agents",
     "load_model",
     "train_model",
 ]
+
+DEFAULT_REQUESTER = RequesterIdentity(
+    type=RequesterType.AGENT,
+    id="services.core",
+)
+
+
+def _build_dispatcher() -> ExecutionDispatcher:
+    """Create the fixed execution dispatcher used by service helpers."""
+    return ExecutionDispatcher(build_default_registry(client_factory=AgentClient))
+
+
+def execute_tool(
+    tool_name: str,
+    payload: Dict[str, Any] | None = None,
+    *,
+    requested_by: RequesterIdentity | None = None,
+    run_id: str | None = None,
+    correlation_id: str | None = None,
+) -> Dict[str, Any]:
+    """Execute a fixed internal tool with typed validation."""
+    request = ToolExecutionRequest.from_raw(
+        tool_name=tool_name,
+        payload=payload or {},
+        requested_by=requested_by or DEFAULT_REQUESTER,
+        run_id=run_id,
+        correlation_id=correlation_id,
+    )
+    result = _build_dispatcher().execute_sync(request)
+    return result.output
 
 
 def create_agent(
@@ -29,9 +64,27 @@ def create_agent(
 
 
 def dispatch_task(ctx: ModelContext) -> Dict[str, Any]:
-    """Send ``ctx`` to the dispatcher and return the result."""
-    client = AgentClient()
-    return client.dispatch_task(ctx)
+    """Dispatch ``ctx`` through the fixed tool execution layer."""
+    description = None
+    if ctx.task_context is not None:
+        description = getattr(ctx.task_context.description, "text", ctx.task_context.description)
+    payload = {
+        "task": description or getattr(ctx, "task", "") or "",
+        "task_type": getattr(ctx.task_context, "task_type", None)
+        if ctx.task_context
+        else None,
+        "session_id": getattr(ctx, "session_id", None),
+        "task_value": getattr(ctx, "task_value", None),
+        "max_tokens": getattr(ctx, "max_tokens", None),
+        "priority": getattr(ctx, "priority", None),
+        "deadline": getattr(ctx, "deadline", None),
+    }
+    return execute_tool("dispatch_task", payload)
+
+
+def list_agents() -> Dict[str, Any]:
+    """List agents through the fixed tool execution layer."""
+    return execute_tool("list_agents", {})
 
 
 def evaluate_agent(agent_id: str) -> Dict[str, Any]:

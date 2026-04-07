@@ -1,4 +1,4 @@
-# Agent-NN UI v1.1.0 🚀
+# ABrain UI v1.1.0 🚀
 
 A modern, responsive web interface for managing AI agents with enhanced UX/UI design, built with React, TypeScript, and Tailwind CSS.
 
@@ -52,8 +52,8 @@ A modern, responsive web interface for managing AI agents with enhanced UX/UI de
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/agent-nn-ui.git
-cd agent-nn-ui/frontend/agent-ui
+git clone https://github.com/EcoSphereNetwork/Agent-NN.git
+cd Agent-NN/frontend/agent-ui
 
 # Install dependencies
 npm install
@@ -79,7 +79,7 @@ VITE_ENABLE_ANALYTICS=false
 VITE_DEBUG_MODE=false
 
 # Optional: Branding
-VITE_APP_NAME="Agent-NN"
+VITE_APP_NAME="ABrain"
 VITE_APP_VERSION="2.0.0"
 ```
 
@@ -294,9 +294,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-- **Documentation**: [Wiki](https://github.com/your-org/agent-nn-ui/wiki)
-- **Issues**: [GitHub Issues](https://github.com/your-org/agent-nn-ui/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/agent-nn-ui/discussions)
+- **Documentation**: central project docs in the main repository
+- **Issues**: use the main repository issue tracker
+- **Discussions**: use the main repository discussion channel when available
 
 ## 🙏 Acknowledgments
 
@@ -309,4 +309,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Built with ❤️ by the Agent-NN Team
+Built with ❤️ by the ABrain team

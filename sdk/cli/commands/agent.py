@@ -22,7 +22,7 @@ from core.level_evaluator import check_level_up
 from core.reputation import aggregate_score
 from core.skills import load_skill
 from core.trust_evaluator import eligible_for_role
-from services import create_agent
+from services import create_agent, list_agents
 
 from ..client import AgentClient
 from ..utils import handle_http_error, print_output
@@ -45,9 +45,8 @@ def agents(
     output: str = typer.Option("table", "--output", help="table|json|markdown")
 ) -> None:
     """List available agents."""
-    client = AgentClient()
     try:
-        result = client.list_agents()
+        result = list_agents()
     except httpx.HTTPStatusError as err:
         handle_http_error(err)
         return
@@ -137,8 +136,7 @@ def agent_top(
     metric: str = typer.Option("cost", "--metric", help="Sort metric")
 ) -> None:
     """List agents sorted by metric."""
-    client = AgentClient()
-    data = client.list_agents().get("agents", [])
+    data = list_agents().get("agents", [])
     if metric == "skill":
         data.sort(key=lambda a: len(a.get("skills", [])), reverse=True)
     elif metric == "load":

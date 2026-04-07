@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Agent-NN Full Stack Startup Script
+# ABrain Full Stack Startup Script
 # Starts both backend and frontend services
 
 set -e
@@ -17,7 +17,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # The script lives in the project root, so use that directly
 PROJECT_ROOT="$SCRIPT_DIR"
 
-echo -e "${BLUE}=== Agent-NN Full Stack Startup ===${NC}"
+echo -e "${BLUE}=== ABrain Full Stack Startup ===${NC}"
 echo -e "${BLUE}Project root: ${PROJECT_ROOT}${NC}"
 
 # Function to check if a port is in use
@@ -154,7 +154,7 @@ for i in {1..30}; do
     sleep 1
 done
 
-echo -e "${GREEN}=== Agent-NN is now running! ===${NC}"
+echo -e "${GREEN}=== ABrain is now running! ===${NC}"
 echo -e "${GREEN}Frontend: http://localhost:3000${NC}"
 echo -e "${GREEN}Backend API: http://localhost:8000${NC}"
 echo -e "${GREEN}API Documentation: http://localhost:8000/docs${NC}"

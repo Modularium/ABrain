@@ -1,12 +1,14 @@
-# Agent-NN v1.0.0 Release Notes 🚀
+# ABrain Predecessor v1.0.0 Release Notes 🚀
+
+> Status: Historische Release-Notizen eines früheren Vollstack-Stands. Diese Datei beschreibt nicht den heutigen gehärteten ABrain-Core als Ganzes.
 
 **Release Date**: July 21, 2025  
 **Version**: 1.0.0  
 **Codename**: "Full-Stack Pioneer"
 
-## 🎉 Welcome to Agent-NN 1.0.0!
+## 🎉 Welcome to the v1.0.0 predecessor release!
 
-This is a **major milestone** for Agent-NN! We're excited to announce the first stable release featuring a complete full-stack integration with a modern React frontend and robust FastAPI backend.
+This is a historical milestone for the earlier Agent-NN product line. It documents the first stable release featuring a complete full-stack integration with a modern React frontend and FastAPI backend.
 
 ## 🌟 What's New in 1.0.0
 
@@ -104,7 +106,7 @@ npm run dev
 ```
 
 ### Demo Login
-- **Email**: demo@agent-nn.com
+- **Email**: demo@abrain.local
 - **Password**: demo
 
 ## 🎮 What Can You Do?

@@ -1,14 +1,16 @@
-# Agent-NN Full Stack Setup
+# ABrain Full Stack Setup
 
-Dieses Dokument beschreibt, wie Sie das Agent-NN Frontend mit dem Backend verbinden und das gesamte System ausführen.
+Dieses Dokument beschreibt, wie Sie das ABrain-Frontend mit dem Backend verbinden und das gesamte System lokal ausführen.
+
+> Status: Operativer Full-Stack-Helfer. Für den gehärteten Core- und AdminBot-Referenzpfad bleiben `README.md` und `docs/setup/DEVELOPMENT_SETUP.md` maßgeblich.
 
 ## System-Übersicht
 
-Das Agent-NN System besteht aus:
+Das ABrain-System besteht aus:
 
 - **Frontend**: React/TypeScript Anwendung mit modernem UI (Port 3000)
-- **Backend**: FastAPI Server als Bridge zwischen Frontend und Agent-NN Core (Port 8000)
-- **Agent-NN Core**: Das Hauptsystem mit Agenten, Task-Management und KI-Funktionalitäten
+- **Backend**: FastAPI Server als Bridge zwischen Frontend und ABrain-Core (Port 8000)
+- **ABrain Core**: Das Hauptsystem mit Agenten, Task-Management und KI-Funktionalitäten
 
 ## Voraussetzungen
 
@@ -69,7 +71,7 @@ npm run dev
 ## Zugangsdaten
 
 Für die Demo-Anwendung verwenden Sie:
-- **Email**: demo@agent-nn.com
+- **Email**: demo@abrain.local
 - **Passwort**: demo
 
 ## Verfügbare Endpunkte
@@ -96,11 +98,11 @@ Für die Demo-Anwendung verwenden Sie:
 ## Architektur-Details
 
 ### Backend-Bridge (server/main.py)
-Der Backend-Server fungiert als Bridge zwischen dem React-Frontend und dem Agent-NN Core-System:
+Der Backend-Server fungiert als Bridge zwischen dem React-Frontend und dem ABrain-Core-System:
 
 - **Authentifizierung**: Einfache token-basierte Authentifizierung
-- **API-Transformation**: Konvertiert Frontend-Anfragen in Agent-NN Core-Aufrufe
-- **Mock-Modus**: Läuft auch ohne vollständig konfiguriertes Agent-NN System
+- **API-Transformation**: Konvertiert Frontend-Anfragen in ABrain-Core-Aufrufe
+- **Mock-Modus**: Läuft auch ohne vollständig konfiguriertes ABrain-System
 - **Error-Handling**: Robuste Fehlerbehandlung und Logging
 
 ### Frontend-Konfiguration

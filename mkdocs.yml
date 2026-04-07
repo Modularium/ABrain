@@ -1,5 +1,5 @@
-site_name: Agent-NN
-site_description: Multi-agent system with neural network-based task routing
+site_name: ABrain
+site_description: Hardened multi-agent execution stack with typed tool dispatch and secure adapter boundaries
 repo_url: https://github.com/EcoSphereNetwork/Agent-NN
 theme:
   name: material

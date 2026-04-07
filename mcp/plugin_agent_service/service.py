@@ -1,4 +1,4 @@
-"""Service executing tool plugins."""
+"""Legacy service executing dynamically loaded tool plugins."""
 
 from __future__ import annotations
 
@@ -8,7 +8,12 @@ from plugins import PluginManager
 
 
 class PluginAgentService:
-    """Load and execute registered tool plugins."""
+    """Load and execute registered tool plugins for legacy plugin paths.
+
+    This service remains outside the hardened core tool surface. New
+    security-sensitive integrations should use the fixed dispatcher/registry
+    path under ``services/core.py`` and ``core/tools/*`` instead.
+    """
 
     def __init__(self, plugin_dir: str = "plugins") -> None:
         self.manager = PluginManager(plugin_dir)

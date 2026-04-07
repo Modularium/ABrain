@@ -1,6 +1,6 @@
 {
   "name": "ListAgents",
-  "description": "Retrieve all registered agents from Agent-NN",
+  "description": "Retrieve all registered agents from ABrain",
   "inputs": [
     {"name": "endpoint", "type": "string", "default": "http://localhost:8000"},
     {"name": "path", "type": "string", "default": "/agents"},

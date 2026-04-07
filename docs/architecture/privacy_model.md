@@ -1,6 +1,6 @@
 # Datenschutzmodell
 
-Dieses Dokument beschreibt die Zugriffsstufen und die Kontextredaktion im Agent-NN Framework.
+Dieses Dokument beschreibt die Zugriffsstufen und die Kontextredaktion im ABrain-Framework.
 
 ## Zugriffsstufen
 

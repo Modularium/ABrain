@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Agent-NN System Test Script
+# ABrain System Test Script
 # Tests the connection between frontend and backend
 
 set -e
@@ -14,7 +14,7 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-echo -e "${BLUE}=== Agent-NN System Test ===${NC}"
+echo -e "${BLUE}=== ABrain System Test ===${NC}"
 
 # Test 1: Check if backend server starts
 echo -e "${YELLOW}Test 1: Starting backend server...${NC}"
@@ -118,7 +118,7 @@ echo -e "${YELLOW}Test 3: Testing API connection with authentication...${NC}"
 # Test login endpoint
 LOGIN_RESPONSE=$(curl -s -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"demo@agent-nn.com","password":"demo"}')
+  -d '{"email":"demo@abrain.local","password":"demo"}')
 
 if echo "$LOGIN_RESPONSE" | grep -q "token"; then
     echo -e "${GREEN}✓ Login endpoint works${NC}"

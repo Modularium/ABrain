@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Agent-NN Frontend-Backend Bridge Server
-Connects the React frontend with the Agent-NN backend system.
+ABrain Frontend-Backend Bridge Server.
+
+Connects the React frontend with the ABrain backend system.
 """
 
 import os
@@ -21,16 +22,16 @@ from pydantic import BaseModel, Field
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
-# Import Agent-NN modules or create fallbacks
+# Import ABrain modules or create fallbacks
 try:
-    from agents.supervisor_agent import SupervisorAgent
-    from agents.chatbot_agent import ChatbotAgent
+    from core.agents import AgentRuntime
+    from core.execution import maybe_await
     from managers.agent_manager import AgentManager
     from managers.monitoring_system import MonitoringSystem
     from utils.logging_util import LoggerMixin
     AGENT_NN_AVAILABLE = True
 except ImportError as e:
-    print(f"Warning: Could not import Agent-NN modules: {e}")
+    print(f"Warning: Could not import ABrain modules: {e}")
     print("Server will run in mock mode.")
     AGENT_NN_AVAILABLE = False
     
@@ -117,8 +118,8 @@ class AgentNNServer(LoggerMixin):
         
         # Initialize FastAPI
         self.app = FastAPI(
-            title="Agent-NN API Server",
-            description="Bridge server connecting React frontend with Agent-NN backend",
+            title="ABrain API Server",
+            description="Bridge server connecting the React frontend with the ABrain backend",
             version="1.0.0",
             docs_url="/docs",
             redoc_url="/redoc"
@@ -136,16 +137,17 @@ class AgentNNServer(LoggerMixin):
         # Security
         self.security = HTTPBearer()
         
-        # Initialize Agent-NN components
+        # Initialize ABrain components
         if AGENT_NN_AVAILABLE:
             try:
-                self.supervisor = SupervisorAgent()
-                self.chatbot = ChatbotAgent(self.supervisor)
+                self.runtime = AgentRuntime()
+                self.supervisor = self.runtime.supervisor
+                self.chatbot = self.runtime.chatbot
                 self.agent_manager = AgentManager()
                 self.monitoring = MonitoringSystem()
                 self.mock_mode = False
             except Exception as e:
-                print(f"Failed to initialize Agent-NN components: {e}")
+                print(f"Failed to initialize ABrain components: {e}")
                 print("Running in mock mode")
                 self.mock_mode = True
         else:
@@ -157,7 +159,7 @@ class AgentNNServer(LoggerMixin):
             "user1": {
                 "id": "user1",
                 "name": "Demo User",
-                "email": "demo@agent-nn.com",
+                "email": "demo@abrain.local",
                 "role": "admin",
                 "permissions": ["read", "write", "admin"],
                 "password": "demo"
@@ -456,7 +458,7 @@ class AgentNNServer(LoggerMixin):
                 response_content = f"Mock response to: {message.content}"
             else:
                 try:
-                    response_content = await self.chatbot.handle_user_message(message.content)
+                    response_content = await self.runtime.handle_user_message(message.content)
                 except Exception as e:
                     self.log_error(e, {"session_id": session_id})
                     response_content = f"Error processing message: {str(e)}"
@@ -494,7 +496,7 @@ class AgentNNServer(LoggerMixin):
                 }
             else:
                 try:
-                    metrics = await self.monitoring.get_metrics()
+                    metrics = await maybe_await(self.monitoring.get_metrics())
                 except Exception as e:
                     self.log_error(e, {})
                     metrics = {"error": str(e), "timestamp": datetime.now()}
@@ -570,7 +572,7 @@ class AgentNNServer(LoggerMixin):
                 )
             ]
         else:
-            # Get agents from Agent-NN system
+            # Get agents from the ABrain system
             try:
                 agent_names = self.agent_manager.get_all_agents()
                 agents = []
@@ -650,13 +652,13 @@ class AgentNNServer(LoggerMixin):
             return []
     
     async def execute_task(self, task: Task):
-        """Execute a task using Agent-NN system"""
+        """Execute a task using the ABrain system."""
         if self.mock_mode:
             return
         
         try:
             # Use supervisor to execute the task
-            result = await self.supervisor.execute_task(
+            result = await self.runtime.execute_task(
                 task.description,
                 {"task_id": task.id, "priority": task.priority}
             )

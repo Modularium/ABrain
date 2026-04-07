@@ -64,7 +64,7 @@ def test_create_agent():
 
 
 def test_dispatch_task():
-    ctx = SimpleNamespace(task_context=SimpleNamespace(description="hi"))
+    ctx = SimpleNamespace(task_context=SimpleNamespace(description="hi", task_type="chat"))
     result = core.dispatch_task(ctx)
     assert result["task"] == "hi"
 

@@ -1,4 +1,4 @@
-"""MCP integration modules for Agent-NN."""
+"""MCP integration modules for ABrain."""
 
 from .mcp_client import MCPClient
 from .mcp_server import create_app

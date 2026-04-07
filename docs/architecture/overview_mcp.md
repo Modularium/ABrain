@@ -1,6 +1,6 @@
 # MCP Overview
 
-The Modular Control Plane architecture breaks Agent-NN into small services that communicate over defined APIs. This overview outlines the main building blocks.
+The Modular Control Plane architecture breaks ABrain into small services that communicate over defined APIs. This overview outlines the main building blocks.
 
 ```mermaid
 graph TD
@@ -51,5 +51,4 @@ mcp/
 ```
 
 All services expose small FastAPI apps with `/health` endpoints and stubs for their main functions.
-
 

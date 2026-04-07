@@ -88,7 +88,7 @@ def write_node(entry: Dict[str, Any], outdir: Path, ts: bool) -> None:
     method = entry.get("method", "GET")
     icon = entry.get("icon", "user")
     color = entry.get("color", "#2375ec")
-    category = entry.get("category", "Agent-NN")
+    category = entry.get("category", "ABrain")
     tooltip = entry.get("tooltip", description)
     doc_url = entry.get("documentationURL")
 

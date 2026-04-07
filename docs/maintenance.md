@@ -1,6 +1,6 @@
 # Maintenance Guide
 
-This document outlines recommended maintenance and security practices for running Agent-NN in production.
+This document outlines recommended maintenance and security practices for running ABrain in production.
 
 ## Backup Strategy
 
@@ -29,4 +29,3 @@ This document outlines recommended maintenance and security practices for runnin
 
 - Logs are written to `/data/logs/` per service with daily rotation.
 - Monitor log volume and archive or purge files older than 30 days.
-

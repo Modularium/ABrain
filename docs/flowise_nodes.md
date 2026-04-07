@@ -1,6 +1,6 @@
-# Flowise Nodes for Agent-NN
+# Flowise Nodes for ABrain
 
-Dieses Dokument listet Flowise-Komponenten, die Agent-NN bereitstellt. Jede Node kann in Flowise importiert werden und kommuniziert über HTTP mit dem jeweiligen Service.
+Dieses Dokument listet Flowise-Komponenten, die ABrain bereitstellt. Jede Node kann in Flowise importiert werden und kommuniziert über HTTP mit dem jeweiligen Service.
 
 ## ListAgents
 
@@ -46,7 +46,7 @@ const result = await node.run();
 
 ## Node-Vorschau und Deployment
 
-Die generierten `.node.json` Dateien enthalten jetzt zusätzliche Felder für Farbe, Icon und Kategorie. Damit erscheinen die Agent-NN Nodes in Flowise einheitlich unter der Kategorie **Agent-NN**.
+Die generierten `.node.json` Dateien enthalten jetzt zusätzliche Felder für Farbe, Icon und Kategorie. Damit erscheinen die ABrain Nodes in Flowise einheitlich unter der Kategorie **ABrain**.
 
 > TODO: Screenshot "flowise_example.png" ergänzen
 

@@ -1,6 +1,6 @@
 # Builtin Tools and Models
 
-Agent-NN ships with a small set of builtin tools. They can be managed via the `agentnn tools` commands.
+ABrain ships with a small set of builtin tools. They can be managed via the `agentnn tools` commands; the CLI slug remains unchanged for compatibility.
 
 ## Listing Tools
 

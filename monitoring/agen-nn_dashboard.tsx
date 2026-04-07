@@ -92,7 +92,7 @@ const Dashboard = () => {
       <header className="bg-indigo-700 text-white p-4 shadow-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold">Agent-NN Dashboard</h1>
+            <h1 className="text-2xl font-bold">ABrain Dashboard</h1>
             <span className="bg-indigo-600 text-sm px-2 py-1 rounded">v2.0.0</span>
           </div>
           <div className="flex items-center space-x-4">
@@ -184,9 +184,9 @@ const DocsPanel = ({ data }) => {
 
       {/* Documentation Overview */}
       <div className="bg-white p-4 rounded-lg shadow">
-        <h3 className="font-bold mb-4">Welcome to Agent-NN Documentation</h3>
+        <h3 className="font-bold mb-4">Welcome to ABrain Documentation</h3>
         <p className="text-gray-600 mb-4">
-          This documentation provides comprehensive information about the Agent-NN system, including
+          This documentation provides comprehensive information about the ABrain system, including
           setup instructions, API references, and best practices for creating and managing agents.
         </p>
         
@@ -197,7 +197,7 @@ const DocsPanel = ({ data }) => {
               <h4 className="font-semibold">Getting Started</h4>
             </div>
             <p className="text-sm text-gray-600">
-              Learn the basics of Agent-NN and how to set up your first agents.
+              Learn the basics of ABrain and how to set up your first agents.
             </p>
             <p className="text-indigo-600 text-sm mt-2">Read more →</p>
           </div>
@@ -208,7 +208,7 @@ const DocsPanel = ({ data }) => {
               <h4 className="font-semibold">API Reference</h4>
             </div>
             <p className="text-sm text-gray-600">
-              Explore the Agent-NN API for programmatic interaction with the system.
+              Explore the ABrain API for programmatic interaction with the system.
             </p>
             <p className="text-indigo-600 text-sm mt-2">Read more →</p>
           </div>
@@ -991,7 +991,7 @@ const SettingsPanel = ({ data }) => {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">System Name</label>
-              <input type="text" className="form-input rounded-md w-full border-gray-300" defaultValue="Agent-NN Production" />
+              <input type="text" className="form-input rounded-md w-full border-gray-300" defaultValue="ABrain Production" />
               <p className="text-xs text-gray-500 mt-1">Displayed in emails, reports, and notifications.</p>
             </div>
             

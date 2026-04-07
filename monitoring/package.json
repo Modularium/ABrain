@@ -2,7 +2,7 @@
   "name": "agent-nn-dashboard",
   "version": "1.0.0",
   "private": true,
-  "description": "Comprehensive monitoring and management interface for the Agent-NN system",
+  "description": "Comprehensive monitoring and management interface for the ABrain system",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

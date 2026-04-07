@@ -1,6 +1,6 @@
-# AgentNN CLI
+# ABrain CLI (`agentnn`)
 
-`agentnn` is the unified command line interface for all services of Agent‑NN.
+`agentnn` is the unified command line interface for ABrain. The binary name remains `agentnn` for compatibility.
 Install the project and run `agentnn --help` to see available commands.
 
 ## Subcommands

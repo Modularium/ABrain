@@ -13,8 +13,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Agent-NN UI',
-        short_name: 'Agent-NN',
+        name: 'ABrain UI',
+        short_name: 'ABrain',
         description: 'Modern AI Agent Management Interface',
         theme_color: '#3b82f6',
         background_color: '#ffffff',

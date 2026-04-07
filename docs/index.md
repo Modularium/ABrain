@@ -1,17 +1,17 @@
-# Agent-NN Documentation
+# ABrain Documentation
 
-Welcome to the Agent-NN documentation! This documentation will help you understand and use our multi-agent system with neural network-based task routing.
+Welcome to the ABrain documentation. This documentation focuses on the current multi-agent and service stack in this repository, including the hardened core path and its surrounding integration points.
 Current stable version: **v1.0.3**.
 
 ## Overview
 
-Agent-NN is a sophisticated multi-agent system that combines large language models (LLMs) with neural networks to create an intelligent task routing and execution framework. The system features:
+ABrain is a multi-agent system that combines large language models (LLMs), task routing and service boundaries to provide a controlled execution framework. The current repository emphasizes:
 
 - Dynamic agent creation and specialization
-- Neural network-based task routing
+- Neural and rule-based task routing
 - Integrated knowledge management
-- Advanced security and monitoring
-- Comprehensive evaluation system
+- A hardened dispatcher and tool layer
+- Security-focused adapter integration
 
 ## Key Features
 
@@ -64,7 +64,7 @@ graph TD
     B --> H[Evaluation]
 ```
 
-For more details about the system architecture, see the [Architecture Overview](architecture/overview.md).
+For more details about the current system architecture, see the [Architecture Overview](architecture/overview.md).
 
 ## Contributing
 

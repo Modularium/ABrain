@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# GitHub Release Preparation Script for Agent-NN v1.0.0
-# This script prepares everything needed for the GitHub release
+# Legacy GitHub Release Preparation Script for ABrain v1.0.0 predecessor
+# This historical helper predates the hardened ABrain closure workflow.
 
 set -e
 
@@ -16,7 +16,8 @@ NC='\033[0m' # No Color
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VERSION="1.0.0"
 
-echo -e "${BLUE}=== Agent-NN v${VERSION} GitHub Release Preparation ===${NC}"
+echo -e "${BLUE}=== ABrain legacy v${VERSION} release preparation ===${NC}"
+echo -e "${YELLOW}Warning: this script targets a historical full-stack release flow and is not the canonical hardened release path.${NC}"
 echo -e "${BLUE}Project root: ${PROJECT_ROOT}${NC}"
 echo ""
 
@@ -77,7 +78,7 @@ else
 
 This release introduces a complete full-stack integration with:
 - Modern React frontend with TypeScript and Tailwind CSS
-- FastAPI backend bridge for seamless Agent-NN integration
+- FastAPI backend bridge for seamless ABrain integration
 - Real-time WebSocket communication
 - Comprehensive dashboard and agent management
 - Automated setup and testing scripts
@@ -172,7 +173,7 @@ bash start_fullstack.sh
 - **Docs**: http://localhost:8000/docs
 
 ## Login Credentials
-- **Email**: demo@agent-nn.com
+- **Email**: demo@abrain.local
 - **Password**: demo
 
 ## Key Features

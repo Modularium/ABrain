@@ -3,6 +3,8 @@
 Diese Datei enthält die ausführliche Aufgabenliste. Eine kompakte Übersicht
 steht in `docs/roadmap.md`. Historische Entwürfe finden sich in `Roadmap.md`.
 
+> Status: Historische Arbeits- und Planungsliste. Für den aktuellen gehärteten Stand von ABrain sind `README.md`, `docs/architecture/PROJECT_OVERVIEW.md` und die Review-Dokumente unter `docs/reviews/` maßgeblich.
+
 # TODO-Liste für Agent-NN Entwicklungsplan
 
 ## Phase 1: Codebase-Konsolidierung & Architektur-Refaktor

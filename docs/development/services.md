@@ -1,5 +1,7 @@
 # Services Übersicht
 
+> Status: Architekturüberblick. Für den sicherheitsrelevanten Referenzpfad sind zusätzlich `services/core.py`, `core/execution/dispatcher.py`, `core/tools/*` und `docs/architecture/PROJECT_OVERVIEW.md` maßgeblich.
+
 Die Modular Control Plane besteht aus mehreren eigenständigen Services. Jeder Service stellt eine kleine FastAPI-Anwendung bereit.
 
 | Service            | Port | Zweck                         |

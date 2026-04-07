@@ -137,7 +137,7 @@ export default function App() {
             <span className="text-white font-bold text-2xl">A</span>
           </div>
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading Agent-NN...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading ABrain...</p>
         </div>
       </div>
     )

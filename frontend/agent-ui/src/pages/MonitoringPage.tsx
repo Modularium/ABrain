@@ -125,7 +125,7 @@ const mockAlerts: Alert[] = [
 const mockServices: ServiceStatus[] = [
   {
     id: '1',
-    name: 'Agent-NN API',
+    name: 'ABrain API',
     status: 'healthy',
     uptime: 99.8,
     responseTime: 145,

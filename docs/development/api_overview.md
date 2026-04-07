@@ -1,6 +1,6 @@
 # API- und CLI-Übersicht
 
-Diese Datei fasst die aktuell vorhandenen Schnittstellen von Agent-NN zusammen.
+Diese Datei fasst die aktuell vorhandenen Schnittstellen von ABrain zusammen.
 Sie dient als Orientierung für das neue Developer SDK.
 
 ## REST-API (`api/`)

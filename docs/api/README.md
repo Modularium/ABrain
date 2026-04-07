@@ -1,6 +1,8 @@
 # API Einstieg
 
-Die REST-Schnittstellen der Agent-NN-Services sind in OpenAPI beschrieben. Die wichtigsten Endpunkte sind unter `openapi/` dokumentiert.
+Die REST-Schnittstellen der ABrain-Services sind in OpenAPI beschrieben. Diese Seite ist ein kompakter Überblick, keine vollständige Vertragsgarantie für jede historische Route.
+
+Für den gehärteten Integrationspfad sind der laufende OpenAPI-Stand der aktiven FastAPI-Apps sowie die Core-Schicht unter `services/core.py` und `core/*` maßgeblich.
 
 - Registry: `/agents`, `/register`
 - Dispatcher: `/task`

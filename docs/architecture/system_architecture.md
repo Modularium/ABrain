@@ -1,6 +1,6 @@
 # System Architecture
 
-The MCP version of Agent-NN is composed of several cooperating services. The following diagram illustrates the overall flow.
+The MCP version of ABrain is composed of several cooperating services. The following diagram illustrates the overall flow.
 
 ```mermaid
 graph TD

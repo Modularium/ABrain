@@ -13,7 +13,7 @@ This file lists missing features and open tasks found during the code review. Th
 
 These gaps must be addressed to reach a functional MVP that matches the roadmap expectations.
 
-# Architektur-Analyse Agent-NN
+# Architektur-Analyse ABrain
 
 Dieses Dokument fasst den aktuellen Stand der Codebasis zusammen und listet fehlende Features sowie Optimierungspotential für das MVP auf.
 

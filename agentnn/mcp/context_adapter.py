@@ -1,4 +1,4 @@
-"""Utility functions to convert between Agent-NN ``ModelContext`` objects and
+"""Utility functions to convert between ABrain ``ModelContext`` objects and
 Model Context Protocol (MCP) compatible dictionaries."""
 
 from __future__ import annotations

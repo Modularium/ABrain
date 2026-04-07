@@ -33,6 +33,6 @@ Vorhandene Installationen werden nur überschrieben, wenn die neue Version höhe
 ## Installation
 
 1. Lade das Archiv im Flowise‑Plugin-Manager hoch oder kopiere es in das Plugin-Verzeichnis.
-2. Starte Flowise neu. Die Agent‑NN Nodes erscheinen anschließend unter der Kategorie **Agent-NN**.
+2. Starte Flowise neu. Die Nodes erscheinen anschließend unter der Kategorie **ABrain**.
 
 > TODO: Screenshot "flowise_example.png" ergänzen

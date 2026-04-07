@@ -1,5 +1,7 @@
 # UI Migration Audit
 
+> Status: Historisches Audit. Diese Datei dokumentiert frühere UI-Konsolidierungen und ist keine vollständige Aussage darüber, welche Frontend-/Monitoring-Pfade heute als primäre Referenz gelten.
+
 This document tracks legacy UI components and their migration status to the consolidated React interface under `frontend/agent-ui`.
 
 ## Legacy Sources
@@ -30,4 +32,3 @@ This document tracks legacy UI components and their migration status to the cons
 | Grafana panels | `monitoring/grafana` | Embedded via `/metrics` route |
 
 All other minor widgets from the legacy dashboard have been archived under `archive/ui_legacy`.
-

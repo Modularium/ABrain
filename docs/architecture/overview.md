@@ -1,6 +1,6 @@
 # Architecture Overview
 
-Agent-NN is being refactored into a Modular Control Plane. Instead of one monolithic agent process, separate services take care of orchestration, knowledge retrieval and task execution.
+ABrain is being refactored into a Modular Control Plane. Instead of one monolithic agent process, separate services take care of orchestration, knowledge retrieval and task execution.
 
 ## Core Repository Folders
 

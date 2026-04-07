@@ -169,7 +169,7 @@ const mockSystemConfig: SystemConfig[] = [
     id: '1',
     category: 'General',
     key: 'app.name',
-    value: 'Agent-NN',
+    value: 'ABrain',
     description: 'Application name displayed in UI',
     type: 'string',
     editable: true,

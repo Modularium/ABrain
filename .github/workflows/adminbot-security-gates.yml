@@ -1,0 +1,47 @@
+name: AdminBot Security Gates
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  adminbot-security:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install minimal test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pydantic pytest
+
+      - name: Run targeted AdminBot security tests
+        run: |
+          python -m pytest -o python_files='test_*.py' \
+            tests/adapters/test_adminbot_client.py \
+            tests/adapters/test_adminbot_tools.py \
+            tests/core/test_execution_dispatcher.py \
+            tests/core/test_tool_registry.py
+
+      - name: Compile hardened AdminBot and core modules
+        run: |
+          python -m py_compile \
+            core/models/adminbot.py \
+            core/models/errors.py \
+            core/models/identity.py \
+            core/models/tooling.py \
+            adapters/adminbot/client.py \
+            adapters/adminbot/service.py \
+            core/execution/dispatcher.py \
+            core/tools/registry.py \
+            core/tools/handlers.py \
+            services/core.py

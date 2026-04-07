@@ -1,6 +1,6 @@
 # Frontend Bridge
 
-This document describes how the `agent-ui` frontend connects to the Agent-NN backend services.
+This document describes how the `agent-ui` frontend connects to the ABrain backend services.
 
 ## Development
 

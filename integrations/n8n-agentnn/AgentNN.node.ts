@@ -10,13 +10,13 @@ import axios, { AxiosRequestConfig } from 'axios';
 
 export class AgentNN implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'AgentNN',
+    displayName: 'ABrain',
     name: 'agentnn',
     group: ['transform'],
     version: 1,
-    description: 'Send tasks to the Agent-NN dispatcher',
+    description: 'Send tasks to the ABrain dispatcher',
     defaults: {
-      name: 'AgentNN',
+      name: 'ABrain',
     },
     inputs: [NodeConnectionType.Main],
     outputs: [NodeConnectionType.Main],

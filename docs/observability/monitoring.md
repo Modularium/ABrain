@@ -1,6 +1,6 @@
 # Monitoring und Logging
 
-Dieses Dokument beschreibt die grundlegende Observability des Agent-NN Systems.
+Dieses Dokument beschreibt die grundlegende Observability des ABrain-Systems.
 
 ## Logging
 

@@ -1,6 +1,6 @@
 {
   "name": "CreateTask",
-  "description": "Create a new task via Agent-NN dispatcher",
+  "description": "Create a new task via the ABrain dispatcher",
   "inputs": [
     {"name": "endpoint", "type": "string", "default": "http://localhost:8000"},
     {"name": "taskType", "type": "string", "default": "chat"},

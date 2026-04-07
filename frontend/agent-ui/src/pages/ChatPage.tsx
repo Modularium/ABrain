@@ -42,7 +42,7 @@ export default function EnhancedChatPage() {
     {
       id: '1',
       role: 'system',
-      content: 'Welcome to Agent-NN! I\'m your AI assistant ready to help with various tasks. You can switch between different task types using the tabs above.',
+      content: 'Welcome to ABrain. I\'m your AI assistant and can help with planning, development, analysis and other task types from the tabs above.',
       timestamp: new Date(Date.now() - 60000)
     }
   ])

@@ -1,4 +1,4 @@
-"""High level HTTP client for Agent-NN services."""
+"""High level HTTP client for ABrain services."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from ..config import SDKSettings
 
 
 class AgentClient:
-    """Wrapper for the Agent-NN REST API."""
+    """Wrapper for the ABrain REST API."""
 
     def __init__(self, settings: Optional[SDKSettings] = None) -> None:
         self.settings = settings or SDKSettings.load()

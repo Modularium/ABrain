@@ -1,6 +1,6 @@
-# Agent-NN Overview
+# ABrain Overview
 
-Agent-NN verbindet Agentensteuerung mit neuronalen Netzen und stellt sowohl eine CLI als auch ein SDK bereit. Die Modular Control Plane (MCP) besteht aus mehreren Microservices, die gemeinsam Aufgaben verarbeiten.
+ABrain verbindet Agentensteuerung, Tool-Dispatching und serviceorientierte Integrationspfade. Die Modular Control Plane (MCP) besteht aus mehreren Microservices, die gemeinsam Aufgaben verarbeiten.
 
 ## Komponenten
 

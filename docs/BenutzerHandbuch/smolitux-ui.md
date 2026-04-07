@@ -1,5 +1,7 @@
 # Benutzerhandbuch: Smolitux-UI für Agent-NN
 
+> Hinweis: Historische UI-Dokumentation. Für den aktuellen Frontend-Referenzpfad ist `frontend/agent-ui` maßgeblich; diese Seite bleibt als Alt-Dokumentation erhalten.
+
 Dieses Benutzerhandbuch erklärt die Verwendung der Smolitux-UI für das Agent-NN-System.
 
 ## Einführung

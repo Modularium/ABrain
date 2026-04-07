@@ -1,11 +1,16 @@
-"""API endpoints for Agent-NN."""
+"""API endpoints for ABrain."""
 from typing import Dict, Any, Optional, List
-from fastapi import APIRouter, HTTPException, Security, status, File, UploadFile, Depends
+from uuid import uuid4
+
+from fastapi import APIRouter, HTTPException, Security, status, File, UploadFile, Depends, WebSocket, WebSocketDisconnect
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
 import mlflow
 import asyncio
 import json
+
+from core.agents import AgentRuntime
+from core.execution import maybe_await
 
 from .models import *
 from managers.agent_manager import AgentManager
@@ -16,8 +21,6 @@ from managers.cache_manager import CacheManager
 from managers.knowledge_manager import KnowledgeManager
 from utils.logging_util import LoggerMixin
 from utils.api_utils import api_route
-from agents.supervisor_agent import SupervisorAgent
-from agents.chatbot_agent import ChatbotAgent
 
 class APIEndpoints(LoggerMixin):
     """API endpoints implementation."""
@@ -36,8 +39,9 @@ class APIEndpoints(LoggerMixin):
         self.knowledge = KnowledgeManager()
         
         # Initialize agents for Smolitux UI
-        self.supervisor = SupervisorAgent()
-        self.chatbot = ChatbotAgent(self.supervisor)
+        self.runtime = AgentRuntime()
+        self.supervisor = self.runtime.supervisor
+        self.chatbot = self.runtime.chatbot
         self.active_connections = []
         self.task_history = []
         
@@ -65,7 +69,10 @@ class APIEndpoints(LoggerMixin):
                     detail="Invalid credentials"
                 )
                 
-            token = self.security.generate_token(form_data.username)
+            token = self.security.generate_token(
+                form_data.username,
+                ["read", "write"],
+            )
             return Token(
                 access_token=token,
                 token_type="bearer",
@@ -77,7 +84,7 @@ class APIEndpoints(LoggerMixin):
         async def create_user(user: UserCreate):
             """Create new user."""
             try:
-                return await self.security.create_user(user)
+                return await maybe_await(self.security.create_user(user))
             except Exception as e:
                 self.log_error(e, {"user": user.dict()})
                 raise HTTPException(
@@ -115,7 +122,7 @@ class APIEndpoints(LoggerMixin):
         async def get_task(task_id: str):
             """Get task status and result."""
             try:
-                result = await self.agent_manager.get_task_result(task_id)
+                result = await maybe_await(self.agent_manager.get_task_result(task_id))
                 if not result:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
@@ -139,7 +146,7 @@ class APIEndpoints(LoggerMixin):
         async def create_agent(config: AgentConfig):
             """Create new agent."""
             try:
-                agent = await self.agent_manager.create_agent(config)
+                agent = await maybe_await(self.agent_manager.create_agent(config))
                 return agent.get_config()
             except Exception as e:
                 self.log_error(e, {"config": config.dict()})
@@ -157,7 +164,7 @@ class APIEndpoints(LoggerMixin):
         async def list_agents():
             """List all agents."""
             try:
-                return await self.agent_manager.get_all_agents()
+                return await maybe_await(self.agent_manager.get_all_agents())
             except Exception as e:
                 self.log_error(e)
                 raise HTTPException(
@@ -174,7 +181,7 @@ class APIEndpoints(LoggerMixin):
         async def get_agent(agent_id: str, format: Optional[str] = None):
             """Get agent status or Flowise-compatible definition."""
             try:
-                agent = await self.agent_manager.get_agent(agent_id)
+                agent = await maybe_await(self.agent_manager.get_agent(agent_id))
                 if not agent:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
@@ -256,7 +263,7 @@ class APIEndpoints(LoggerMixin):
         async def create_knowledge_base(config: KnowledgeBase):
             """Create knowledge base."""
             try:
-                kb = await self.knowledge.create_knowledge_base(config)
+                kb = await maybe_await(self.knowledge.create_knowledge_base(config))
                 return kb
             except Exception as e:
                 self.log_error(e, {"config": config.dict()})
@@ -280,11 +287,11 @@ class APIEndpoints(LoggerMixin):
                 results = []
                 for file in files:
                     content = await file.read()
-                    doc = await self.knowledge.add_document(
+                    doc = await maybe_await(self.knowledge.add_document(
                         kb_name,
                         file.filename,
                         content
-                    )
+                    ))
                     results.append(doc)
                 return results
             except Exception as e:
@@ -307,7 +314,7 @@ class APIEndpoints(LoggerMixin):
         async def get_metrics():
             """Get system metrics."""
             try:
-                return await self.monitoring.get_metrics()
+                return await maybe_await(self.monitoring.get_metrics())
             except Exception as e:
                 self.log_error(e)
                 raise HTTPException(
@@ -342,7 +349,7 @@ class APIEndpoints(LoggerMixin):
         async def create_test(config: TestConfig):
             """Create new A/B test."""
             try:
-                test = await self.ab_testing.create_test(config)
+                test = await maybe_await(self.ab_testing.create_test(config))
                 return test
             except Exception as e:
                 self.log_error(e, {"config": config.dict()})
@@ -360,7 +367,7 @@ class APIEndpoints(LoggerMixin):
         async def get_test_results(test_id: str):
             """Get A/B test results."""
             try:
-                return await self.ab_testing.get_results(test_id)
+                return await maybe_await(self.ab_testing.get_results(test_id))
             except Exception as e:
                 self.log_error(e, {"test_id": test_id})
                 raise HTTPException(
@@ -375,10 +382,10 @@ class APIEndpoints(LoggerMixin):
             """Create and execute task for Smolitux UI."""
             try:
                 # Execute task
-                result = await self.supervisor.execute_task(request.description, request.context)
+                result = await self.runtime.execute_task(request.description, request.context)
                 
                 # Create response
-                task_id = str(uuid.uuid4())
+                task_id = str(uuid4())
                 response = {
                     "task_id": task_id,
                     "result": result["result"],
@@ -468,7 +475,7 @@ class APIEndpoints(LoggerMixin):
                     context = request_data.get("context")
                     
                     # Handle the message through the chatbot
-                    response = await self.chatbot.handle_user_message(task_description)
+                    response = await self.runtime.handle_user_message(task_description)
                     
                     # Send response back
                     await websocket.send_json({
@@ -498,7 +505,7 @@ class APIEndpoints(LoggerMixin):
         async def update_cache_config(config: CacheConfig):
             """Update cache configuration."""
             try:
-                return await self.cache.update_config(config)
+                return await maybe_await(self.cache.update_config(config))
             except Exception as e:
                 self.log_error(e, {"config": config.dict()})
                 raise HTTPException(
@@ -515,7 +522,7 @@ class APIEndpoints(LoggerMixin):
         async def get_cache_stats():
             """Get cache statistics."""
             try:
-                return await self.cache.get_stats()
+                return await maybe_await(self.cache.get_stats())
             except Exception as e:
                 self.log_error(e)
                 raise HTTPException(
@@ -531,7 +538,7 @@ class APIEndpoints(LoggerMixin):
         async def clear_cache():
             """Clear cache."""
             try:
-                await self.cache.clear()
+                await maybe_await(self.cache.clear())
                 return {"status": "cleared"}
             except Exception as e:
                 self.log_error(e)
@@ -550,15 +557,17 @@ class APIEndpoints(LoggerMixin):
             TaskResponse: Task response
         """
         # Select agent
-        agent = await self.agent_manager.select_agent(task.description)
+        agent = await maybe_await(self.agent_manager.select_agent(task.description))
+        if isinstance(agent, tuple):
+            agent = agent[0]
         
         # Execute task
         start_time = datetime.now()
-        result = await agent.execute_task(
+        result = await maybe_await(agent.execute_task(
             task.description,
             task.context,
             timeout=task.timeout
-        )
+        ))
         duration = (datetime.now() - start_time).total_seconds()
         
         # Create response
@@ -687,12 +696,12 @@ class APIEndpoints(LoggerMixin):
         self.monitoring.update_interval(config.monitoring_interval)
         
         # Update cache size
-        await self.cache.update_config(CacheConfig(
+        await maybe_await(self.cache.update_config(CacheConfig(
             max_size=config.cache_size,
             ttl=3600,
             cleanup_interval=300,
             storage_type="memory"
-        ))
+        )))
         
         # Update logging
         self.log_level = config.log_level

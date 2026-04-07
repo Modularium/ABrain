@@ -1,6 +1,6 @@
 # Release Checklist
 
-Diese Liste hilft dabei, eine neue Version von Agent-NN vorzubereiten und zu veröffentlichen.
+Diese Liste hilft dabei, eine neue Version von ABrain vorzubereiten und zu veröffentlichen.
 
 1. **Tests ausführen**
    ```bash

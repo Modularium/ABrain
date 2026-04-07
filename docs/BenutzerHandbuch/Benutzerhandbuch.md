@@ -4,6 +4,8 @@ slug: /BenutzerHandbuch
 
 # Agent-NN: Benutzerhandbuch
 
+> Hinweis: Historischer Produkt- und UX-Stand. Diese Langform-Doku bleibt zur Referenz erhalten, ist aber nicht die maßgebliche Beschreibung des heutigen gehärteten ABrain-Core- und AdminBot-Pfads.
+
 ## Inhaltsverzeichnis
 
 1. [Einführung](#einführung)

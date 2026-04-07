@@ -1,6 +1,6 @@
-# AgentNN CLI
+# ABrain CLI (`agentnn`)
 
-`agentnn` bietet verschiedene Unterbefehle zum Aufrufen der Services.
+`agentnn` bietet verschiedene Unterbefehle zum Aufrufen der Services. Der Kommando-Name bleibt als technischer Slug erhalten, obwohl das Projekt fachlich als `ABrain` geführt wird.
 
 ## Häufig genutzte Befehle
 

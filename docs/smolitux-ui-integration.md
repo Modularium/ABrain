@@ -1,10 +1,10 @@
-# Smolitux-UI Integration für Agent-NN
+# Smolitux-UI Integration für ABrain
 
-Diese Dokumentation beschreibt die Integration der Smolitux-UI-Bibliothek mit dem Agent-NN-System.
+Diese Dokumentation beschreibt die Integration der Smolitux-UI-Bibliothek mit dem ABrain-System.
 
 ## Überblick
 
-Die Smolitux-UI-Integration bietet eine moderne, reaktionsfähige Benutzeroberfläche für das Agent-NN-System. Sie ermöglicht Benutzern, mit dem Multi-Agenten-System zu interagieren, Aufgaben zu erstellen, Agenten zu verwalten und Ergebnisse zu visualisieren.
+Die Smolitux-UI-Integration bietet eine moderne, reaktionsfähige Benutzeroberfläche für das ABrain-System. Sie ermöglicht Benutzern, mit dem Multi-Agenten-System zu interagieren, Aufgaben zu erstellen, Agenten zu verwalten und Ergebnisse zu visualisieren.
 
 ## Architektur
 
@@ -45,7 +45,7 @@ Die Backend-Integration erfolgt über die folgenden Komponenten:
 
 ### Chat-Interface
 
-Das Chat-Interface ermöglicht Benutzern, mit dem Agent-NN-System zu interagieren:
+Das Chat-Interface ermöglicht Benutzern, mit dem ABrain-System zu interagieren:
 
 - Eingabe von Fragen und Aufgaben
 - Anzeige von Antworten und Ergebnissen

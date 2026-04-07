@@ -8,7 +8,7 @@ Ensure Prometheus and Grafana are installed. Example using Helm:
 helm install monitoring prometheus-community/kube-prometheus-stack
 ```
 
-Afterwards deploy Agent-NN with:
+Afterwards deploy ABrain with:
 
 ```bash
 helm install agent-nn deploy/k8s/helm/agent-nn -n agent-nn --create-namespace

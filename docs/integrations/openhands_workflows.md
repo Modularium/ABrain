@@ -82,10 +82,9 @@ Enthält zehn Spezialisten für neue Lernverfahren. Die Ports reichen von 3041 b
   ]
 }
 ```
-Damit kann geprüft werden, ob die Verbindung zu Agent-NN funktioniert.
+Damit kann geprüft werden, ob die Verbindung zu ABrain funktioniert.
 
 ## Tipps
 - Die Workflows sind als Vorlage gedacht. Du kannst weitere Agenten hinzufügen oder überflüssige entfernen.
 - Beachte, dass `npm install` und `npx tsc` im Ordner `integrations/flowise-agentnn` ausgeführt wurden, bevor die Komponente genutzt wird.
 - Für Offline-Umgebungen lassen sich die Endpunkte leicht an interne Hostnamen anpassen.
-

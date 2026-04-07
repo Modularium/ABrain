@@ -98,7 +98,7 @@ export default function Header({ user, theme, onToggleTheme, onAddNotification }
               {currentPageName}
             </h1>
             <nav className="hidden sm:flex text-sm text-gray-500 dark:text-gray-400">
-              <span>Agent-NN</span>
+              <span>ABrain</span>
               <span className="mx-2">/</span>
               <span className="text-gray-900 dark:text-white">{currentPageName}</span>
             </nav>

@@ -19,8 +19,8 @@ from data_manager import DataManager
 
 # Create FastAPI app
 app = FastAPI(
-    title="Agent-NN Monitoring API",
-    description="API for monitoring and managing the Agent-NN system",
+    title="ABrain Monitoring API",
+    description="API for monitoring and managing the ABrain system",
     version="2.0.0"
 )
 

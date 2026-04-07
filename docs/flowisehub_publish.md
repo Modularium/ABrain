@@ -1,6 +1,6 @@
 # FlowiseHub Publishing Guide
 
-This document explains how to publish the Agent-NN Flowise plugin to FlowiseHub or any compatible registry.
+This document explains how to publish the ABrain Flowise plugin to FlowiseHub or any compatible registry.
 
 ## Preparation
 
@@ -27,4 +27,3 @@ https://github.com/EcoSphereNetwork/Agent-NN. GitHub Pages can host a preview pa
 ## Submitting to FlowiseHub
 
 Upload the generated archive or reference the release page in FlowiseHub. Ensure that `flowise-plugin.json` includes the fields `repository`, `homepage` and `license` so that users can verify the source and terms.
-

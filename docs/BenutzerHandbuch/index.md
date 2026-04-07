@@ -4,6 +4,8 @@ slug: /BenutzerHandbuch/uebersicht
 
 # Benutzerhandbuch
 
+> Hinweis: Dieses Benutzerhandbuch beschreibt einen historischen, produktorientierten Dokumentationsstand. Für den aktuellen gehärteten Entwickler- und Integrationspfad sind `README.md`, `docs/architecture/PROJECT_OVERVIEW.md` und `docs/setup/DEVELOPMENT_SETUP.md` maßgeblich.
+
 Willkommen beim Agent-NN System. Diese Kurzanleitung hilft Ihnen beim Einstieg ohne technische Vorkenntnisse.
 
 ## Was ist Agent-NN?

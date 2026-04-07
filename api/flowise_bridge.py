@@ -1,4 +1,4 @@
-"""Flowise runtime bridge for Agent-NN."""
+"""Flowise runtime bridge for ABrain."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ class RunTaskRequest(BaseModel):
 
 
 class FlowiseBridge(LoggerMixin):
-    """Router to map Flowise nodes to Agent-NN API calls."""
+    """Router to map Flowise nodes to ABrain API calls."""
 
     def __init__(self, api_base: str = "http://localhost:8000/api/v2") -> None:
         super().__init__()

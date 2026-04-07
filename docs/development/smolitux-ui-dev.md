@@ -1,6 +1,6 @@
-# Entwicklerdokumentation: Smolitux-UI für Agent-NN
+# Entwicklerdokumentation: Smolitux-UI für ABrain
 
-Diese Dokumentation richtet sich an Entwickler, die an der Smolitux-UI-Integration für das Agent-NN-System arbeiten möchten.
+Diese Dokumentation richtet sich an Entwickler, die an der Smolitux-UI-Integration für das ABrain-System arbeiten möchten.
 
 ## Architektur
 

@@ -1,4 +1,4 @@
-name: Deploy Agent-NN Docs
+name: Deploy ABrain Docs
 
 on:
   push:

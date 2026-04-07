@@ -28,7 +28,7 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold">Agent-NN Dashboard</h1>
+            <h1 className="text-2xl font-bold">ABrain Dashboard</h1>
             <span className="bg-indigo-600 dark:bg-indigo-800 text-sm px-2 py-1 rounded">v2.0.0</span>
           </div>
           
@@ -293,7 +293,7 @@ const Footer: React.FC = () => {
   return (
     <footer className="bg-white dark:bg-gray-800 shadow-md py-3 px-6 text-center border-t border-gray-200 dark:border-gray-700">
       <div className="text-sm text-gray-500 dark:text-gray-400">
-        <p>© 2025 Agent-NN Dashboard. All rights reserved.</p>
+        <p>© 2025 ABrain Dashboard. All rights reserved.</p>
         <p className="mt-1 text-xs">
           Version 2.0.0 | <a href="#" className="text-indigo-600 dark:text-indigo-400 hover:underline">View Changelog</a> | <a href="#" className="text-indigo-600 dark:text-indigo-400 hover:underline">Report Issue</a>
         </p>

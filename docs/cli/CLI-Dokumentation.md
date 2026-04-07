@@ -1,4 +1,4 @@
-# Agent-NN Command Line Interface
+# ABrain Command Line Interface
 
 ## Inhaltsverzeichnis
 
@@ -17,7 +17,7 @@
 
 ## Einführung
 
-Die Agent-NN Command Line Interface (CLI) ist ein leistungsstarkes Werkzeug, das direkten Zugriff auf das Agent-NN-System über die Kommandozeile ermöglicht. Sie bietet alle Kernfunktionen der Web-Oberfläche und zusätzliche Automatisierungs- und Integrationsmöglichkeiten für fortgeschrittene Benutzer.
+Die ABrain Command Line Interface (CLI) ist ein leistungsstarkes Werkzeug, das direkten Zugriff auf das System über die Kommandozeile ermöglicht. Sie bietet alle Kernfunktionen der Web-Oberfläche und zusätzliche Automatisierungs- und Integrationsmöglichkeiten für fortgeschrittene Benutzer.
 
 Die CLI ist ideal für:
 - Automatisierte Workflows und Skripte
@@ -389,7 +389,7 @@ agent-nn config --reset
 
 ## Aufgabenausführung
 
-Die CLI ermöglicht die Ausführung von Aufgaben im Agent-NN-System. Sie können einzelne Aufgaben ausführen oder Batch-Verarbeitung für mehrere Aufgaben verwenden.
+Die CLI ermöglicht die Ausführung von Aufgaben im ABrain-System. Sie können einzelne Aufgaben ausführen oder Batch-Verarbeitung für mehrere Aufgaben verwenden.
 
 ### Einzelne Aufgabe ausführen
 

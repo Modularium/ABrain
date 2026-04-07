@@ -168,7 +168,7 @@ def create_app() -> FastAPI:
         record_vote(vote)
         return {"status": "recorded"}
 
-    app = FastAPI(title="Agent-NN MCP Server")
+    app = FastAPI(title="ABrain MCP Server")
     app.include_router(router)
     app.include_router(ws_server.router)
     return app

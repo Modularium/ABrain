@@ -1,6 +1,6 @@
 # Metrics Reference
 
-The following Prometheus metrics are exported by Agent-NN services.
+The following Prometheus metrics are exported by ABrain services.
 
 - `agentnn_feedback_positive_total{agent}` – number of positive feedback entries per worker
 - `agentnn_feedback_negative_total{agent}` – number of negative feedback entries per worker

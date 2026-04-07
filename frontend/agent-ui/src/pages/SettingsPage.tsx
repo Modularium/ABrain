@@ -649,7 +649,7 @@ export default function ModernSettingsPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
-            <p className="text-gray-600 dark:text-gray-400">Configure your Agent-NN system</p>
+            <p className="text-gray-600 dark:text-gray-400">Configure your ABrain system</p>
           </div>
           
           <div className="flex items-center gap-3">

@@ -1,6 +1,6 @@
 # Contributing Guide
 
-Vielen Dank für dein Interesse an Agent-NN! Dieses Projekt verwendet GitHub Flow.
+Vielen Dank für dein Interesse an ABrain. Dieses Projekt verwendet GitHub Flow.
 
 ## Setup
 
@@ -34,4 +34,4 @@ pytest
 - Füge Dokumentation und Tests hinzu, wenn nötig.
 - Stelle sicher, dass die CI-Pipeline ohne Fehler durchläuft.
 
-Weitere Details findest du unter [docs/development/contributing.md](docs/development/contributing.md).
+Weitere Details findest du unter [docs/development/contributing.md](docs/development/contributing.md) sowie im gehärteten Überblick unter [docs/architecture/PROJECT_OVERVIEW.md](docs/architecture/PROJECT_OVERVIEW.md).

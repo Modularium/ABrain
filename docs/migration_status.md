@@ -1,5 +1,7 @@
 # Migration Status
 
+> Status: Historischer Snapshot. Diese Tabelle dokumentiert ältere Migrationsschritte und ist nicht der maßgebliche Architekturstatus für den gehärteten ABrain-Core.
+
 Altmodul → Neues Modul / Status
 
 - `api/server.py` → `api_gateway/main.py` / ✓
