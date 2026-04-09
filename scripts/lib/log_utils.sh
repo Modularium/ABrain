@@ -321,7 +321,7 @@ print_next_steps() {
     echo
     echo -e "  ${YELLOW}5. Logs anzeigen:${NC}"
     echo "     docker-compose logs -f"
-    echo "     docker-compose logs worker_openhands  # für problematischen Worker"
+    echo "     docker-compose logs dispatcher        # fuer den canonical dispatcher"
     echo
     echo -e "${CYAN}Wichtige URLs:${NC}"
     echo "  • API Documentation: http://localhost:8000/docs"
@@ -331,7 +331,7 @@ print_next_steps() {
     echo "  • Database: localhost:5434"
     echo
     echo -e "${CYAN}Bekannte Probleme beheben:${NC}"
-    echo "  • Worker restarting: docker-compose restart worker_openhands"
+    echo "  • Dispatcher restart: docker-compose restart dispatcher"
     echo "  • Port 3000 belegt: Verwende Port 3001 für lokale Entwicklung"
     echo "  • Tests: poetry install --with dev && poetry run pytest"
     echo

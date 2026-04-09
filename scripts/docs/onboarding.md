@@ -13,7 +13,8 @@ Neue Contributor:innen finden hier eine kurze Anleitung für den Einstieg in Age
    ```
 3. **Struktur kennenlernen**
    - `scripts/lib/` enthält wiederverwendbare Helper
-   - Services und Agents liegen unter `mcp/`, `agents/` und `services/`
+   - Der canonical runtime stack liegt unter `services/`
+   - Historische Bereiche unter `mcp/` sind `legacy (disabled)`
 4. **Status prüfen**
    ```bash
    ./scripts/status.sh

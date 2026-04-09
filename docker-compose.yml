@@ -7,6 +7,12 @@ services:
     command: python api_gateway/main.py
     restart: unless-stopped
     env_file: .env
+    environment:
+      DISPATCHER_URL: http://dispatcher:8001
+      SESSION_MANAGER_URL: http://session_manager:8005
+      AGENT_REGISTRY_URL: http://registry:8002
+      VECTOR_STORE_URL: http://vector_store:8004
+      LLM_GATEWAY_URL: http://llm_gateway:8003
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
@@ -20,20 +26,25 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python mcp/task_dispatcher/main.py
+    command: python services/task_dispatcher/main.py
     restart: unless-stopped
     env_file: .env
+    environment:
+      REGISTRY_URL: http://registry:8002
+      SESSION_URL: http://session_manager:8005
+      ROUTING_URL: http://routing_agent:8111
     depends_on:
       - registry
       - session_manager
       - vector_store
       - llm_gateway
+      - routing_agent
 
   registry:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python mcp/agent_registry/main.py
+    command: python services/agent_registry/main.py
     restart: unless-stopped
     env_file: .env
 
@@ -41,7 +52,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python mcp/session_manager/main.py
+    command: python services/session_manager/main.py
     restart: unless-stopped
     env_file: .env
     depends_on:
@@ -51,7 +62,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python mcp/vector_store/main.py
+    command: python services/vector_store/main.py
     restart: unless-stopped
     env_file: .env
     volumes:
@@ -61,7 +72,15 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python mcp/llm_gateway/main.py
+    command: python services/llm_gateway/main.py
+    restart: unless-stopped
+    env_file: .env
+
+  routing_agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python services/routing_agent/main.py
     restart: unless-stopped
     env_file: .env
 
@@ -70,30 +89,6 @@ services:
       context: .
       dockerfile: Dockerfile
     command: python services/user_manager/main.py
-    restart: unless-stopped
-    env_file: .env
-
-  worker_dev:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: python mcp/worker_dev/main.py
-    restart: unless-stopped
-    env_file: .env
-
-  worker_openhands:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: python mcp/worker_openhands/main.py
-    restart: unless-stopped
-    env_file: .env
-
-  worker_loh:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: python mcp/worker_loh/main.py
     restart: unless-stopped
     env_file: .env
 
@@ -134,4 +129,3 @@ services:
 volumes:
   vector_data:
   postgres_data:
-

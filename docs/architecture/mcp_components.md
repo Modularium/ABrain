@@ -1,5 +1,7 @@
 # MCP Components
 
+Hinweis: Diese Seite beschreibt die historische MCP-Zerlegung. Fuer den aktuellen produktiven Laufzeitpfad ist `services/*` canonical; `mcp/*` ist `legacy (disabled)`.
+
 - **Task-Dispatcher**: central orchestration service. Decides which worker should execute a task.
 - **Agent Registry**: stores available worker services, capabilities and health status.
 - **Session Manager**: keeps conversation history and temporary state.
@@ -12,4 +14,4 @@
 
 ## Service Registration
 
-Worker services announce themselves to the Agent Registry. For local testing the registry loads static data from `mcp/agents.yaml`. Each worker can send a `POST /register` request during startup to appear in the registry. In Phase 1 this process is manual but it prepares automatic discovery for later stages.
+Historisch wurden Worker ueber `mcp/agents.yaml` und direkte MCP-Routen modelliert. Dieser Pfad ist nicht mehr produktiv. Fuer den aktuellen Stack sind `services/agent_registry` und der gehaertete Core die Referenz.

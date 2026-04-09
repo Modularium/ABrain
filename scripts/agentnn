@@ -67,11 +67,11 @@ ${CYAN}Agent-NN CLI v${CLI_VERSION} - Multi-Agent System Management${NC}
 Usage: ${CLI_NAME} <command> [options] [arguments]
 
 SETUP & INSTALLATION:
-  setup [preset]         System einrichten (presets: dev|ci|minimal|mcp|full)
+  setup [preset]         System einrichten (presets: dev|ci|minimal|full)
   config <action>        Konfiguration verwalten (show|edit|reset|validate)
 
 SERVICE MANAGEMENT:
-  start [service]        Services starten (all|standard|mcp|<service-name>)
+  start [service]        Services starten (all|standard|<service-name>)
   stop [service]         Services stoppen
   restart [service]      Services neustarten
   logs [service]         Service-Logs anzeigen
@@ -130,7 +130,6 @@ PRESETS:
   dev                   Vollständige Entwicklungsumgebung (default)
   ci                    CI/CD Pipeline Setup  
   minimal               Nur Python-Umgebung
-  mcp                   MCP Services fokussiert
   full                  Komplettes System mit allen Features
 
 OPTIONS:
@@ -138,14 +137,12 @@ OPTIONS:
   --with-sudo           Installation mit sudo-Rechten
   --no-frontend         Frontend-Build überspringen
   --no-docker           Docker-Setup überspringen  
-  --no-mcp              MCP-Services überspringen
   --recover             Fehlgeschlagenes Setup fortsetzen
   --clean-first         Umgebung vor Setup bereinigen
 
 BEISPIELE:
   agentnn setup                           # Interaktives Setup
   agentnn setup dev --auto-install       # Automatisches Dev-Setup
-  agentnn setup mcp --with-sudo          # MCP-Setup mit sudo
   agentnn setup --recover                # Setup nach Fehler fortsetzen
 
 EOF
@@ -159,7 +156,6 @@ Usage: agentnn start [service] [options]
 SERVICES:
   all                   Alle Services (default)
   standard              Standard-Services (API, Frontend, DB)
-  mcp                   MCP-Services 
   api                   Nur API Gateway
   frontend              Nur Frontend
   database              Nur Datenbank-Services
@@ -174,7 +170,6 @@ OPTIONS:
 
 BEISPIELE:
   agentnn start                           # Alle Services starten
-  agentnn start mcp --build              # MCP Services neu bauen und starten
   agentnn start api --wait               # API starten und auf Bereitschaft warten
   agentnn start --env staging            # Services in Staging-Umgebung
 
@@ -189,7 +184,7 @@ Usage: agentnn status [options] [components]
 COMPONENTS:
   system                System-Ressourcen
   docker                Docker-Services
-  mcp                   MCP-Services
+  mcp                   Legacy MCP (disabled)
   services              Standard-Services
   frontend              Frontend-Status
   database              Datenbank-Status
@@ -206,7 +201,7 @@ BEISPIELE:
   agentnn status                          # Standard Status-Übersicht
   agentnn status --watch                  # Live-Monitoring
   agentnn status --format json           # JSON-Output
-  agentnn status docker mcp              # Nur Docker und MCP Status
+  agentnn status docker services         # Nur Docker und Services Status
 
 EOF
             ;;
@@ -222,7 +217,6 @@ KATEGORIEN:
   e2e                   End-to-End Tests
   api                   API Tests
   frontend              Frontend Tests
-  mcp                   MCP Tests
   performance           Performance Tests
   security              Security Tests
   all                   Alle Tests
@@ -350,7 +344,8 @@ cmd_start() {
             exec "$SCRIPT_DIR/start_docker.sh" "$@"
             ;;
         mcp)
-            exec "$SCRIPT_DIR/start_mcp.sh" start "$@"
+            log_err "Legacy MCP runtime ist deaktiviert; canonical runtime ist services/*"
+            exit 1
             ;;
         api|frontend|database)
             log_warn "Spezifische Service-Namen noch nicht implementiert"
@@ -370,14 +365,13 @@ cmd_stop() {
     
     case "$service" in
         all)
-            "$SCRIPT_DIR/start_mcp.sh" stop "$@" 2>/dev/null || true
-            # Standard services stoppen
             if [[ -f "$REPO_ROOT/docker-compose.yml" ]]; then
                 cd "$REPO_ROOT" && docker compose down "$@" 2>/dev/null || true
             fi
             ;;
         mcp)
-            exec "$SCRIPT_DIR/start_mcp.sh" stop "$@"
+            log_err "Legacy MCP runtime ist deaktiviert; nichts zu stoppen"
+            exit 1
             ;;
         standard)
             if [[ -f "$REPO_ROOT/docker-compose.yml" ]]; then
@@ -433,13 +427,14 @@ cmd_logs() {
     if [[ -z "$service" ]]; then
         log_err "Service-Name erforderlich für Logs"
         echo "Verwendung: agentnn logs <service> [optionen]"
-        echo "Services: mcp, api, frontend, database, all"
+        echo "Services: api, frontend, database, all"
         exit 1
     fi
     
     case "$service" in
         mcp)
-            exec "$SCRIPT_DIR/start_mcp.sh" logs "$@"
+            log_err "Legacy MCP runtime ist deaktiviert; keine Logs verfuegbar"
+            exit 1
             ;;
         all)
             # Zeige Logs aller verfügbaren Services

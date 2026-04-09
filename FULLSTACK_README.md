@@ -47,7 +47,7 @@ Das Startskript führt automatisch folgende Schritte aus:
 #### Backend starten:
 ```bash
 # In das Projektverzeichnis wechseln
-cd /home/dev/Agent-NN
+cd <repo-root>
 
 # Virtual Environment aktivieren
 source .venv/bin/activate
@@ -59,7 +59,7 @@ python server/main.py
 #### Frontend starten:
 ```bash
 # In das Frontend-Verzeichnis wechseln
-cd /home/dev/Agent-NN/frontend/agent-ui
+cd <repo-root>/frontend/agent-ui
 
 # Abhängigkeiten installieren (nur beim ersten Mal)
 npm install

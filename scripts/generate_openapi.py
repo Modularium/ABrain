@@ -1,4 +1,4 @@
-"""Generate OpenAPI specs for all MCP services."""
+"""Generate OpenAPI specs for the canonical services/* runtime."""
 from importlib import import_module
 from pathlib import Path
 import json
@@ -8,15 +8,12 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 SERVICES = {
-    "agent_registry": "mcp.agent_registry.main",
-    "task_dispatcher": "mcp.task_dispatcher.main",
-    "session_manager": "mcp.session_manager.main",
-    "llm_gateway": "mcp.llm_gateway.main",
-    "vector_store": "mcp.vector_store.main",
-    "routing_agent": "mcp.routing_agent.main",
-    "worker_dev": "mcp.worker_dev.main",
-    "worker_loh": "mcp.worker_loh.main",
-    "worker_openhands": "mcp.worker_openhands.main",
+    "agent_registry": "services.agent_registry.main",
+    "task_dispatcher": "services.task_dispatcher.main",
+    "session_manager": "services.session_manager.main",
+    "llm_gateway": "services.llm_gateway.main",
+    "vector_store": "services.vector_store.main",
+    "routing_agent": "services.routing_agent.main",
 }
 
 OUTPUT_DIR = Path("docs/api/openapi")

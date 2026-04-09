@@ -351,7 +351,6 @@ validate_docker() {
     # Compose-Dateien prüfen
     local compose_files=(
         "$REPO_ROOT/docker-compose.yml"
-        "$REPO_ROOT/mcp/docker-compose.yml"
     )
     
     for compose_file in "${compose_files[@]}"; do
@@ -372,64 +371,10 @@ validate_docker() {
     done
 }
 
-# MCP-Services Validierung
+# LEGACY (disabled): not part of canonical runtime
 validate_mcp() {
     log_info "=== MCP-VALIDIERUNG ==="
-    
-    local mcp_dir="$REPO_ROOT/mcp"
-    if [[ -d "$mcp_dir" ]]; then
-        add_validation_result "mcp" "MCP-Verzeichnis" "passed" "MCP-Verzeichnis existiert"
-        
-        # MCP Compose-Datei
-        if [[ -f "$mcp_dir/docker-compose.yml" ]]; then
-            add_validation_result "mcp" "MCP-Compose" "passed" "MCP docker-compose.yml gefunden"
-        else
-            add_validation_result "mcp" "MCP-Compose" "failed" "MCP docker-compose.yml fehlt"
-        fi
-        
-        # MCP-Konfiguration
-        if [[ -f "$mcp_dir/.env" ]]; then
-            add_validation_result "mcp" "MCP-Umgebung" "passed" "MCP .env gefunden"
-        else
-            add_validation_result "mcp" "MCP-Umgebung" "warning" "MCP .env nicht gefunden"
-            
-            if [[ "$FIX_ISSUES" == "true" && -f "$mcp_dir/.env.example" ]]; then
-                cp "$mcp_dir/.env.example" "$mcp_dir/.env"
-                add_validation_result "mcp" "MCP-Umgebung" "fixed" ".env aus Beispiel erstellt"
-            fi
-        fi
-        
-        # MCP Service-Status prüfen (falls Services laufen sollen)
-        if [[ "$CHECK_SERVICES" == "true" ]]; then
-            if docker ps --format '{{.Names}}' | grep -q "mcp-"; then
-                add_validation_result "mcp" "MCP-Services" "passed" "MCP Services laufen"
-                
-                # Service Health-Checks
-                local mcp_services=(
-                    "dispatcher:8001"
-                    "registry:8002"
-                    "session:8003"
-                    "vector:8004"
-                    "gateway:8005"
-                )
-                
-                for service_info in "${mcp_services[@]}"; do
-                    local service="${service_info%%:*}"
-                    local port="${service_info##*:}"
-                    
-                    if curl -f -s --max-time 5 "http://localhost:$port/health" >/dev/null 2>&1; then
-                        add_validation_result "mcp" "MCP-$service" "passed" "Service gesund (Port $port)"
-                    else
-                        add_validation_result "mcp" "MCP-$service" "warning" "Service nicht erreichbar (Port $port)"
-                    fi
-                done
-            else
-                add_validation_result "mcp" "MCP-Services" "warning" "MCP Services laufen nicht"
-            fi
-        fi
-    else
-        add_validation_result "mcp" "MCP-Verzeichnis" "failed" "MCP-Verzeichnis nicht gefunden"
-    fi
+    add_validation_result "mcp" "Legacy-Status" "warning" "Legacy-MCP ist deaktiviert und kein canonical runtime path"
 }
 
 # Konfiguration-Validierung

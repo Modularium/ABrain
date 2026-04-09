@@ -376,124 +376,48 @@ class APIEndpoints(LoggerMixin):
                 )
                 
         # Smolitux UI Integration
+        def legacy_smolitux_disabled() -> None:
+            raise HTTPException(
+                status_code=status.HTTP_410_GONE,
+                detail={
+                    "error_code": "legacy_smolitux_disabled",
+                    "message": (
+                        "The legacy Smolitux integration is disabled and not part of the "
+                        "canonical ABrain runtime."
+                    ),
+                    "details": {
+                        "canonical_path": "services/core.py",
+                        "legacy_prefix": "/smolitux",
+                    },
+                },
+            )
+
         @api_route(version="v1.0.0")
         @self.router.post("/smolitux/tasks")
         async def smolitux_create_task(request: TaskRequest):
-            """Create and execute task for Smolitux UI."""
-            try:
-                # Execute task
-                result = await self.runtime.execute_task(request.description, request.context)
-                
-                # Create response
-                task_id = str(uuid4())
-                response = {
-                    "task_id": task_id,
-                    "result": result["result"],
-                    "chosen_agent": result["chosen_agent"],
-                    "execution_time": result["execution_time"],
-                    "timestamp": datetime.now().isoformat()
-                }
-                
-                # Store in history
-                self.task_history.append({
-                    "id": task_id,
-                    "description": request.description,
-                    "result": result,
-                    "timestamp": datetime.now().isoformat()
-                })
-                
-                return response
-            except Exception as e:
-                self.log_error(e, {
-                    "task_description": request.description,
-                    "context": request.context
-                })
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Error executing task: {str(e)}"
-                )
+            _ = request
+            legacy_smolitux_disabled()
 
         @api_route(version="v1.0.0")
         @self.router.get("/smolitux/tasks")
         async def smolitux_get_tasks():
-            """Get task history for Smolitux UI."""
-            return self.task_history
+            legacy_smolitux_disabled()
 
         @api_route(version="v1.0.0")
         @self.router.get("/smolitux/tasks/{task_id}")
         async def smolitux_get_task(task_id: str):
-            """Get task details for Smolitux UI."""
-            for task in self.task_history:
-                if task["id"] == task_id:
-                    return task
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Task with ID {task_id} not found"
-            )
+            _ = task_id
+            legacy_smolitux_disabled()
 
         @api_route(version="v1.0.0")
         @self.router.get("/smolitux/agents")
         async def smolitux_get_agents():
-            """Get agents for Smolitux UI."""
-            agents = self.supervisor.agent_manager.get_all_agents()
-            agent_data = []
-            
-            for agent_name in agents:
-                agent = self.supervisor.agent_manager.get_agent(agent_name)
-                if agent:
-                    # Get agent status
-                    status = self.supervisor.get_agent_status(agent_name)
-                    agent_data.append({
-                        "id": agent_name,
-                        "name": agent_name,
-                        "domain": agent.name,
-                        "totalTasks": status.get("total_tasks", 0),
-                        "successRate": status.get("success_rate", 0),
-                        "avgExecutionTime": status.get("avg_execution_time", 0),
-                        "description": f"Specialized in {agent.name} domain",
-                        "knowledgeBase": {
-                            "documentsCount": len(agent.search_knowledge_base("", k=1000))
-                        }
-                    })
-            
-            return agent_data
+            legacy_smolitux_disabled()
 
         @api_route(version="v1.0.0")
         @self.router.websocket("/smolitux/ws")
         async def smolitux_websocket_endpoint(websocket: WebSocket):
-            """WebSocket endpoint for Smolitux UI."""
-            await websocket.accept()
-            self.active_connections.append(websocket)
-            
-            try:
-                while True:
-                    data = await websocket.receive_text()
-                    request_data = json.loads(data)
-                    
-                    # Process the request
-                    task_description = request_data.get("task_description", "")
-                    context = request_data.get("context")
-                    
-                    # Handle the message through the chatbot
-                    response = await self.runtime.handle_user_message(task_description)
-                    
-                    # Send response back
-                    await websocket.send_json({
-                        "response": response,
-                        "timestamp": datetime.now().isoformat()
-                    })
-            except WebSocketDisconnect:
-                self.active_connections.remove(websocket)
-            except Exception as e:
-                self.log_error(e, {
-                    "websocket": "disconnect",
-                    "error": str(e)
-                })
-                await websocket.send_json({
-                    "error": str(e),
-                    "timestamp": datetime.now().isoformat()
-                })
-                self.active_connections.remove(websocket)
+            await websocket.close(code=1008, reason="legacy_smolitux_disabled")
                 
         # Cache Management
         @api_route(version="v1.0.0")

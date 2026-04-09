@@ -1,5 +1,7 @@
 # Session Management
 
+Note: the historical MCP session endpoints below are `legacy (disabled)`. The canonical runtime uses `services/session_manager` directly.
+
 The session pool enables multiple agents to collaborate within the same dialogue.
 A session is identified by a unique ID and holds the following data:
 

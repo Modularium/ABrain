@@ -1,7 +1,7 @@
 #!/bin/bash
 # -*- coding: utf-8 -*-
 # Agent-NN Setup Script - Vollständige Installation und Konfiguration
-# Verbesserte Version mit MCP Integration und robuster Fehlerbehandlung
+# Verbesserte Version fuer den canonical services/*-Stack
 
 set -euo pipefail
 
@@ -101,7 +101,7 @@ show_current_config() {
     echo "   Auto-Modus: ${AUTO_MODE:-false}"
     echo "   Frontend bauen: ${BUILD_FRONTEND:-true}"
     echo "   Docker starten: ${START_DOCKER:-true}"
-    echo "   MCP starten: ${START_MCP:-false}"
+    echo "   Legacy MCP aktiv: ${START_MCP:-false}"
     echo "   Preset: ${PRESET:-keines}"
     echo
     
@@ -175,7 +175,6 @@ OPTIONS:
     -v, --verbose           Ausführliche Ausgabe aktivieren
     --no-frontend           Frontend-Build überspringen
     --skip-docker           Docker-Start überspringen
-    --with-mcp              MCP Services starten
     --check-only            Nur Umgebungsprüfung durchführen
     --check                 Nur Validierung ausführen und beenden
     --install-heavy         Zusätzliche Heavy-Dependencies installieren
@@ -187,7 +186,7 @@ OPTIONS:
     --no-docker             Setup ohne Docker-Schritte
     --exit-on-fail          Bei Fehlern sofort abbrechen
     --recover               Fehlgeschlagenes Setup wiederaufnehmen
-    --preset <name>         Vordefinierte Einstellungen laden (dev|ci|minimal|mcp)
+    --preset <name>         Vordefinierte Einstellungen laden (dev|ci|minimal)
     --clean                 Entwicklungsumgebung zurücksetzen
     --timeout <seconds>     Timeout für Benutzer-Eingaben (default: 300)
 
@@ -195,8 +194,6 @@ BEISPIELE:
     $SCRIPT_NAME                    # Vollständiges Setup
     $SCRIPT_NAME --check-only       # Nur Umgebungsprüfung
     $SCRIPT_NAME --skip-docker      # Setup ohne Docker-Start
-    $SCRIPT_NAME --with-mcp         # Setup mit MCP Services
-    $SCRIPT_NAME --preset mcp       # MCP-fokussiertes Setup
     $SCRIPT_NAME --auto-install    # Keine Rückfragen bei Abhängigkeitsinstallation
 
 VORAUSSETZUNGEN:
@@ -217,7 +214,7 @@ interactive_menu() {
         "🐍 Python & Poetry (Nur Python-Umgebung)"
         "🎨 Frontend bauen (React-Frontend)"
         "🐳 Docker-Services (Standard Services starten)"
-        "🔗 MCP-Services (Model Context Protocol)"
+        "🔗 Legacy MCP-Services (disabled)"
         "🧪 Tests & CI (Testlauf)"
         "🔁 Reparatur (Umgebung reparieren)"
         "📊 Status anzeigen (Systemstatus)"
@@ -394,49 +391,10 @@ ensure_poetry_improved() {
     return 0
 }
 
-# MCP Services Funktion
+# LEGACY (disabled): not part of canonical runtime
 start_mcp_services() {
-    log_info "Starte MCP Services..."
-    
-    local mcp_compose="$REPO_ROOT/mcp/docker-compose.yml"
-    
-    if [[ ! -f "$mcp_compose" ]]; then
-        log_err "MCP docker-compose.yml nicht gefunden: $mcp_compose"
-        return 1
-    fi
-    
-    cd "$REPO_ROOT" || return 1
-    
-    if docker_compose_up "$mcp_compose" "--build"; then
-        log_ok "MCP Services gestartet"
-        
-        # Kurze Wartezeit für Service-Start
-        sleep 5
-        
-        # MCP Health-Checks
-        local mcp_urls=(
-            "http://localhost:8001/health:MCP Dispatcher"
-            "http://localhost:8002/health:MCP Registry"
-            "http://localhost:8003/health:MCP Session Manager"
-        )
-        
-        for url_desc in "${mcp_urls[@]}"; do
-            local url="${url_desc%:*}"
-            local desc="${url_desc#*:}"
-            
-            if curl -f -s "$url" &>/dev/null; then
-                log_ok "$desc erreichbar ($url)"
-            else
-                log_warn "$desc nicht erreichbar ($url)"
-            fi
-        done
-        
-        update_status "mcp" "ok" "$REPO_ROOT/.agentnn/status.json"
-        return 0
-    else
-        log_err "Fehler beim Starten der MCP Services"
-        return 1
-    fi
+    log_err "Legacy MCP runtime is disabled; use docker-compose.yml and services/*"
+    return 1
 }
 
 # Erweiterte Preset-Anwendung
@@ -464,10 +422,8 @@ apply_preset_improved() {
             START_MCP=false
             ;;
         mcp)
-            RUN_MODE="full"
-            BUILD_FRONTEND=true
-            START_DOCKER=true
-            START_MCP=true
+            log_err "Preset 'mcp' ist deaktiviert; canonical runtime ist services/*"
+            return 1
             ;;
     esac
 }
@@ -531,8 +487,8 @@ parse_arguments() {
                 shift
                 ;;
             --with-mcp)
-                START_MCP=true
-                shift
+                log_err "--with-mcp ist deaktiviert; canonical runtime ist services/*"
+                exit 1
                 ;;
             --check-only)
                 BUILD_FRONTEND=false
@@ -658,7 +614,8 @@ execute_setup_mode() {
             fi
             ;;
         mcp)
-            run_step "MCP-Services" start_mcp_services
+            log_err "Legacy MCP runtime ist deaktiviert"
+            return 1
             ;;
         system)
             run_step "System-Abhängigkeiten" "${SCRIPT_DIR}/install_dependencies.sh ${SUDO_CMD:+--with-sudo} --auto-install"
@@ -704,8 +661,8 @@ execute_setup_mode() {
             fi
 
             if [[ "$START_MCP" == "true" ]]; then
-                log_info "=== MCP-SERVICES ==="
-                run_step "MCP-Services" start_mcp_services
+                log_err "Legacy MCP runtime ist deaktiviert"
+                return 1
             fi
 
             log_info "=== VERIFIZIERUNG ==="

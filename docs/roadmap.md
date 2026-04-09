@@ -32,7 +32,7 @@ Notizen sind unter `Roadmap.md` archiviert.
 
 ## Teamweitergabe & Onboarding
 - Neue Entwickler starten am besten mit `docs/deployment.md` und `docs/maintenance.md`.
-- Kernkomponenten befinden sich in `services/` und `mcp/`; die React-Oberfläche unter `frontend/agent-ui`.
+- Kernkomponenten befinden sich im canonical runtime stack unter `services/`; `mcp/` bleibt nur `legacy (disabled)`. Die React-Oberflaeche liegt unter `frontend/agent-ui`.
 - Für Tests dient `tests/test_all.py` als Einstiegspunkt.
 
 ## Strategische Ziele

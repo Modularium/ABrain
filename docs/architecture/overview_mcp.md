@@ -1,5 +1,7 @@
 # MCP Overview
 
+Hinweis: Diese Uebersicht beschreibt den frueheren `mcp/*`-Stack. Der aktuelle canonical runtime stack ist `services/*`; `mcp/*` bleibt nur `legacy (disabled)`.
+
 The Modular Control Plane architecture breaks ABrain into small services that communicate over defined APIs. This overview outlines the main building blocks.
 
 ```mermaid
@@ -35,7 +37,7 @@ sequenceDiagram
 
 Each service can be scaled independently and replaced without touching the others. The dispatcher coordinates requests and uses the registry to find suitable workers. Session data and knowledge retrieval are handled by dedicated services.
 
-### Directory Layout
+### Historical Directory Layout
 
 ```
 mcp/
@@ -50,5 +52,4 @@ mcp/
 └── worker_openhands/
 ```
 
-All services expose small FastAPI apps with `/health` endpoints and stubs for their main functions.
-
+Diese Verzeichnisstruktur ist kein produktiver Startpfad mehr. Der produktive Compose- und Service-Start liegt jetzt in `docker-compose.yml` und `services/*`.

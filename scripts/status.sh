@@ -183,66 +183,14 @@ check_docker_status() {
     set_component_status "docker" "running" "$docker_details" "$health"
 }
 
-# MCP-Services Status prüfen
+# LEGACY (disabled): not part of canonical runtime
 check_mcp_status() {
-    log_debug "Prüfe MCP-Services..."
-    
-    local mcp_compose="$REPO_ROOT/mcp/docker-compose.yml"
-    if [[ ! -f "$mcp_compose" ]]; then
-        set_component_status "mcp" "error" "MCP docker-compose.yml nicht gefunden" "unhealthy"
-        return
-    fi
-    
-    # MCP Container prüfen
-    local mcp_containers
-    mcp_containers=$(docker ps --format "{{.Names}}" | grep -c "mcp-" 2>/dev/null || echo "0")
-    
-    if [[ $mcp_containers -eq 0 ]]; then
-        set_component_status "mcp" "stopped" "Keine MCP Services laufen" "unhealthy"
-        return
-    fi
-    
-    # Health-Checks für MCP Services
-    local healthy_services=0
-    local total_services=8  # Anzahl der MCP Services
-    
-    local mcp_services=(
-        "dispatcher:8001"
-        "registry:8002"
-        "session:8003"
-        "vector:8004"
-        "gateway:8005"
-        "worker-dev:8006"
-        "worker-loh:8007"
-        "worker-oh:8008"
-    )
-    
-    if [[ "$CHECK_HEALTH" == "true" ]]; then
-        for service_info in "${mcp_services[@]}"; do
-            local service="${service_info%%:*}"
-            local port="${service_info##*:}"
-            
-            if curl -f -s --max-time 3 "http://localhost:$port/health" >/dev/null 2>&1; then
-                healthy_services=$((healthy_services + 1))
-            fi
-        done
-    else
-        # Wenn Health-Checks deaktiviert, zähle laufende Container
-        healthy_services=$mcp_containers
-    fi
-    
-    local mcp_details="Container: $mcp_containers laufen | Gesunde Services: $healthy_services/$total_services"
-    
-    local health="healthy"
-    if [[ $healthy_services -lt $total_services ]]; then
-        if [[ $healthy_services -eq 0 ]]; then
-            health="unhealthy"
-        else
-            health="degraded"
-        fi
-    fi
-    
-    set_component_status "mcp" "running" "$mcp_details" "$health"
+    log_debug "Prüfe Legacy-MCP-Status..."
+    set_component_status \
+        "mcp" \
+        "warning" \
+        "Legacy-MCP ist deaktiviert und kein Teil des canonical runtime stack" \
+        "unknown"
 }
 
 # Standard-Services Status prüfen

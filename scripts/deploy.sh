@@ -247,15 +247,6 @@ build_deployment_images() {
                 return 1
             fi
             
-            # MCP Images
-            if [[ -f "mcp/Dockerfile" ]]; then
-                local mcp_image="agent-nn-mcp:${IMAGE_TAG}"
-                if ! docker build -t "$mcp_image" -f mcp/Dockerfile .; then
-                    log_err "MCP Docker-Build fehlgeschlagen"
-                    return 1
-                fi
-            fi
-            
             # Registry Push
             if [[ -n "$DEPLOYMENT_REGISTRY" ]]; then
                 push_images_to_registry
@@ -271,9 +262,6 @@ push_images_to_registry() {
     log_info "Pushe Images zu Registry: $DEPLOYMENT_REGISTRY"
     
     local images=("agent-nn:${IMAGE_TAG}")
-    if docker images | grep -q "agent-nn-mcp:${IMAGE_TAG}"; then
-        images+=("agent-nn-mcp:${IMAGE_TAG}")
-    fi
     
     for image in "${images[@]}"; do
         local registry_image="$DEPLOYMENT_REGISTRY/$image"
@@ -305,7 +293,7 @@ create_deployment_backup() {
     mkdir -p "$backup_dir"
     
     # Konfigurationsdateien sichern
-    local config_files=(".env" "docker-compose.yml" "mcp/docker-compose.yml")
+    local config_files=(".env" "docker-compose.yml")
     for file in "${config_files[@]}"; do
         if [[ -f "$REPO_ROOT/$file" ]]; then
             cp "$REPO_ROOT/$file" "$backup_dir/"
@@ -361,10 +349,6 @@ deploy_local() {
                 docker_compose_up "$REPO_ROOT/docker-compose.yml" "--build" "-d"
             fi
             
-            # MCP Services
-            if [[ -f "$REPO_ROOT/mcp/docker-compose.yml" ]]; then
-                docker_compose_up "$REPO_ROOT/mcp/docker-compose.yml" "--build" "-d"
-            fi
             ;;
         recreate)
             log_info "Starte Services mit Recreate Strategy..."
@@ -373,16 +357,8 @@ deploy_local() {
             if [[ -f "$REPO_ROOT/docker-compose.yml" ]]; then
                 docker_compose_down "$REPO_ROOT/docker-compose.yml"
             fi
-            if [[ -f "$REPO_ROOT/mcp/docker-compose.yml" ]]; then
-                docker_compose_down "$REPO_ROOT/mcp/docker-compose.yml"
-            fi
-            
-            # Services neu starten
             if [[ -f "$REPO_ROOT/docker-compose.yml" ]]; then
                 docker_compose_up "$REPO_ROOT/docker-compose.yml" "--build" "-d"
-            fi
-            if [[ -f "$REPO_ROOT/mcp/docker-compose.yml" ]]; then
-                docker_compose_up "$REPO_ROOT/mcp/docker-compose.yml" "--build" "-d"
             fi
             ;;
     esac

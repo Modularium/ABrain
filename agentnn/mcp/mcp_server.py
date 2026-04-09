@@ -1,4 +1,4 @@
-"""Lightweight MCP compatible server exposing context and execution endpoints."""
+"""LEGACY (disabled): historical MCP server, not part of canonical runtime."""
 
 from __future__ import annotations
 
@@ -25,6 +25,23 @@ TOOLS_URL = os.getenv("PLUGIN_AGENT_URL", "http://plugin_agent_service:8110")
 session_pool = SessionManager()
 
 
+def _legacy_disabled(path: str, canonical_path: str) -> None:
+    raise HTTPException(
+        status_code=status.HTTP_410_GONE,
+        detail={
+            "error_code": "legacy_mcp_runtime_disabled",
+            "message": (
+                "Legacy MCP runtime endpoints are disabled. "
+                "Use the canonical services/* runtime instead."
+            ),
+            "details": {
+                "canonical_path": canonical_path,
+                "legacy_route": path,
+            },
+        },
+    )
+
+
 def create_app() -> FastAPI:
     """Return the FastAPI application."""
     router = APIRouter(prefix="/v1/mcp")
@@ -33,66 +50,69 @@ def create_app() -> FastAPI:
     registry = ServiceConnector(REGISTRY_URL)
     @router.get("/ping")
     async def ping() -> dict:
-        return {"status": "ok"}
+        return {"status": "legacy_disabled"}
 
     @router.post("/execute", response_model=ModelContext)
     async def execute(ctx: ModelContext) -> ModelContext:
-        return await dispatcher.post("/dispatch", ctx.model_dump())
+        _ = ctx
+        _legacy_disabled("/v1/mcp/execute", "services/core.py")
 
     @router.post("/task/execute", response_model=ModelContext)
     async def execute_task(ctx: ModelContext) -> ModelContext:
-        return await dispatcher.post("/dispatch", ctx.model_dump())
+        _ = ctx
+        _legacy_disabled("/v1/mcp/task/execute", "services/core.py")
 
     @router.post("/context")
     async def update_context(ctx: ModelContext) -> dict:
-        await sessions.post("/update_context", ctx.model_dump())
-        return {"status": "ok"}
+        _ = ctx
+        _legacy_disabled("/v1/mcp/context", "services/session_manager")
 
     @router.post("/context/save")
     async def save_context_route(ctx: ModelContext) -> dict:
-        await sessions.post("/update_context", ctx.model_dump())
-        context_store.save_context(ctx.session_id or "default", ctx.model_dump())
-        return {"status": "ok"}
+        _ = ctx
+        _legacy_disabled("/v1/mcp/context/save", "services/session_manager")
 
     @router.get("/context/load/{sid}")
     async def load_context_route(sid: str) -> dict:
-        return {"context": context_store.load_context(sid)}
+        _ = sid
+        _legacy_disabled("/v1/mcp/context/load/{sid}", "services/session_manager")
 
     @router.get("/context/history")
     async def list_contexts_route() -> dict:
-        return {"sessions": context_store.list_contexts()}
+        _legacy_disabled("/v1/mcp/context/history", "services/session_manager")
 
     @router.get("/context/map")
     async def context_map_route() -> dict:
-        return generate_map()
+        _legacy_disabled("/v1/mcp/context/map", "services/session_manager")
 
     @router.get("/context/{sid}")
     async def get_context(sid: str) -> dict:
-        return await sessions.get(f"/context/{sid}")
+        _ = sid
+        _legacy_disabled("/v1/mcp/context/{sid}", "services/session_manager")
 
     @router.get("/context/get/{sid}")
     async def get_context_alt(sid: str) -> dict:
-        return await sessions.get(f"/context/{sid}")
+        _ = sid
+        _legacy_disabled("/v1/mcp/context/get/{sid}", "services/session_manager")
 
     @router.post("/agent/create")
     async def create_agent(agent: dict) -> dict:
-        return await registry.post("/register", agent)
+        _ = agent
+        _legacy_disabled("/v1/mcp/agent/create", "services/agent_registry")
 
     @router.post("/agent/register")
     async def agent_register(agent: dict) -> dict:
-        return await registry.post("/register", agent)
+        _ = agent
+        _legacy_disabled("/v1/mcp/agent/register", "services/agent_registry")
 
     @router.get("/agent/list")
     async def agent_list() -> list:
-        return await registry.get("/agents")
+        _legacy_disabled("/v1/mcp/agent/list", "services/agent_registry")
 
     @router.get("/agent/info/{name}")
     async def agent_info(name: str) -> dict:
-        agents = await registry.get("/agents")
-        for a in agents:
-            if a.get("name") == name:
-                return a
-        return {}
+        _ = name
+        _legacy_disabled("/v1/mcp/agent/info/{name}", "services/agent_registry")
 
     @router.post("/tool/use")
     async def use_tool(payload: dict) -> dict:
@@ -115,75 +135,70 @@ def create_app() -> FastAPI:
 
     @router.post("/session/start")
     async def session_start(payload: dict | None = None) -> dict:
-        data = payload or {}
-        return await sessions.post("/session", {"data": data})
+        _ = payload
+        _legacy_disabled("/v1/mcp/session/start", "services/session_manager")
 
     @router.get("/session/status/{sid}")
     async def session_status_route(sid: str) -> dict:
-        return await sessions.get(f"/session/{sid}/status")
+        _ = sid
+        _legacy_disabled("/v1/mcp/session/status/{sid}", "services/session_manager")
 
     @router.post("/session/restore/{snapshot_id}")
     async def session_restore(snapshot_id: str) -> dict:
-        sid = snapshot_store.restore_snapshot(snapshot_id)
-        return {"session_id": sid}
+        _ = snapshot_id
+        _legacy_disabled("/v1/mcp/session/restore/{snapshot_id}", "services/session_manager")
 
     @router.post("/session/create")
     async def create_session_route() -> dict:
-        sid = session_pool.create_session()
-        return {"session_id": sid}
+        _legacy_disabled("/v1/mcp/session/create", "services/session_manager")
 
     @router.post("/session/{sid}/add_agent")
     async def add_agent_route(sid: str, payload: dict) -> dict:
-        session_pool.add_agent(sid, payload.get("agent_id"))
-        return {"status": "ok"}
+        _ = (sid, payload)
+        _legacy_disabled("/v1/mcp/session/{sid}/add_agent", "services/session_manager")
 
     @router.post("/session/{sid}/run_task")
     async def run_task_route(sid: str, payload: dict) -> dict:
-        ctx = session_pool.run_task(sid, payload.get("task", ""))
-        return ctx.model_dump()
+        _ = (sid, payload)
+        _legacy_disabled("/v1/mcp/session/{sid}/run_task", "services/core.py")
 
     @router.post("/task/ask", response_model=ModelContext)
     async def task_ask(ctx: ModelContext) -> ModelContext:
-        return await dispatcher.post("/dispatch", ctx.model_dump())
+        _ = ctx
+        _legacy_disabled("/v1/mcp/task/ask", "services/core.py")
 
     @router.post("/task/dispatch", response_model=ModelContext)
     async def task_dispatch(ctx: ModelContext) -> ModelContext:
-        return await dispatcher.post("/dispatch", ctx.model_dump())
+        _ = ctx
+        _legacy_disabled("/v1/mcp/task/dispatch", "services/core.py")
 
     @router.get("/task/result/{task_id}")
     async def task_result(task_id: str) -> dict:
-        return {"status": "unknown", "task_id": task_id}
+        _ = task_id
+        _legacy_disabled("/v1/mcp/task/result/{task_id}", "services/core.py")
 
     @router.post("/prompt/refine")
     async def prompt_refine(payload: dict) -> dict:
-        prompt = payload.get("prompt", "")
-        strategy = payload.get("strategy", "direct")
-        return {"refined": propose_refinement(prompt, strategy)}
+        _ = payload
+        _legacy_disabled("/v1/mcp/prompt/refine", "services/core.py")
 
     @router.post("/train/start")
     async def train_start_route(payload: dict) -> dict:
-        # minimal stub for training start
-        return {"started": payload.get("agent")}
+        _ = payload
+        _legacy_disabled("/v1/mcp/train/start", "services/core.py")
 
     @router.post("/feedback/record/{sid}")
     async def feedback_record(sid: str, payload: dict) -> dict:
-        return await sessions.post(f"/session/{sid}/feedback", payload)
+        _ = (sid, payload)
+        _legacy_disabled("/v1/mcp/feedback/record/{sid}", "services/session_manager")
 
     @router.post("/governance/vote")
     async def governance_vote(payload: dict) -> dict:
-        vote = ProposalVote(
-            proposal_id=payload.get("proposal_id", "unknown"),
-            agent_id=payload.get("agent_id", "anon"),
-            decision=payload.get("decision", "yes"),
-            comment=payload.get("comment"),
-            created_at=datetime.utcnow().isoformat(),
-        )
-        record_vote(vote)
-        return {"status": "recorded"}
+        _ = payload
+        _legacy_disabled("/v1/mcp/governance/vote", "services/core.py")
 
     app = FastAPI(title="ABrain MCP Server")
     app.include_router(router)
-    app.include_router(ws_server.router)
     return app
 
 

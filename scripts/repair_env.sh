@@ -338,7 +338,7 @@ repair_docker() {
     fi
     
     # Compose-Dateien validieren
-    local compose_files=("$REPO_ROOT/docker-compose.yml" "$REPO_ROOT/mcp/docker-compose.yml")
+    local compose_files=("$REPO_ROOT/docker-compose.yml")
     
     for compose_file in "${compose_files[@]}"; do
         if [[ -f "$compose_file" ]]; then
@@ -434,88 +434,10 @@ repair_frontend() {
     cd "$REPO_ROOT" || return 1
 }
 
-# MCP-Reparaturen
+# LEGACY (disabled): not part of canonical runtime
 repair_mcp() {
     log_info "=== MCP-REPARATUR ==="
-    
-    local mcp_dir="$REPO_ROOT/mcp"
-    
-    if [[ ! -d "$mcp_dir" ]]; then
-        log_repair_action "MCP Verzeichnis" "failed" "MCP-Verzeichnis nicht gefunden"
-        return 1
-    fi
-    
-    # MCP docker-compose.yml prüfen
-    if [[ ! -f "$mcp_dir/docker-compose.yml" ]]; then
-        log_repair_action "MCP docker-compose.yml" "failed" "MCP docker-compose.yml nicht gefunden"
-        return 1
-    fi
-    
-    # MCP .env prüfen
-    if [[ ! -f "$mcp_dir/.env" ]]; then
-        log_repair_action "MCP Environment" "attempted" ""
-        
-        if [[ -f "$mcp_dir/.env.example" ]]; then
-            create_backup "$mcp_dir/.env.example"
-            cp "$mcp_dir/.env.example" "$mcp_dir/.env"
-            log_repair_action "MCP Environment" "successful" ".env aus Beispiel erstellt"
-        else
-            # Minimale .env erstellen
-            cat > "$mcp_dir/.env" << 'EOF'
-# MCP Services Konfiguration
-POSTGRES_DB=mcp_db
-POSTGRES_USER=mcp_user
-POSTGRES_PASSWORD=mcp_password
-REDIS_PASSWORD=mcp_redis_password
-MCP_LOG_LEVEL=INFO
-MCP_DEBUG=false
-EOF
-            log_repair_action "MCP Environment" "successful" "Minimale .env erstellt"
-        fi
-    fi
-    
-    # MCP Services prüfen und reparieren
-    if command -v docker >/dev/null && docker info >/dev/null 2>&1; then
-        cd "$mcp_dir" || return 1
-        
-        # Gestoppte MCP Services neustarten
-        local mcp_containers
-        mcp_containers=$(docker ps -a --format "{{.Names}}" | grep "mcp-" | wc -l || echo "0")
-        
-        if [[ $mcp_containers -gt 0 ]]; then
-            local running_containers
-            running_containers=$(docker ps --format "{{.Names}}" | grep "mcp-" | wc -l || echo "0")
-            
-            if [[ $running_containers -lt $mcp_containers ]]; then
-                log_repair_action "MCP Services Restart" "attempted" ""
-                
-                if docker_compose up -d >/dev/null 2>&1; then
-                    log_repair_action "MCP Services Restart" "successful" "MCP Services neu gestartet"
-                else
-                    log_repair_action "MCP Services Restart" "failed" "MCP Services konnten nicht gestartet werden"
-                fi
-            fi
-        fi
-        
-        # MCP Health-Check nach Reparatur
-        sleep 5
-        local healthy_services=0
-        local mcp_ports=(8001 8002 8003 8004 8005)
-        
-        for port in "${mcp_ports[@]}"; do
-            if curl -f -s --max-time 3 "http://localhost:$port/health" >/dev/null 2>&1; then
-                healthy_services=$((healthy_services + 1))
-            fi
-        done
-        
-        if [[ $healthy_services -gt 0 ]]; then
-            log_repair_action "MCP Health Check" "successful" "$healthy_services/${#mcp_ports[@]} Services gesund"
-        else
-            log_repair_action "MCP Health Check" "failed" "Keine MCP Services antworten"
-        fi
-        
-        cd "$REPO_ROOT" || return 1
-    fi
+    log_repair_action "Legacy MCP" "skipped" "Legacy-MCP ist deaktiviert und wird nicht repariert"
 }
 
 # Berechtigungs-Reparaturen

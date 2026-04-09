@@ -1,6 +1,6 @@
 #!/bin/bash
 # -*- coding: utf-8 -*-
-# Verbesserte Docker Helper Funktionen mit MCP-Integration
+# Verbesserte Docker Helper Funktionen für den canonical services/*-Stack
 
 set -euo pipefail
 
@@ -21,18 +21,6 @@ source "$HELPERS_DIR/common.sh"
 DOCKER_COMPOSE_COMMAND=""
 DOCKER_COMPOSE_VERSION=""
 
-# MCP-spezifische Konfiguration
-declare -A MCP_SERVICES=(
-    [dispatcher]="mcp-dispatcher:8001:MCP Task Dispatcher"
-    [registry]="mcp-registry:8002:MCP Agent Registry" 
-    [session_manager]="mcp-session:8003:MCP Session Manager"
-    [vector_store]="mcp-vector:8004:MCP Vector Store"
-    [llm_gateway]="mcp-gateway:8005:MCP LLM Gateway"
-    [worker_dev]="mcp-worker-dev:8006:MCP Dev Worker"
-    [worker_loh]="mcp-worker-loh:8007:MCP LoH Worker"
-    [worker_openhands]="mcp-worker-oh:8008:MCP OpenHands Worker"
-)
-
 # Standard-Services Konfiguration
 declare -A STANDARD_SERVICES=(
     [api]="agent-api:8000:Agent API Gateway"
@@ -50,12 +38,7 @@ find_compose_file() {
     
     case "$prefer_type" in
         mcp)
-            search_paths=(
-                "$REPO_ROOT/mcp/docker-compose.yml"
-                "$REPO_ROOT/mcp/docker-compose.yaml"
-                "$REPO_ROOT/docker-compose.mcp.yml"
-                "$REPO_ROOT/docker-compose.mcp.yaml"
-            )
+            search_paths=()
             ;;
         standard)
             search_paths=(
@@ -93,7 +76,7 @@ find_compose_file() {
     if [[ "$name" == "docker-compose.yml" ]]; then
         local pattern
         case "$prefer_type" in
-            mcp) pattern="$REPO_ROOT/mcp/docker-compose*.yml" ;;
+            mcp) pattern="$REPO_ROOT/nonexistent-mcp-compose*.yml" ;;
             *) pattern="$REPO_ROOT/docker-compose*.yml" ;;
         esac
         
@@ -299,7 +282,8 @@ check_service_health() {
     local services_map
     case "$service_type" in
         mcp)
-            declare -n services_map=MCP_SERVICES
+            log_warn "Legacy MCP health checks are disabled"
+            return 1
             ;;
         *)
             declare -n services_map=STANDARD_SERVICES
@@ -339,29 +323,15 @@ check_service_health() {
     fi
 }
 
-# MCP-spezifische Funktionen
+# LEGACY (disabled): not part of canonical runtime
 start_mcp_services() {
-    log_info "Starte MCP Services..."
-    
-    local mcp_compose
-    if mcp_compose=$(find_compose_file "docker-compose.yml" "mcp"); then
-        docker_compose_up "$mcp_compose" "--build" "-d" "mcp"
-    else
-        log_err "MCP docker-compose.yml nicht gefunden"
-        return 1
-    fi
+    log_err "Legacy MCP runtime is disabled; use the canonical services/* stack"
+    return 1
 }
 
 stop_mcp_services() {
-    log_info "Stoppe MCP Services..."
-    
-    local mcp_compose
-    if mcp_compose=$(find_compose_file "docker-compose.yml" "mcp"); then
-        docker_compose_down "$mcp_compose" "mcp"
-    else
-        log_warn "MCP docker-compose.yml nicht gefunden"
-        return 1
-    fi
+    log_warn "Legacy MCP runtime is disabled; nothing to stop"
+    return 1
 }
 
 # Standard Services
@@ -400,23 +370,14 @@ start_all_services() {
         log_warn "Standard Services konnten nicht gestartet werden"
     fi
     
-    # MCP Services
-    if start_mcp_services; then
-        log_ok "MCP Services gestartet"
-    else
-        log_warn "MCP Services konnten nicht gestartet werden"
-    fi
-    
     # Gesamt Health-Check
     sleep 5
     check_service_health "standard" 30 || true
-    check_service_health "mcp" 30 || true
 }
 
 stop_all_services() {
     log_info "Stoppe alle Services..."
     
-    stop_mcp_services || true
     stop_standard_services || true
     
     log_ok "Alle Services gestoppt"
@@ -487,11 +448,7 @@ find_compose_file_fixed() {
     local search_paths=()
     case "$prefer_type" in
         mcp)
-            search_paths=(
-                "$REPO_ROOT/mcp/docker-compose.yml"
-                "$REPO_ROOT/mcp/docker-compose.yaml"
-                "$REPO_ROOT/docker-compose.mcp.yml"
-            )
+            search_paths=()
             ;;
         *)
             search_paths=(

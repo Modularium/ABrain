@@ -1,6 +1,8 @@
 # Integrations
 
-Dieses Kapitel beschreibt, wie ABrain mit externen Tools gekoppelt werden kann. Neben der Smolitux-UI stehen Erweiterungen für n8n und FlowiseAI bereit. Beide Systeme können ABrain aufrufen und umgekehrt von ABrain aus gesteuert werden. Historische Plugin-Pfade unter `plugins/` sind `historical / legacy (not active runtime path)` und kein `canonical path` mehr.
+Dieses Kapitel beschreibt, wie ABrain mit externen Tools gekoppelt werden kann. Erweiterungen fuer n8n und FlowiseAI bleiben verfuegbar. Historische Plugin-Pfade unter `plugins/` sind `historical / legacy (not active runtime path)` und kein `canonical path` mehr.
+
+Die fruehere Smolitux-Integration und andere Altpfade ausserhalb des gehaerteten Core-/`services/*`-Stacks sind `legacy (disabled)`.
 
 Für die Beispielintegration ist es erforderlich, die TypeScript-Dateien zunächst mit `npm install` und `npx tsc` zu kompilieren. Die erzeugten JavaScript-Dateien werden anschließend vom jeweiligen PluginManager geladen.
 

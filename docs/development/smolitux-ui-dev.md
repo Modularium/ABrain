@@ -1,5 +1,7 @@
 # Entwicklerdokumentation: Smolitux-UI für ABrain
 
+Hinweis: Die hier beschriebene Smolitux-Bridge ist `legacy (disabled)` und nicht Teil des canonical runtime stack.
+
 Diese Dokumentation richtet sich an Entwickler, die an der Smolitux-UI-Integration für das ABrain-System arbeiten möchten.
 
 ## Architektur

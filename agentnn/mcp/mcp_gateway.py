@@ -1,4 +1,4 @@
-"""Public MCP gateway with authentication."""
+"""LEGACY (disabled): historical MCP gateway, not part of canonical runtime."""
 
 from __future__ import annotations
 
@@ -20,38 +20,41 @@ def create_gateway() -> FastAPI:
     conn = ServiceConnector(MCP_SERVER_URL)
     prefix = "/v1/mcp"
 
-    @app.post(f"{prefix}/task/execute")
-    async def execute(request: Request) -> dict:
-        payload = await request.json()
-        return await conn.post("/execute", payload)
-
-    @app.post(f"{prefix}/tool/use")
-    async def tool_use(request: Request) -> dict:
-        # legacy (disabled): kept only to reject the historical generic tool proxy
-        _ = await request.json()
+    def legacy_disabled(path: str) -> None:
         raise HTTPException(
             status_code=status.HTTP_410_GONE,
             detail={
-                "error_code": "legacy_tool_proxy_disabled",
+                "error_code": "legacy_mcp_runtime_disabled",
                 "message": (
-                    "Legacy dynamic tool execution via the MCP gateway is disabled. "
-                    "Use the fixed core tool surface instead."
+                    "Legacy MCP gateway endpoints are disabled. "
+                    "Use the canonical services/* runtime instead."
                 ),
                 "details": {
-                    "canonical_path": "services.core.execute_tool",
-                    "legacy_route": f"{prefix}/tool/use",
+                    "canonical_path": "services/core.py",
+                    "legacy_route": path,
                 },
             },
         )
 
+    @app.post(f"{prefix}/task/execute")
+    async def execute(request: Request) -> dict:
+        _ = await request.json()
+        legacy_disabled(f"{prefix}/task/execute")
+
+    @app.post(f"{prefix}/tool/use")
+    async def tool_use(request: Request) -> dict:
+        _ = await request.json()
+        legacy_disabled(f"{prefix}/tool/use")
+
     @app.post(f"{prefix}/context/save")
     async def save(request: Request) -> dict:
-        payload = await request.json()
-        return await conn.post("/context/save", payload)
+        _ = await request.json()
+        legacy_disabled(f"{prefix}/context/save")
 
     @app.get(f"{prefix}/context/load/{'{sid}'}")
     async def load(sid: str) -> dict:
-        return await conn.get(f"/context/load/{sid}")
+        _ = sid
+        legacy_disabled(f"{prefix}/context/load/{{sid}}")
 
     return app
 

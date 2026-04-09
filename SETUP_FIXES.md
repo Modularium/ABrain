@@ -11,7 +11,7 @@ This document explains the fixes applied to resolve the setup script errors and 
 - `run_project_tests` 
 - `print_next_steps`
 
-**Solution**: Added these functions to `/home/dev/Agent-NN/scripts/lib/log_utils.sh`
+**Solution**: Added these functions to `scripts/lib/log_utils.sh`
 
 ### 2. Missing Utility Functions in setup.sh
 
@@ -53,7 +53,7 @@ cd ~/Agent-NN
 
 # Or run with specific options
 ./scripts/setup.sh --minimal  # Python only
-./scripts/setup.sh --preset mcp  # MCP-focused setup
+./scripts/setup.sh --preset dev  # canonical services/* setup
 ```
 
 ### Testing Docker Build Separately

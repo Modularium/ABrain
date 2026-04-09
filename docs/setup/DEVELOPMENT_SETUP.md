@@ -4,6 +4,8 @@
 
 Diese Anleitung beschreibt den aktuellen, ehrlichen Entwicklungs- und Prüfpfad für den gehärteten ABrain-Stand. Der Arbeitsbaum und einige interne Paketpfade heißen derzeit noch `Agent-NN` bzw. `agentnn`; das ist während der Rename-Migration beabsichtigt.
 
+Der canonical runtime stack ist `services/*`. Historische Bereiche unter `mcp/*`, `agentnn/mcp/*` und `/smolitux/*` sind `legacy (disabled)`.
+
 ## Voraussetzungen
 
 - Python 3.10+
@@ -16,7 +18,7 @@ Diese Anleitung beschreibt den aktuellen, ehrlichen Entwicklungs- und Prüfpfad 
 Wenn Sie nur den stabilisierten Core und den AdminBot-Adapter verifizieren wollen:
 
 ```bash
-cd /home/dev/Agent-NN
+cd <repo-root>
 python3 -m venv .venv
 . .venv/bin/activate
 pip install --upgrade pip
@@ -35,7 +37,7 @@ python -m pytest -o python_files='test_*.py' \
 Für breitere Arbeit am Repo:
 
 ```bash
-cd /home/dev/Agent-NN
+cd <repo-root>
 python3 -m venv .venv
 . .venv/bin/activate
 pip install --upgrade pip
@@ -51,7 +53,7 @@ poetry install --no-root
 ## Frontend lokal starten
 
 ```bash
-cd /home/dev/Agent-NN/frontend/agent-ui
+cd <repo-root>/frontend/agent-ui
 npm install
 npm run dev
 ```
@@ -96,7 +98,8 @@ Syntaxprüfung der gehärteten Kernmodule:
 
 ## Wichtige weiterführende Dokumente
 
-- [`PROJECT_OVERVIEW.md`](/home/dev/Agent-NN/docs/architecture/PROJECT_OVERVIEW.md)
-- [`CORE_REFACTOR.md`](/home/dev/Agent-NN/docs/architecture/CORE_REFACTOR.md)
-- [`AGENT_NN_ADMINBOT_INTEGRATION_PLAN.md`](/home/dev/Agent-NN/docs/integrations/adminbot/AGENT_NN_ADMINBOT_INTEGRATION_PLAN.md)
-- [`SECURITY_INVARIANTS.md`](/home/dev/Agent-NN/docs/integrations/adminbot/SECURITY_INVARIANTS.md)
+- [`PROJECT_OVERVIEW.md`](../architecture/PROJECT_OVERVIEW.md)
+- [`CANONICAL_RUNTIME_STACK.md`](../architecture/CANONICAL_RUNTIME_STACK.md)
+- [`CORE_REFACTOR.md`](../architecture/CORE_REFACTOR.md)
+- [`AGENT_NN_ADMINBOT_INTEGRATION_PLAN.md`](../integrations/adminbot/AGENT_NN_ADMINBOT_INTEGRATION_PLAN.md)
+- [`SECURITY_INVARIANTS.md`](../integrations/adminbot/SECURITY_INVARIANTS.md)
