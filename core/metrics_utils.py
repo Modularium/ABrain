@@ -1,14 +1,68 @@
 import time
-from fastapi import APIRouter, Request
-from fastapi.responses import Response
-from starlette.middleware.base import BaseHTTPMiddleware
-from prometheus_client import (
-    Counter,
-    Gauge,
-    Histogram,
-    generate_latest,
-    CONTENT_TYPE_LATEST,
-)
+try:  # pragma: no cover - optional web deps
+    from fastapi import APIRouter, Request
+    from fastapi.responses import Response
+    from starlette.middleware.base import BaseHTTPMiddleware
+except Exception:  # pragma: no cover - optional web deps
+    APIRouter = Request = Response = None
+
+    class BaseHTTPMiddleware:  # type: ignore[override]
+        """Fallback stub when FastAPI/Starlette is unavailable."""
+
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("FastAPI middleware dependencies are not installed")
+try:  # pragma: no cover - optional metrics deps
+    from prometheus_client import (
+        Counter,
+        Gauge,
+        Histogram,
+        generate_latest,
+        CONTENT_TYPE_LATEST,
+    )
+except Exception:  # pragma: no cover - optional metrics deps
+    CONTENT_TYPE_LATEST = "text/plain; version=0.0.4"
+
+    class _DummyValue:
+        def __init__(self) -> None:
+            self._current = 0.0
+
+        def get(self) -> float:
+            return self._current
+
+    class _DummyMetricChild:
+        def __init__(self) -> None:
+            self._value = _DummyValue()
+
+        def inc(self, amount: float = 1.0) -> None:
+            self._value._current += amount
+
+        def observe(self, amount: float) -> None:
+            self._value._current = amount
+
+        def set(self, value: float) -> None:
+            self._value._current = value
+
+    class _DummyMetric:
+        def __init__(self, *args, **kwargs) -> None:
+            self._children: dict[tuple[str, ...], _DummyMetricChild] = {}
+
+        def labels(self, *label_values: str) -> _DummyMetricChild:
+            key = tuple(str(value) for value in label_values)
+            if key not in self._children:
+                self._children[key] = _DummyMetricChild()
+            return self._children[key]
+
+    def Counter(*args, **kwargs):  # type: ignore[misc]
+        return _DummyMetric()
+
+    def Gauge(*args, **kwargs):  # type: ignore[misc]
+        return _DummyMetric()
+
+    def Histogram(*args, **kwargs):  # type: ignore[misc]
+        return _DummyMetric()
+
+    def generate_latest() -> bytes:
+        return b""
 
 TASKS_PROCESSED = Counter(
     "agentnn_tasks_processed_total", "Total processed tasks", ["service"]
@@ -51,6 +105,8 @@ ROUTING_DECISIONS = Counter(
 
 
 def metrics_router() -> APIRouter:
+    if APIRouter is None or Response is None:
+        raise RuntimeError("FastAPI metrics router dependencies are not installed")
     router = APIRouter()
 
     @router.get("/metrics")

@@ -64,6 +64,14 @@ def dispatch_task_tool(
     context.max_tokens = tool_input.max_tokens
     context.priority = tool_input.priority
     context.deadline = tool_input.deadline
+    # Keep the historical SDK-facing contract stable even when ``TaskContext``
+    # normalizes string descriptions into richer wrapper objects internally.
+    if hasattr(context.task_context, "description"):
+        context.task_context.description = getattr(
+            context.task_context.description,
+            "text",
+            context.task_context.description,
+        )
     factory = client_factory or _default_client_factory
     return factory().dispatch_task(context)
 

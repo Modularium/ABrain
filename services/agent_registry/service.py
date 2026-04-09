@@ -2,6 +2,8 @@
 
 from typing import Dict, List
 
+from core.decision.agent_descriptor import AgentDescriptor
+
 from .schemas import AgentInfo
 from core.metrics_utils import TASKS_PROCESSED
 
@@ -23,10 +25,27 @@ class AgentRegistryService:
         self._agents[info.id] = info
         TASKS_PROCESSED.labels("agent_registry").inc()
 
+    def register_descriptor(self, descriptor: AgentDescriptor) -> AgentDescriptor:
+        """Register a canonical descriptor through the existing service store."""
+        info = AgentInfo.from_descriptor(descriptor)
+        self.register_agent(info)
+        return info.to_descriptor()
+
     def get_agent(self, agent_id: str) -> AgentInfo | None:
         """Return a single agent by id."""
         TASKS_PROCESSED.labels("agent_registry").inc()
         return self._agents.get(agent_id)
+
+    def get_descriptor(self, agent_id: str) -> AgentDescriptor | None:
+        """Return a canonical descriptor by id."""
+        info = self.get_agent(agent_id)
+        if info is None:
+            return None
+        return info.to_descriptor()
+
+    def list_descriptors(self) -> List[AgentDescriptor]:
+        """Return all registered agents as canonical descriptors."""
+        return [info.to_descriptor() for info in self.list_agents()]
 
     def update_status(self, name: str, status: Dict[str, float | int | bool]) -> None:
         """Update status info for an agent."""
