@@ -1,5 +1,5 @@
-# Release Notes v1.0.3
+# Release Notes
 
-Dieses Release finalisiert die Flowise-Export-Funktion und erweitert die Dokumentation.
-Fehlercodes sind vereinheitlicht und die Monitoring-Konfiguration wurde verbessert.
-Details siehe [CHANGELOG](https://github.com/EcoSphereNetwork/Agent-NN/blob/main/CHANGELOG.md).
+Der aktuelle Foundations-Meilenstein ist in [docs/releases/RELEASE_NOTES_FOUNDATIONS.md](releases/RELEASE_NOTES_FOUNDATIONS.md) dokumentiert.
+
+Historische Release-Notizen wie `v1.0.3` bleiben unter `docs/releases/` erhalten, sind aber nicht die maßgebliche Beschreibung des neuen ABrain-Kerns.

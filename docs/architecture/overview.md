@@ -1,24 +1,26 @@
 # Architecture Overview
 
-ABrain is being refactored into a Modular Control Plane. Instead of one monolithic agent process, separate services take care of orchestration, knowledge retrieval and task execution.
+ABrain now exposes a stabilized foundations stack around a hardened execution core. The repository still contains historical services and legacy paths, but the current architectural truth is the combination of canonical agent modeling, decision, execution and learning around `services/core.py`.
 
 ## Core Repository Folders
 
-- **agents/** – legacy agent implementations (will evolve into worker services)
-- **llm_models/** – wrappers for various LLM backends
-- **managers/** – utilities for model and agent management
-- **datastores/** – vector store and agent specific databases
-- **api/** – FastAPI endpoints
-- **cli/** – command line interface utilities
+- **core/decision/** – canonical agent model, planner, candidate filter, neural policy and learning
+- **core/execution/** – dispatcher plus execution engine and static adapters
+- **adapters/adminbot/** – verified AdminBot-v2 adapter
+- **adapters/flowise/** – Flowise import/export interoperability layer
+- **interfaces/mcp_v1/** – thin MCP interface layer
+- **services/** – canonical runtime and service wrappers
+- **api/** and **server/** – API-facing entry points and bridges
+- **sdk/** – CLI and SDK utilities with historical technical names where needed
 
-## MCP Components
+## Foundations Pipeline
 
-1. **Task-Dispatcher** – replaces the Supervisor and delegates tasks to workers
-2. **Agent Registry** – stores available agent services and metadata
-3. **Session Manager** – keeps conversation state centrally
-4. **Worker Services** – domain specific executors running in their own processes
-5. **Vector Store Service** – provides semantic search capabilities
-6. **LLM Gateway** – unified interface to LLM providers
-7. **User Manager Service** – handles user accounts and tokens
+1. **Planner** – derives required capabilities from the task
+2. **CandidateFilter** – enforces deterministic safety and capability constraints
+3. **NeuralPolicyModel** – ranks only the already safe candidates
+4. **RoutingEngine** – materializes a routing decision
+5. **ExecutionEngine** – selects a static adapter and executes
+6. **FeedbackLoop** – updates performance history and learning data best-effort
+7. **Training Components** – dataset, reward model and trainer improve routing quality over time
 
-For an overview of the interaction between these services see `overview_mcp.md`.
+For the current architectural reference, prefer `PROJECT_OVERVIEW.md`. Historical MCP diagrams such as `overview_mcp.md` remain documentation of legacy evolution, not the current foundations truth.

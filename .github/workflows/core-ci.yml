@@ -1,4 +1,4 @@
-name: Core CI
+name: Foundations CI
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  core-ci:
+  foundations-ci:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,37 +19,64 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install minimal test dependencies
+      - name: Install foundations test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pydantic pytest
+          python -m pip install pydantic pytest httpx
 
-      - name: Run hardened core and adapter tests
+      - name: Run foundations test suite
         run: |
           python -m pytest -o python_files='test_*.py' \
-            tests/adapters/test_adminbot_client.py \
-            tests/adapters/test_adminbot_tools.py \
-            tests/core/test_execution_dispatcher.py \
-            tests/core/test_tool_registry.py \
-            tests/services/test_core.py
+            tests/decision \
+            tests/execution \
+            tests/adapters \
+            tests/core \
+            tests/services \
+            tests/integration/test_node_export.py
 
-      - name: Compile core, service and adapter modules
+      - name: Compile foundations modules
         run: |
           python -m py_compile \
-            api/endpoints.py \
-            server/main.py \
             services/core.py \
-            services/__init__.py \
-            sdk/cli/commands/agent.py \
-            core/__init__.py \
-            core/tools/__init__.py \
-            core/agents/runtime.py \
-            core/execution/dispatcher.py \
+            services/routing_agent/service.py \
             core/models/adminbot.py \
             core/models/errors.py \
             core/models/identity.py \
             core/models/tooling.py \
+            core/decision/__init__.py \
+            core/decision/agent_creation.py \
+            core/decision/agent_descriptor.py \
+            core/decision/agent_registry.py \
+            core/decision/candidate_filter.py \
+            core/decision/capabilities.py \
+            core/decision/feature_encoder.py \
+            core/decision/feedback_loop.py \
+            core/decision/neural_policy.py \
+            core/decision/performance_history.py \
+            core/decision/planner.py \
+            core/decision/routing_engine.py \
+            core/decision/scoring_models.py \
+            core/decision/task_intent.py \
+            core/decision/learning/dataset.py \
+            core/decision/learning/online_updater.py \
+            core/decision/learning/persistence.py \
+            core/decision/learning/reward_model.py \
+            core/decision/learning/trainer.py \
+            core/execution/__init__.py \
+            core/execution/dispatcher.py \
+            core/execution/execution_engine.py \
+            core/execution/adapters/__init__.py \
+            core/execution/adapters/base.py \
+            core/execution/adapters/registry.py \
+            core/execution/adapters/adminbot_adapter.py \
+            core/execution/adapters/openhands_adapter.py \
+            core/execution/adapters/claude_code_adapter.py \
+            core/execution/adapters/codex_adapter.py \
             core/tools/registry.py \
             core/tools/handlers.py \
+            adapters/flowise/__init__.py \
+            adapters/flowise/models.py \
+            adapters/flowise/importer.py \
+            adapters/flowise/exporter.py \
             adapters/adminbot/client.py \
             adapters/adminbot/service.py

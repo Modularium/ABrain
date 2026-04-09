@@ -55,7 +55,7 @@ Der Feedback Loop aktualisiert nach jeder Ausfuehrung die `PerformanceHistory`:
 - Kosten
 - Failure Count
 
-Das eigentliche NN-Training folgt spaeter. In dieser Phase werden nur saubere Verlaufsdaten gesammelt.
+Zusätzlich erzeugt der aktuelle Foundations-Stand Trainingssamples und kann das `NeuralPolicyModel` inline in kleinen Schritten nachtrainieren. Dieser Lernpfad bleibt bewusst best-effort und darf erfolgreiche Executions nicht nachtraeglich fehlschlagen lassen.
 
 ## Gesamtpipeline
 
@@ -65,7 +65,6 @@ Das eigentliche NN-Training folgt spaeter. In dieser Phase werden nur saubere Ve
 
 Nicht Teil von V1:
 
-- echtes NN-Training
 - Multi-Agent-Orchestrierung
 - MCP-Erweiterung
 - UI- oder Flowise-Sync

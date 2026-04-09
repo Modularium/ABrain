@@ -13,23 +13,24 @@ Der canonical runtime stack ist `services/*`. Historische Bereiche unter `mcp/*`
 - optional: Poetry
 - optional: Node.js 18+ für das Frontend
 
-## Minimaler Prüfpfad für den gehärteten Core
+## Minimaler Prüfpfad für den aktuellen Foundations-Stand
 
-Wenn Sie nur den stabilisierten Core und den AdminBot-Adapter verifizieren wollen:
+Wenn Sie den aktuellen Foundations-Stand mit Decision-, Execution- und Learning-Layer verifizieren wollen:
 
 ```bash
 cd <repo-root>
 python3 -m venv .venv
 . .venv/bin/activate
 pip install --upgrade pip
-pip install pydantic pytest
+pip install pydantic pytest httpx
 
 python -m pytest -o python_files='test_*.py' \
-  tests/adapters/test_adminbot_client.py \
-  tests/adapters/test_adminbot_tools.py \
-  tests/core/test_execution_dispatcher.py \
-  tests/core/test_tool_registry.py \
-  tests/services/test_core.py
+  tests/decision \
+  tests/execution \
+  tests/adapters \
+  tests/core \
+  tests/services \
+  tests/integration/test_node_export.py
 ```
 
 ## Vollere lokale Entwicklungsumgebung
@@ -60,18 +61,19 @@ npm run dev
 
 ## Wichtige Prüfkommandos
 
-Gezielte Kern- und Adapter-Tests:
+Foundations-Tests:
 
 ```bash
 .venv/bin/python -m pytest -o python_files='test_*.py' \
-  tests/adapters/test_adminbot_client.py \
-  tests/adapters/test_adminbot_tools.py \
-  tests/core/test_execution_dispatcher.py \
-  tests/core/test_tool_registry.py \
-  tests/services/test_core.py
+  tests/decision \
+  tests/execution \
+  tests/adapters \
+  tests/core \
+  tests/services \
+  tests/integration/test_node_export.py
 ```
 
-Syntaxprüfung der gehärteten Kernmodule:
+Syntaxprüfung der Foundations-Module:
 
 ```bash
 .venv/bin/python -m py_compile \
@@ -86,13 +88,47 @@ Syntaxprüfung der gehärteten Kernmodule:
   core/models/identity.py \
   core/models/errors.py \
   core/models/adminbot.py \
+  core/decision/__init__.py \
+  core/decision/agent_creation.py \
+  core/decision/agent_descriptor.py \
+  core/decision/agent_registry.py \
+  core/decision/candidate_filter.py \
+  core/decision/capabilities.py \
+  core/decision/feature_encoder.py \
+  core/decision/feedback_loop.py \
+  core/decision/neural_policy.py \
+  core/decision/performance_history.py \
+  core/decision/planner.py \
+  core/decision/routing_engine.py \
+  core/decision/scoring_models.py \
+  core/decision/task_intent.py \
+  core/decision/learning/dataset.py \
+  core/decision/learning/online_updater.py \
+  core/decision/learning/persistence.py \
+  core/decision/learning/reward_model.py \
+  core/decision/learning/trainer.py \
   adapters/adminbot/client.py \
-  adapters/adminbot/service.py
+  adapters/adminbot/service.py \
+  adapters/flowise/__init__.py \
+  adapters/flowise/models.py \
+  adapters/flowise/importer.py \
+  adapters/flowise/exporter.py \
+  core/execution/__init__.py \
+  core/execution/execution_engine.py \
+  core/execution/adapters/__init__.py \
+  core/execution/adapters/base.py \
+  core/execution/adapters/registry.py \
+  core/execution/adapters/adminbot_adapter.py \
+  core/execution/adapters/openhands_adapter.py \
+  core/execution/adapters/claude_code_adapter.py \
+  core/execution/adapters/codex_adapter.py \
+  services/routing_agent/service.py
 ```
 
 ## Sicherheitskontext
 
 - ABrain besitzt eine gehärtete Core-Schicht über Dispatcher, Registry und getypte Tool-Inputs.
+- Der aktuelle Foundations-Release erweitert diesen Referenzpfad um kanonisches Agentenmodell, Decision Layer, Execution Layer und Learning-System.
 - Der AdminBot-Adapter bleibt strikt read-only im erlaubten Scope.
 - AdminBot bleibt die Sicherheitsgrenze; ABrain baut keine zweite lokale Security Engine.
 

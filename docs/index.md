@@ -1,70 +1,51 @@
 # ABrain Documentation
 
-Welcome to the ABrain documentation. This documentation focuses on the current multi-agent and service stack in this repository, including the hardened core path and its surrounding integration points.
-Current stable version: **v1.0.3**.
+Welcome to the ABrain documentation. This documentation now focuses on the current foundations stack in this repository: canonical agent model, Flowise interop, decision layer, execution layer and learning system around the hardened core path.
+Current foundations release: **v1.1.0**.
 
 ## Overview
 
-ABrain is a multi-agent system that combines large language models (LLMs), task routing and service boundaries to provide a controlled execution framework. The current repository emphasizes:
+ABrain is a multi-agent orchestration system that combines typed tool execution, deterministic policy checks and neural ranking to provide a controlled execution framework. The current repository emphasizes:
 
-- Dynamic agent creation and specialization
-- Neural and rule-based task routing
-- Integrated knowledge management
+- Canonical `AgentDescriptor` modeling
+- Deterministic planning and candidate filtering
+- Always-on `NeuralPolicyModel` ranking
+- Static execution adapters behind a separated execution layer
+- Feedback-driven learning with best-effort training
 - A hardened dispatcher and tool layer
-- Security-focused adapter integration
+- Security-focused adapter integration and interface boundaries
 
 ## Key Features
 
-### Multi-agent System
-- Dynamic agent creation and management
-- Specialized worker agents for different domains
-- Inter-agent communication and collaboration
-- Task routing and delegation
-
-### Neural Intelligence
-- Neural network-based task matching
-- Performance optimization through learning
-- Feature extraction and analysis
-- Adaptive agent selection
-
-### Knowledge Management
-- Integrated vector store
-- Domain-specific knowledge bases
-- Document ingestion and retrieval
-- Semantic search capabilities
-
-### Security & Monitoring
-- Token-based authentication
-- Input validation and filtering
-- Rate limiting and access control
-- Comprehensive logging and monitoring
-
-### Evaluation & Analysis
-- Performance metrics tracking
-- A/B testing framework
-- Cost analysis and optimization
-- System-wide monitoring
+### Foundations Release
+- Canonical agent model in `core/decision/*`
+- Flowise import/export as a thin interoperability layer
+- Planner, `CandidateFilter`, `NeuralPolicyModel` and `RoutingEngine`
+- Execution engine with static adapter registry
+- Learning dataset, reward model, online updater and trainer
+- Hardened core dispatch path via `services/core.py`
 
 ## Getting Started
-For a practical introduction, see the [User Guide](BenutzerHandbuch/index.md).
+For the current developer-facing foundations path, start with [Project Overview](architecture/PROJECT_OVERVIEW.md), [Development Setup](setup/DEVELOPMENT_SETUP.md) and [Foundations Release Notes](releases/RELEASE_NOTES_FOUNDATIONS.md).
 
 
 ## Architecture Overview
 
-The system consists of several key components:
+The current foundations pipeline consists of these key stages:
 
 ```mermaid
 graph TD
-    A[User Request] --> B[Supervisor Agent]
-    B --> C[Neural Router]
-    C --> D[Worker Agents]
-    D --> E[Knowledge Base]
-    D --> F[External APIs]
-    B --> G[Monitoring]
-    B --> H[Evaluation]
+    A[Task] --> B[Planner]
+    B --> C[CandidateFilter]
+    C --> D[NeuralPolicyModel]
+    D --> E[RoutingDecision]
+    E --> F[ExecutionAdapter]
+    F --> G[ExecutionResult]
+    G --> H[Feedback Loop]
+    H --> I[Training Dataset]
 ```
 
-For more details about the current system architecture, see the [Architecture Overview](architecture/overview.md).
+For more details about the current system architecture, see the [Project Overview](architecture/PROJECT_OVERVIEW.md).
 
 ## Contributing
 
@@ -72,4 +53,4 @@ We welcome contributions! Please see our [Contributing Guide](development/contri
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/EcoSphereNetwork/Agent-NN/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License - see the local `LICENSE` file for details.

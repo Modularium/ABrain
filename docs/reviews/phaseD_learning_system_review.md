@@ -48,6 +48,10 @@ This means the system does actively learn during normal executions, not only in 
 - automatic model persistence/loading is still an explicit helper concern
 - no background trainer worker exists yet; training is small and inline
 
+### Release Positioning
+
+The learning system is part of the ABrain foundations release, but not yet a full production ML platform. It improves routing quality incrementally and safely, while leaving security boundaries unchanged and persistence explicit.
+
 ### Best-Effort Safety For Learning
 
 Learning and training are now explicitly best-effort:

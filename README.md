@@ -21,6 +21,8 @@ Der Arbeitsbaum und einige interne Paket-, Deploy- und Repo-Slugs heißen derzei
 
 Der historische `mcp/*`-Stack, `agentnn/mcp/*`-Bridges und die Smolitux-Altpfade sind nicht mehr produktiv. Sie bleiben nur als `legacy (disabled)` im Repository.
 
+Aktueller Foundations-Release-Stand: `v1.1.0`.
+
 ## Wichtige Komponenten
 
 ### Hardened Core
@@ -176,6 +178,8 @@ Syntaxprüfung der gehärteten Module:
 
 Für neue sicherheitsrelevante Integrationen gilt der gehärtete Core als Referenzpfad. Ältere Bereiche und historische Dokumente bleiben im Repository nur dort erhalten, wo sie für Betrieb, Migration oder Rückverfolgbarkeit noch relevant sind; sie sind nicht gleichrangig mit dem Core-/AdminBot-Pfad.
 
+Der aktuelle Release-Scope des neuen Kerns ist bewusst begrenzt: kanonisches Agentenmodell, Flowise-Interop, Decision Layer, Execution Layer und Learning-System sind enthalten; Multi-Agent-Orchestrierung, breite MCP-Expansion und produktionsreife Spezialadapter noch nicht.
+
 ## Wichtige Dokumente
 
 - [Projektüberblick](docs/architecture/PROJECT_OVERVIEW.md)
@@ -183,6 +187,8 @@ Für neue sicherheitsrelevante Integrationen gilt der gehärtete Core als Refere
 - [Agent Model And Flowise Interop](docs/architecture/AGENT_MODEL_AND_FLOWISE_INTEROP.md)
 - [Decision Layer And Neural Policy](docs/architecture/DECISION_LAYER_AND_NEURAL_POLICY.md)
 - [Execution Layer And Agent Creation](docs/architecture/EXECUTION_LAYER_AND_AGENT_CREATION.md)
+- [Foundations Release Scope](docs/releases/FOUNDATIONS_RELEASE_SCOPE.md)
+- [Foundations Release Notes](docs/releases/RELEASE_NOTES_FOUNDATIONS.md)
 - [MCP Architektur](docs/architecture/MCP_V1_SERVER.md)
 - [MCP Usage](docs/mcp/MCP_SERVER_USAGE.md)
 - [Core Refactor](docs/architecture/CORE_REFACTOR.md)
@@ -190,3 +196,4 @@ Für neue sicherheitsrelevante Integrationen gilt der gehärtete Core als Refere
 - [AdminBot Integration Plan](docs/integrations/adminbot/AGENT_NN_ADMINBOT_INTEGRATION_PLAN.md)
 - [AdminBot Security Invariants](docs/integrations/adminbot/SECURITY_INVARIANTS.md)
 - [Rename Plan](docs/reviews/abrain_rename_plan.md)
+- [Rename And Release Audit](docs/reviews/repo_rename_and_release_audit.md)

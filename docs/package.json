@@ -1,5 +1,6 @@
 {
   "name": "agent-nn-docs",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "build": "../node_modules/.bin/docusaurus build ..",

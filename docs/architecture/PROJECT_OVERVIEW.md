@@ -50,6 +50,8 @@ Der Execution Layer fuehrt eine bereits getroffene Routing-Entscheidung aus. Er 
 
 Das Learning-System sammelt strukturierte Trainingsdaten aus realen Executions, berechnet einen deterministischen Reward und trainiert das verpflichtende NeuralPolicyModel schrittweise nach. Es beeinflusst nur das Ranking innerhalb der bereits sicher gefilterten Kandidatenmenge.
 
+Die Lernschicht ist im Runtime-Pfad bewusst best-effort: Learning- oder Trainingsfehler duerfen eine bereits erfolgreiche Execution nicht nachtraeglich scheitern lassen.
+
 ### API / FastAPI
 
 - `server/main.py`
@@ -101,10 +103,11 @@ Stabil und gezielt abgesichert sind aktuell vor allem:
 
 Noch nicht das Ziel dieses Schritts:
 
-- breite Architektur-Neuschreibung
+- Multi-Agent-Orchestrierung
+- breite MCP-Tool-Expansion
+- voll ausgereifte native Spezialadapter
+- fortgeschrittenes kontinuierliches Training oder RL
 - Umbenennung aller internen Paket- und Deploy-Slugs
-- Ausweitung des AdminBot-Scope
-- flächendeckende Modernisierung aller Legacy-Bereiche
 
 ## Bewusst verbleibende historische Identifiers
 

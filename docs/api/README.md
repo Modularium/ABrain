@@ -4,6 +4,8 @@ Die REST-Schnittstellen der ABrain-Services sind in OpenAPI beschrieben. Diese S
 
 Für den gehärteten Integrationspfad sind der laufende OpenAPI-Stand der aktiven FastAPI-Apps sowie die Core-Schicht unter `services/core.py` und `core/*` als `canonical path` maßgeblich.
 
+Der neue Foundations-Stand fuehrt kein zweites API-Produkt ein. Decision Layer, Execution Layer und Learning-System sind derzeit in erster Linie interne Kernbausteine hinter den bestehenden Service- und Interface-Einstiegen.
+
 Deaktivierte historische Pfade wie der fruehere Plugin-Agent-Service sind
 `legacy (disabled)`; zugehoerige Restdoku ist nur `historical / legacy (not
 active runtime path)` und wird nicht mehr als aktuelle OpenAPI-Spezifikation

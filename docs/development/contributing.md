@@ -12,7 +12,7 @@ We want to make contributing to ABrain as easy and transparent as possible, whet
 
 We use GitHub to host code, to track issues and feature requests, as well as accept pull requests.
 
-1. Fork the repo and create your branch from `develop`
+1. Fork the repo and create your branch from `main`
 2. If you've added code that should be tested, add tests
 3. If you've changed APIs, update the documentation
 4. Ensure the test suite passes
@@ -30,9 +30,9 @@ We use GitHub to host code, to track issues and feature requests, as well as acc
 
 In short, when you submit code changes, your submissions are understood to be under the same [MIT License](http://choosealicense.com/licenses/mit/) that covers the project. Feel free to contact the maintainers if that's a concern.
 
-## Report bugs using GitHub's [issue tracker](https://github.com/EcoSphereNetwork/Agent-NN/issues)
+## Report bugs using GitHub's [issue tracker](https://github.com/Modularium/ABrain/issues)
 
-We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/EcoSphereNetwork/Agent-NN/issues/new).
+We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/Modularium/ABrain/issues/new).
 
 ## Write bug reports with detail, background, and sample code
 
@@ -50,7 +50,7 @@ We use GitHub issues to track public bugs. Report a bug by [opening a new issue]
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/EcoSphereNetwork/Agent-NN.git
+git clone https://github.com/Modularium/ABrain.git
 cd Agent-NN
 ```
 
@@ -74,23 +74,23 @@ git checkout -b feature/your-feature-name
 We use several tools to maintain code quality:
 
 - `black` for code formatting
-- `isort` for import sorting
-- `flake8` for style guide enforcement
+- `isort` for import sorting in historical areas
+- `ruff` for current linting
 - `mypy` for type checking
 
 Run the full suite:
 ```bash
 poetry run black .
 poetry run isort .
-poetry run flake8 .
+poetry run ruff check .
 poetry run mypy .
 ```
 
 ## Testing
 
-We use `pytest` for testing. Run the tests:
+We use `pytest` for testing. For the foundations stack, run:
 ```bash
-poetry run pytest
+poetry run pytest tests/decision tests/execution tests/adapters tests/core tests/services
 ```
 
 With coverage:

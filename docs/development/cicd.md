@@ -1,221 +1,94 @@
 # CI/CD Pipeline
 
-This document describes the Continuous Integration and Continuous Deployment (CI/CD) pipeline for ABrain.
+Diese Seite beschreibt den aktuell relevanten CI/CD-Zustand fuer den stabilisierten ABrain-Foundations-Stand.
 
-## Overview
+## Relevante Workflows
 
-Our CI/CD pipeline automates the following processes:
+Produktiv relevant fuer den neuen Kern sind derzeit vor allem:
 
-1. Code Quality Checks
-2. Testing
-3. Building
-4. Deployment
+- `.github/workflows/core-ci.yml`
+- `.github/workflows/adminbot-security-gates.yml`
+- `.github/workflows/docs.yml`
 
-## Pipeline Stages
+Weitere Workflows wie `ci-core.yml`, `ci-full.yml`, `deploy.yml`, `plugin-release.yml` oder `openhands-resolver.yml` bleiben im Repository, sind aber nicht die normative Referenz fuer den Foundations-Release.
 
-### 1. Test Stage
+## Foundations Gates
 
-The test stage runs on every push and pull request:
+Der Foundations-Job prueft auf `push` und `pull_request` gegen `main` mindestens:
 
-```mermaid
-graph TD
-    A[Push/PR] --> B[Install Dependencies]
-    B --> C[Linting]
-    B --> D[Type Checking]
-    B --> E[Unit Tests]
-    C --> F[Upload Coverage]
-    D --> F
-    E --> F
+1. `tests/decision`
+2. `tests/execution`
+3. `tests/adapters`
+4. `tests/core`
+5. `tests/services`
+6. `tests/integration/test_node_export.py`
+7. `py_compile` fuer die neuen bzw. geaenderten Foundations-Dateien
+
+Der AdminBot-Security-Workflow prueft weiterhin gezielt den gehaerteten AdminBot-/Core-Pfad.
+
+## Ziel der Gates
+
+Die CI soll Regressionen im neuen Kern frueh blockieren, ohne daraus eine zweite Architektur oder einen schweren Release-Prozess zu machen. Wichtig ist:
+
+- Decision Layer regressiert nicht still
+- Execution Layer regressiert nicht still
+- Learning-Pfad regressiert nicht still
+- der gehaertete Core bleibt bestehen
+
+## Lokale Reproduktion
+
+Die relevante Foundations-Suite laesst sich lokal mit denselben Gruppen starten:
+
+```bash
+.venv/bin/python -m pytest -o python_files='test_*.py' \
+  tests/decision tests/execution tests/adapters tests/core tests/services \
+  tests/integration/test_node_export.py
 ```
 
-Components:
-- Linting with `flake8`, `black`, and `isort`
-- Type checking with `mypy`
-- Unit tests with `pytest`
-- Coverage reporting with `codecov`
+Die zugehoerige Syntaxpruefung:
 
-### 2. Build Stage
-
-The build stage runs on pushes to main and develop branches:
-
-```mermaid
-graph TD
-    A[Push to main/develop] --> B[Build Package]
-    B --> C[Upload Artifact]
+```bash
+.venv/bin/python -m py_compile \
+  services/core.py \
+  services/routing_agent/service.py \
+  core/decision/__init__.py \
+  core/decision/agent_creation.py \
+  core/decision/agent_descriptor.py \
+  core/decision/agent_registry.py \
+  core/decision/candidate_filter.py \
+  core/decision/capabilities.py \
+  core/decision/feature_encoder.py \
+  core/decision/feedback_loop.py \
+  core/decision/neural_policy.py \
+  core/decision/performance_history.py \
+  core/decision/planner.py \
+  core/decision/routing_engine.py \
+  core/decision/scoring_models.py \
+  core/decision/task_intent.py \
+  core/decision/learning/dataset.py \
+  core/decision/learning/online_updater.py \
+  core/decision/learning/persistence.py \
+  core/decision/learning/reward_model.py \
+  core/decision/learning/trainer.py \
+  core/execution/__init__.py \
+  core/execution/execution_engine.py \
+  core/execution/adapters/__init__.py \
+  core/execution/adapters/base.py \
+  core/execution/adapters/registry.py \
+  core/execution/adapters/adminbot_adapter.py \
+  core/execution/adapters/openhands_adapter.py \
+  core/execution/adapters/claude_code_adapter.py \
+  core/execution/adapters/codex_adapter.py \
+  adapters/flowise/__init__.py \
+  adapters/flowise/models.py \
+  adapters/flowise/importer.py \
+  adapters/flowise/exporter.py \
+  adapters/adminbot/client.py \
+  adapters/adminbot/service.py
 ```
 
-Components:
-- Package building with Poetry
-- Artifact uploading to GitHub Actions
+## Grenzen
 
-### 3. Deployment Stages
-
-#### Staging Deployment
-
-Runs on pushes to the develop branch:
-
-```mermaid
-graph TD
-    A[Push to develop] --> B[Download Artifact]
-    B --> C[Build Docker Image]
-    C --> D[Push to Registry]
-    D --> E[Deploy to Staging]
-```
-
-#### Production Deployment
-
-Runs on pushes to the main branch:
-
-```mermaid
-graph TD
-    A[Push to main] --> B[Download Artifact]
-    B --> C[Build Docker Image]
-    C --> D[Push to Registry]
-    D --> E[Deploy to Production]
-```
-
-## Configuration
-
-### GitHub Actions
-
-The pipeline is configured in `.github/workflows/ci.yml`:
-
-```yaml
-name: CI/CD Pipeline
-
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
-
-jobs:
-  test:
-    # Test job configuration...
-    
-  build:
-    # Build job configuration...
-    
-  deploy-staging:
-    # Staging deployment configuration...
-    
-  deploy-production:
-    # Production deployment configuration...
-```
-
-### Environment Variables
-
-Required secrets in GitHub:
-
-- `DOCKER_USERNAME`: Docker Hub username
-- `DOCKER_PASSWORD`: Docker Hub password
-- `STAGING_SSH_KEY`: SSH key for staging server
-- `PRODUCTION_SSH_KEY`: SSH key for production server
-
-### Docker Configuration
-
-Dockerfile for the application:
-
-```dockerfile
-FROM python:3.10-slim
-
-WORKDIR /app
-
-# Install Poetry
-RUN pip install poetry
-
-# Copy project files
-COPY pyproject.toml poetry.lock ./
-COPY smolit_llm_nn/ ./smolit_llm_nn/
-
-# Install dependencies
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-dev
-
-# Run application
-CMD ["poetry", "run", "python", "-m", "smolit_llm_nn"]
-```
-
-## Monitoring
-
-The pipeline includes several monitoring points:
-
-1. Test Results:
-   - Unit test results
-   - Coverage reports
-   - Linting issues
-
-2. Build Artifacts:
-   - Package versions
-   - Build logs
-   - Docker image tags
-
-3. Deployment Status:
-   - Deployment success/failure
-   - Environment health checks
-   - Service metrics
-
-## Troubleshooting
-
-Common issues and solutions:
-
-1. Failed Tests:
-   - Check test logs in GitHub Actions
-   - Run tests locally: `poetry run pytest`
-   - Verify dependencies are up to date
-
-2. Build Failures:
-   - Check Poetry build logs
-   - Verify package dependencies
-   - Check Docker build context
-
-3. Deployment Issues:
-   - Verify environment variables
-   - Check Docker registry access
-   - Validate deployment configurations
-
-## Best Practices
-
-1. Branch Protection:
-   - Require PR reviews
-   - Enforce status checks
-   - Protect main and develop branches
-
-2. Version Control:
-   - Use semantic versioning
-   - Tag releases
-   - Keep changelog updated
-
-3. Testing:
-   - Write comprehensive tests
-   - Maintain high coverage
-   - Test in isolation
-
-4. Documentation:
-   - Document API changes
-   - Update deployment guides
-   - Keep README current
-
-## Future Improvements
-
-Planned enhancements to the pipeline:
-
-1. Automated Version Bumping:
-   - Implement semantic release
-   - Automate changelog generation
-   - Version tagging
-
-2. Enhanced Testing:
-   - Integration tests
-   - Performance tests
-   - Security scans
-
-3. Deployment Enhancements:
-   - Blue-green deployments
-   - Canary releases
-   - Automated rollbacks
-
-4. Monitoring Improvements:
-   - Enhanced metrics
-   - Automated alerts
-   - Performance tracking
+- Die aktuelle CI trainiert kein groesseres Modell offline.
+- Es gibt noch keinen separaten Hintergrund-Worker fuer Learning.
+- Legacy-Dokumente und historische Workflows koennen weiter im Repo liegen, sind aber fuer Release-Entscheidungen nicht massgeblich.

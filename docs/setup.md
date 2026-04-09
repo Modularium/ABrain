@@ -7,12 +7,12 @@ Dieser Leitfaden beschreibt die Installation des aktuellen ABrain-Stands. Histor
 ## \ud83d\udd27 Schnelles Setup
 ```bash
 # Voraussetzung: Docker, Node.js, Python 3.10+, Poetry
-git clone https://github.com/EcoSphereNetwork/Agent-NN
+git clone https://github.com/Modularium/ABrain.git
 cd Agent-NN
 ./scripts/setup.sh
 ```
 
-Das Skript wurde unter Ubuntu, macOS und Windows/WSL getestet.
+Das Skript wurde unter Ubuntu, macOS und Windows/WSL getestet. Der lokale Ordnername `Agent-NN` kann aus Kompatibilitätsgründen vorerst bestehen bleiben.
 
 ## Vorbereitung
 

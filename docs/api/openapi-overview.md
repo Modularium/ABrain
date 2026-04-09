@@ -1,6 +1,8 @@
 # OpenAPI Overview
 
-Version: v1.0.0-beta
+Status: historical service snapshot, not a foundations release contract.
+
+Der folgende Überblick beschreibt weiter wichtige Service-Routen im Repository, ist aber keine vollständige Spezifikation des neuen Foundations-Releases. Für den aktuellen Kern sind `services/core.py`, die aktiven FastAPI-Apps und die Architektur-Dokumente maßgeblich.
 
 | Method | Path | Description | Tags |
 |-------|------|-------------|------|

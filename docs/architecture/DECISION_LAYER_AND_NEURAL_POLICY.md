@@ -76,14 +76,13 @@ Zusaetzlich nutzt V1:
 
 Das Modell liefert einen Score pro sicheren Kandidaten. Die RoutingEngine sortiert nach diesem Score und waehlt den Top-Kandidaten aus.
 
-## Grenzen dieses Schritts
+## Grenzen des aktuellen Release-Stands
 
 Nicht Teil dieses Schritts:
 
-- Execution Adapter Ansteuerung
-- kontinuierliches Training
+- Multi-Agent-Orchestrierung
 - RL-/Bandit-Strategien
-- weitere Framework-Adapter
+- weitere native Spezialadapter
 - MCP-Erweiterung
 
 ## Legacy-Abgrenzung

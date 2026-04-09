@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented in this file.
 
+## v1.1.0 - 2026-04-10 Foundations Release
+
+### Included
+- canonical agent model with `AgentDescriptor`, `Capability` and `AgentRegistry`
+- Flowise import/export interoperability layer as a non-runtime UI bridge
+- decision layer with `Planner`, `CandidateFilter`, always-on `NeuralPolicyModel` and `RoutingEngine`
+- execution layer with static adapter registry, `ExecutionEngine`, agent creation and feedback loop
+- learning system with dataset, reward model, online updater, trainer and explicit persistence helpers
+- best-effort learning path so post-execution training failures do not break successful `run_task(...)` results
+- updated release, architecture and setup documentation for the new ABrain foundations stack
+- CI gates for `tests/decision`, `tests/execution`, `tests/adapters`, `tests/core`, `tests/services` and `py_compile`
+
+### Not Included
+- multi-agent orchestration
+- broad MCP tool expansion
+- advanced RL or continuous background training
+- production-grade native adapters for all external systems
+
+### Naming And Identity
+- visible product identity is now consistently documented as `ABrain`
+- technical slugs such as `agentnn` and `agent-nn` remain where changing them would risk packaging or deployment regressions
+
 ## v1.0.0 - 2025-07-21 🚀 **Full-Stack Release**
 
 ### 🎉 Major Features
