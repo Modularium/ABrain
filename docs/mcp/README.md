@@ -16,4 +16,4 @@ ABrain stellt einen neuen MCP-v1-Server unter `interfaces/mcp_v1/*` bereit. Dies
 
 - [MCP V1 Architektur](MCP_V1_SERVER.md)
 - [MCP Server Usage](MCP_SERVER_USAGE.md)
-- [Claude Desktop Beispielkonfiguration](claude_desktop_config.json)
+- [VS Code MCP Beispielkonfiguration](vscode_mcp_config.json)

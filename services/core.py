@@ -5,14 +5,10 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Dict
 
-from agentnn.deployment.agent_registry import AgentRegistry
 from core.execution import ExecutionDispatcher
 from core.models import RequesterIdentity, RequesterType, ToolExecutionRequest
 from core.model_context import ModelContext
 from core.tools import build_default_registry
-from managers.agent_optimizer import AgentOptimizer
-from managers.model_manager import ModelManager
-from sdk.client import AgentClient
 
 __all__ = [
     "create_agent",
@@ -32,6 +28,8 @@ DEFAULT_REQUESTER = RequesterIdentity(
 
 def _build_dispatcher() -> ExecutionDispatcher:
     """Create the fixed execution dispatcher used by service helpers."""
+    from sdk.client import AgentClient
+
     return ExecutionDispatcher(build_default_registry(client_factory=AgentClient))
 
 
@@ -59,6 +57,8 @@ def create_agent(
     config: Dict[str, Any], endpoint: str = "http://localhost:8090"
 ) -> Dict[str, Any]:
     """Register ``config`` with the MCP agent registry."""
+    from agentnn.deployment.agent_registry import AgentRegistry
+
     registry = AgentRegistry(endpoint)
     return registry.deploy(config)
 
@@ -89,6 +89,8 @@ def list_agents() -> Dict[str, Any]:
 
 def evaluate_agent(agent_id: str) -> Dict[str, Any]:
     """Return evaluation metrics for ``agent_id``."""
+    from managers.agent_optimizer import AgentOptimizer
+
     optimizer = AgentOptimizer()
     return asyncio.run(optimizer.evaluate_agent(agent_id))
 
@@ -101,6 +103,8 @@ def load_model(
     version: str | None = None,
 ) -> Dict[str, Any]:
     """Load a model using :class:`ModelManager`."""
+    from managers.model_manager import ModelManager
+
     manager = ModelManager()
     return asyncio.run(manager.load_model(name, type, source, config, version))
 

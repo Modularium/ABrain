@@ -33,6 +33,13 @@ flowchart LR
 - keine versteckten Parameter
 - Tool-Ausführung ausschließlich über `services.core.execute_tool(...)`
 
+## Betriebsform in V1
+
+- primärer lokaler Transport: stdio
+- primärer Client-Setup: VS Code MCP mit explizitem Venv-Pfad
+- empfohlener Startpfad: installierter Console-Script-Entry `abrain-mcp`
+- Python-Modulstart nur mit explizitem Interpreter und installiertem Projekt
+
 ## V1 Scope
 
 - `list_agents`

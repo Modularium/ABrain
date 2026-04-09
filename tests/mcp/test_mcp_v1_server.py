@@ -2,6 +2,7 @@ import ast
 import io
 import json
 from pathlib import Path
+import tomllib
 
 import pytest
 
@@ -188,3 +189,10 @@ def test_cli_wrapper_calls_stdio_server(monkeypatch):
     abrain_mcp.main()
 
     assert called["ok"] is True
+
+
+def test_pyproject_exposes_stable_mcp_console_entry():
+    pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
+
+    assert pyproject["project"]["scripts"]["abrain-mcp"] == "interfaces.mcp_v1.server:main"
+    assert pyproject["tool"]["poetry"]["scripts"]["abrain-mcp"] == "interfaces.mcp_v1.server:main"

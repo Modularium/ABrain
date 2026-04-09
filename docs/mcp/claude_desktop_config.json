@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "abrain": {
-      "command": "python",
-      "args": ["-m", "interfaces.mcp_v1.server"]
-    }
-  }
-}

@@ -33,9 +33,13 @@ authors = ["OpenHands <openhands@all-hands.dev>"]
 license = "MIT"
 readme = "README.md"
 packages = [
+  { include = "adapters" },
   { include = "agentnn" },
+  { include = "core" },
+  { include = "managers" },
   { include = "sdk" },
   { include = "mcp" },
+  { include = "services" },
   { include = "interfaces" },
   { include = "scripts" }
 ]
@@ -81,12 +85,12 @@ black = "*"
 sdk = []
 
 [project.scripts]
-abrain-mcp = "scripts.abrain_mcp:main"
+abrain-mcp = "interfaces.mcp_v1.server:main"
 
 [tool.poetry.scripts]
 agentnn = "sdk.cli.main:app"
 mcp_cli = "mcp.cli:app"
-abrain-mcp = "scripts.abrain_mcp:main"
+abrain-mcp = "interfaces.mcp_v1.server:main"
 
 [build-system]
 requires = ["poetry-core>=1.7.0"]

@@ -19,24 +19,101 @@ Der ABrain MCP v1 Server exponiert genau vier feste Tools für lokale MCP-Client
 - mutierende AdminBot-Operationen
 - historische MCP-/Plugin-Proxies
 
-## Lokaler Start
+## Primärer Einsatz: VS Code MCP
 
-Direkt aus dem Repo:
+Der primäre lokale V1-Pfad ist VS Code MCP über stdio mit einem expliziten Interpreter oder dem installierten CLI-Entry.
 
-```bash
-cd /home/dev/Agent-NN
-.venv/bin/python -m interfaces.mcp_v1.server
-```
-
-Über den CLI-Wrapper:
+Konfigurationsdatei unter Ubuntu 24:
 
 ```bash
-abrain-mcp
+~/.config/Code/User/mcp.json
 ```
 
-## Claude Desktop
+Beispielkonfiguration mit stabilem CLI-Pfad:
 
-Die Beispielkonfiguration liegt in [claude_desktop_config.json](claude_desktop_config.json).
+```json
+{
+  "servers": {
+    "abrain": {
+      "type": "stdio",
+      "command": "/home/dev/Agent-NN/.venv/bin/abrain-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+Alternative mit explizitem Python-Interpreter:
+
+```json
+{
+  "servers": {
+    "abrain": {
+      "type": "stdio",
+      "command": "/home/dev/Agent-NN/.venv/bin/python",
+      "args": ["-m", "interfaces.mcp_v1.server"]
+    }
+  }
+}
+```
+
+Wichtig:
+
+- Beide Varianten sollen mit einem expliziten Venv-Pfad arbeiten.
+- Die Modulvariante ist außerhalb des Repo-CWD nur stabil, wenn das Projekt in genau dieser `.venv` installiert wurde.
+- Der CLI-Pfad ist für VS Code robuster, weil er nicht vom aktuellen Arbeitsverzeichnis abhängt.
+
+## Installation des CLI-Entry
+
+Für den empfohlenen Startpfad muss das Projekt in die Ziel-`venv` installiert sein:
+
+```bash
+/home/dev/Agent-NN/.venv/bin/python -m pip install -e /home/dev/Agent-NN --no-deps
+```
+
+Danach steht der Entry bereit unter:
+
+```bash
+/home/dev/Agent-NN/.venv/bin/abrain-mcp
+```
+
+Wenn du Poetry statt `pip` nutzt, installiere das Projekt nicht mit `--no-root`, sondern als echtes Paket, damit der Console-Script-Entry erzeugt wird.
+
+Der installierte CLI-Entry zeigt direkt auf `interfaces.mcp_v1.server:main` und verwendet damit keinen separaten Proxy- oder Wrapper-Pfad.
+
+## Manueller lokaler Start
+
+Empfohlen:
+
+```bash
+/home/dev/Agent-NN/.venv/bin/abrain-mcp
+```
+
+Alternative:
+
+```bash
+/home/dev/Agent-NN/.venv/bin/python -m interfaces.mcp_v1.server
+```
+
+## VS Code Ablauf
+
+1. `mcp.json` unter `~/.config/Code/User/mcp.json` anlegen oder anpassen.
+2. Den empfohlenen `abrain-mcp`-Pfad oder den Python-Fallback mit absolutem Interpreter eintragen.
+3. VS Code vollständig neu starten.
+4. In der MCP-Ansicht prüfen, ob die vier ABrain-Tools sichtbar sind.
+5. Bei Fehlern die Server-Logs in der VS-Code-Extension prüfen.
+
+## Debug-Hinweise
+
+- `No module named interfaces`: Das Projekt ist nicht in der gewählten `.venv` installiert oder VS Code startet mit einem anderen Interpreter.
+- `command not found` für `abrain-mcp`: Die editable Installation wurde in einer anderen `.venv` ausgeführt.
+- Falscher Code-Stand wird geladen: ein globales `PYTHONPATH` zeigt auf einen anderen Checkout und übersteuert das installierte Paket.
+- Keine Tools sichtbar: VS Code nach Änderungen an `mcp.json` komplett neu starten.
+- Server startet, Tool-Calls scheitern: den Core separat mit den Standard-Pytests verifizieren.
+
+## Claude Desktop als sekundäre Option
+
+Claude Desktop kann denselben stdio-Server ebenfalls starten, ist in dieser Phase aber nur ein sekundärer lokaler Client. Verwende dort ebenfalls bevorzugt den absoluten CLI-Pfad `/home/dev/Agent-NN/.venv/bin/abrain-mcp`.
 
 Typische manuelle Konfigurationsorte:
 
@@ -51,9 +128,6 @@ Nach dem Eintragen:
 1. Claude Desktop komplett neu starten.
 2. Den ABrain-MCP-Server in der Konfiguration aktiv lassen.
 3. Nach dem Neustart prüfen, ob die vier Tools im MCP-UI sichtbar sind.
-
-Hinweis:
-Anthropic empfiehlt aktuell für lokale MCP-Server zunehmend Desktop Extensions. Die hier hinterlegte JSON-Konfiguration ist für den manuellen lokalen Dev-Start gedacht.
 
 ## Security-Hinweise
 
