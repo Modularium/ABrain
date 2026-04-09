@@ -18,7 +18,8 @@ class DummyRegistry:
 
 class DummyClient:
     def dispatch_task(self, ctx):
-        return {"task": ctx.task_context.description}
+        description = ctx.task_context.description
+        return {"task": getattr(description, "text", description)}
 
 
 class DummyOptimizer:
@@ -35,51 +36,67 @@ class DummyArgs:
     pass
 
 
-sys.modules.setdefault(
-    "sdk.client", types.SimpleNamespace(AgentClient=lambda: DummyClient())
-)
-sys.modules.setdefault(
-    "agentnn.deployment.agent_registry",
-    types.SimpleNamespace(AgentRegistry=DummyRegistry),
-)
-sys.modules.setdefault(
-    "managers.agent_optimizer",
-    types.SimpleNamespace(AgentOptimizer=lambda: DummyOptimizer()),
-)
-sys.modules.setdefault(
-    "managers.model_manager",
-    types.SimpleNamespace(ModelManager=lambda: DummyModelManager()),
-)
-sys.modules.setdefault("training.train", types.SimpleNamespace(train=lambda x: 1))
-sys.modules.setdefault(
-    "core.model_context", types.SimpleNamespace(ModelContext=SimpleNamespace)
-)
+@pytest.fixture
+def core(monkeypatch):
+    monkeypatch.setitem(
+        sys.modules,
+        "sdk.client",
+        types.SimpleNamespace(AgentClient=lambda: DummyClient()),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "agentnn.deployment.agent_registry",
+        types.SimpleNamespace(AgentRegistry=DummyRegistry),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "managers.agent_optimizer",
+        types.SimpleNamespace(AgentOptimizer=lambda: DummyOptimizer()),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "managers.model_manager",
+        types.SimpleNamespace(ModelManager=lambda: DummyModelManager()),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "training.train",
+        types.SimpleNamespace(train=lambda x: 1),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "core.model_context",
+        types.SimpleNamespace(
+            ModelContext=SimpleNamespace,
+            TaskContext=SimpleNamespace,
+        ),
+    )
+    sys.modules.pop("services.core", None)
+    return importlib.import_module("services.core")
 
-core = importlib.import_module("services.core")
 
-
-def test_create_agent():
+def test_create_agent(core):
     result = core.create_agent({"id": "demo"}, endpoint="http://x")
     assert result == {"ok": "demo", "endpoint": "http://x"}
 
 
-def test_dispatch_task():
+def test_dispatch_task(core):
     ctx = SimpleNamespace(task_context=SimpleNamespace(description="hi", task_type="chat"))
     result = core.dispatch_task(ctx)
     assert result["task"] == "hi"
 
 
-def test_evaluate_agent():
+def test_evaluate_agent(core):
     result = core.evaluate_agent("a1")
     assert result["aid"] == "a1"
 
 
-def test_load_model():
+def test_load_model(core):
     result = core.load_model("m", "t", "s", {})
     assert result["name"] == "m"
 
 
-def test_train_model(monkeypatch):
+def test_train_model(core, monkeypatch):
     called = {}
 
     def dummy(args):

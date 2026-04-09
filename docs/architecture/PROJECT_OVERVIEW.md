@@ -18,6 +18,38 @@ Diese Schicht ist der bevorzugte Einstieg für kontrollierte Tool-Ausführung. S
 
 Der canonical runtime stack liegt in `services/*`. Die Kurzbegründung und die verworfenen Alternativen stehen in [CANONICAL_RUNTIME_STACK.md](./CANONICAL_RUNTIME_STACK.md).
 
+### Canonical Agent Model
+
+- `core/decision/*`
+- `services/agent_registry/*` als Migrationskante
+- `adapters/flowise/*` als Interop-Schicht
+
+ABrain fuehrt nun ein eigenes kanonisches `AgentDescriptor`-Modell. Dieses Format ist die interne Wahrheit fuer spaeteres Routing, Planning und Bewertung. Flowise wird davon explizit getrennt als externer Interop- und UI-Layer behandelt. Die Details stehen in [AGENT_MODEL_AND_FLOWISE_INTEROP.md](./AGENT_MODEL_AND_FLOWISE_INTEROP.md).
+
+### Decision Layer
+
+- `core/decision/planner.py`
+- `core/decision/candidate_filter.py`
+- `core/decision/neural_policy.py`
+- `core/decision/routing_engine.py`
+
+Der kanonische Decision Layer trennt nun Planner, deterministische Kandidatenfilterung und verpflichtendes NeuralPolicyModel explizit. Das NN ist immer aktiv, ersetzt aber nicht die harte Sicherheitsgrenze. Es rankt nur bereits sicher gefilterte Kandidaten. Die Zielarchitektur steht in [DECISION_LAYER_AND_NEURAL_POLICY.md](./DECISION_LAYER_AND_NEURAL_POLICY.md).
+
+### Execution Layer
+
+- `core/execution/adapters/*`
+- `core/execution/execution_engine.py`
+- `core/decision/agent_creation.py`
+- `core/decision/feedback_loop.py`
+
+Der Execution Layer fuehrt eine bereits getroffene Routing-Entscheidung aus. Er kapselt statische Adapter fuer AdminBot, OpenHands, Codex und Claude Code, ohne selbst neue Decision-Logik einzufuehren. Agent Creation und Feedback Loop liegen explizit neben dem Routing und bleiben vom gehärteten Core getrennt. Details stehen in [EXECUTION_LAYER_AND_AGENT_CREATION.md](./EXECUTION_LAYER_AND_AGENT_CREATION.md).
+
+### Learning System
+
+- `core/decision/learning/*`
+
+Das Learning-System sammelt strukturierte Trainingsdaten aus realen Executions, berechnet einen deterministischen Reward und trainiert das verpflichtende NeuralPolicyModel schrittweise nach. Es beeinflusst nur das Ranking innerhalb der bereits sicher gefilterten Kandidatenmenge.
+
 ### API / FastAPI
 
 - `server/main.py`
