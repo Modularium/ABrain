@@ -104,7 +104,9 @@ class AgentCreationEngine:
         if intent.domain == "system":
             return AgentSourceType.ADMINBOT, AgentExecutionKind.SYSTEM_EXECUTOR
         if intent.domain == "workflow":
-            return AgentSourceType.FLOWISE, AgentExecutionKind.WORKFLOW_ENGINE
+            if self._prefer_flowise_workflow(intent):
+                return AgentSourceType.FLOWISE, AgentExecutionKind.WORKFLOW_ENGINE
+            return AgentSourceType.N8N, AgentExecutionKind.WORKFLOW_ENGINE
         if intent.domain == "code":
             if self._prefer_openhands(intent):
                 return AgentSourceType.OPENHANDS, AgentExecutionKind.HTTP_SERVICE
@@ -131,11 +133,18 @@ class AgentCreationEngine:
         return AgentLatencyProfile.INTERACTIVE
 
     def _infer_domain(self, task_type: str) -> str:
-        if task_type.startswith("system") or task_type.startswith("service"):
+        normalized = task_type.lower()
+        if normalized.startswith("system") or normalized.startswith("service"):
             return "system"
-        if task_type.startswith("workflow"):
+        if (
+            normalized.startswith("workflow")
+            or normalized in {"backend_automation", "visual_agent_editable", "tool_orchestration_ui"}
+            or "automation" in normalized
+            or "orchestration" in normalized
+            or "visual_agent" in normalized
+        ):
             return "workflow"
-        if task_type.startswith("code"):
+        if normalized.startswith("code"):
             return "code"
         return "analysis"
 
@@ -172,4 +181,13 @@ class AgentCreationEngine:
             or complexity in {"high", "complex"}
             or hints.get("large_repo")
             or hints.get("high_capability_required")
+        )
+
+    def _prefer_flowise_workflow(self, intent: TaskIntent) -> bool:
+        hints = intent.execution_hints
+        return bool(
+            intent.task_type in {"visual_agent_editable", "tool_orchestration_ui"}
+            or hints.get("visual_editable")
+            or hints.get("editable_in_ui")
+            or hints.get("tool_orchestration")
         )

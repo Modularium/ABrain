@@ -42,7 +42,7 @@ Der kanonische Decision Layer trennt nun Planner, deterministische Kandidatenfil
 - `core/decision/agent_creation.py`
 - `core/decision/feedback_loop.py`
 
-Der Execution Layer fuehrt eine bereits getroffene Routing-Entscheidung aus. Er kapselt statische Adapter fuer AdminBot, OpenHands, Codex und Claude Code, ohne selbst neue Decision-Logik einzufuehren. OpenHands wird in F1 als self-hosted HTTP-Service angesprochen; Claude Code und Codex werden in F1 als kontrollierte headless CLI-Adapter behandelt. Agent Creation und Feedback Loop liegen explizit neben dem Routing und bleiben vom gehärteten Core getrennt. Details stehen in [EXECUTION_LAYER_AND_AGENT_CREATION.md](./EXECUTION_LAYER_AND_AGENT_CREATION.md) und [NATIVE_DEV_AGENT_ADAPTERS.md](./NATIVE_DEV_AGENT_ADAPTERS.md).
+Der Execution Layer fuehrt eine bereits getroffene Routing-Entscheidung aus. Er kapselt statische Adapter fuer AdminBot, OpenHands, Codex, Claude Code, n8n und Flowise, ohne selbst neue Decision-Logik einzufuehren. OpenHands wird in F1 als self-hosted HTTP-Service angesprochen; Claude Code und Codex werden in F1 als kontrollierte headless CLI-Adapter behandelt. n8n kommt in F2 als kontrollierter Workflow-Executor hinzu; Flowise bleibt primaer Interop-Layer und wird nur zusaetzlich als kleiner Workflow-Execution-Adapter genutzt. Agent Creation und Feedback Loop liegen explizit neben dem Routing und bleiben vom gehärteten Core getrennt. Details stehen in [EXECUTION_LAYER_AND_AGENT_CREATION.md](./EXECUTION_LAYER_AND_AGENT_CREATION.md), [NATIVE_DEV_AGENT_ADAPTERS.md](./NATIVE_DEV_AGENT_ADAPTERS.md) und [WORKFLOW_ADAPTER_LAYER.md](./WORKFLOW_ADAPTER_LAYER.md).
 
 ### Learning System
 
@@ -60,6 +60,15 @@ Die Lernschicht ist im Runtime-Pfad bewusst best-effort: Learning- oder Training
 - `interfaces/mcp_v1/`
 
 Das Repo enthält mehrere API-basierte Einstiegspunkte und Bridges. Produktiv maßgeblich bleiben die gehärtete Core-Schicht und die `services/*`-Runtime. Der aktive MCP-Einstieg liegt in `interfaces/mcp_v1/` und bleibt eine dünne Protokollschicht vor dem gehärteten Core. Historische MCP- und Smolitux-Bridges sind `legacy (disabled)` und keine gleichrangigen Runtime-Pfade.
+
+### Workflow Interop und historische Integrationen
+
+- `adapters/flowise/*`
+- `integrations/n8n-agentnn/*`
+- `integrations/flowise-agentnn/*`
+- `integrations/flowise-nodes/*`
+
+Der kanonische F2-Pfad fuer Workflow-Ausfuehrung liegt im Execution Layer unter `core/execution/adapters/*`. Aeltere n8n- und Flowise-Integrationsartefakte unter `integrations/*` bleiben hoechstens `historical / legacy (not active runtime path)`, solange sie nicht explizit auf den neuen Foundations-Stack modernisiert wurden.
 
 ### AdminBot-Adapter
 
