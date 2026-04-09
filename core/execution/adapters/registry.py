@@ -17,8 +17,11 @@ class ExecutionAdapterRegistry:
     def __init__(self) -> None:
         self._adapters: dict[tuple[str, str], BaseExecutionAdapter] = {
             (AgentExecutionKind.SYSTEM_EXECUTOR.value, AgentSourceType.ADMINBOT.value): AdminBotExecutionAdapter(),
+            (AgentExecutionKind.HTTP_SERVICE.value, AgentSourceType.OPENHANDS.value): OpenHandsExecutionAdapter(),
             (AgentExecutionKind.LOCAL_PROCESS.value, AgentSourceType.OPENHANDS.value): OpenHandsExecutionAdapter(),
+            (AgentExecutionKind.LOCAL_PROCESS.value, AgentSourceType.CLAUDE_CODE.value): ClaudeCodeExecutionAdapter(),
             (AgentExecutionKind.CLOUD_AGENT.value, AgentSourceType.CLAUDE_CODE.value): ClaudeCodeExecutionAdapter(),
+            (AgentExecutionKind.LOCAL_PROCESS.value, AgentSourceType.CODEX.value): CodexExecutionAdapter(),
             (AgentExecutionKind.CLOUD_AGENT.value, AgentSourceType.CODEX.value): CodexExecutionAdapter(),
         }
 

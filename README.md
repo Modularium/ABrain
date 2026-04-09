@@ -15,6 +15,7 @@ Der Arbeitsbaum und einige interne Paket-, Deploy- und Repo-Slugs heißen derzei
 - kanonischer Decision Layer mit Planner, Candidate Filtering und verpflichtendem NeuralPolicyModel
 - trainierbares Learning-System fuer das NeuralPolicyModel in `core/decision/learning/*`
 - getrennter Execution Layer mit statischen Adaptern, Agent Creation und Feedback Loop
+- native Dev-/Code-Agent-Adapter fuer OpenHands, Codex und Claude Code im Execution Layer
 - sicherer, read-only AdminBot-v2-Adapter in `adapters/adminbot/*`
 - MCP-v1-Interface-Schicht in `interfaces/mcp_v1/*`
 - Flowise-Interop-Layer in `adapters/flowise/*`
@@ -65,6 +66,9 @@ Der Flowise-Pfad ist bewusst nur ein Import-/Export- und UI-Layer. Er ist weder 
 - `core/decision/agent_creation.py`
 - `core/decision/feedback_loop.py`
 - `docs/architecture/EXECUTION_LAYER_AND_AGENT_CREATION.md`
+- `docs/architecture/NATIVE_DEV_AGENT_ADAPTERS.md`
+
+OpenHands, Codex und Claude Code werden dabei nur als kontrollierte `ExecutionAdapter` eingebunden. Sie sind nicht Teil der internen Wahrheit und ersetzen weder Decision Layer noch gehärteten Core.
 
 ### Learning System
 
@@ -187,6 +191,7 @@ Der aktuelle Release-Scope des neuen Kerns ist bewusst begrenzt: kanonisches Age
 - [Agent Model And Flowise Interop](docs/architecture/AGENT_MODEL_AND_FLOWISE_INTEROP.md)
 - [Decision Layer And Neural Policy](docs/architecture/DECISION_LAYER_AND_NEURAL_POLICY.md)
 - [Execution Layer And Agent Creation](docs/architecture/EXECUTION_LAYER_AND_AGENT_CREATION.md)
+- [Native Dev Agent Adapters](docs/architecture/NATIVE_DEV_AGENT_ADAPTERS.md)
 - [Foundations Release Scope](docs/releases/FOUNDATIONS_RELEASE_SCOPE.md)
 - [Foundations Release Notes](docs/releases/RELEASE_NOTES_FOUNDATIONS.md)
 - [MCP Architektur](docs/architecture/MCP_V1_SERVER.md)

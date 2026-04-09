@@ -31,8 +31,8 @@ Jeder externe Agent wird ueber einen expliziten `ExecutionAdapter` angesprochen.
 ## Unterstuetzte Adapter-Typen in V1
 
 - `system_executor`: AdminBot ueber den gehärteten Core
-- `local_process`: OpenHands
-- `cloud_agent`: Codex oder Claude Code
+- `http_service`: OpenHands als self-hosted Dev-Agent
+- `local_process`: Codex oder Claude Code im headless CLI-Modus
 - `workflow_engine`: noch kein V1-Executor, nur als Zieltyp fuer spaetere Erweiterung modelliert
 
 ## Agent Creation
@@ -42,7 +42,7 @@ Wenn kein existierender Agent gut genug ist, kann ABrain einen neuen `AgentDescr
 Heuristik in V1:
 
 - `system` -> AdminBot / `system_executor`
-- `code` -> OpenHands / `local_process`
+- `code` -> OpenHands / `http_service`, Claude Code / `local_process` oder Codex / `local_process`
 - `workflow` -> Flowise / `workflow_engine`
 - bevorzugte Source Types koennen ueber Execution Hints eingeengt werden
 

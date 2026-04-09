@@ -42,7 +42,7 @@ Der kanonische Decision Layer trennt nun Planner, deterministische Kandidatenfil
 - `core/decision/agent_creation.py`
 - `core/decision/feedback_loop.py`
 
-Der Execution Layer fuehrt eine bereits getroffene Routing-Entscheidung aus. Er kapselt statische Adapter fuer AdminBot, OpenHands, Codex und Claude Code, ohne selbst neue Decision-Logik einzufuehren. Agent Creation und Feedback Loop liegen explizit neben dem Routing und bleiben vom gehärteten Core getrennt. Details stehen in [EXECUTION_LAYER_AND_AGENT_CREATION.md](./EXECUTION_LAYER_AND_AGENT_CREATION.md).
+Der Execution Layer fuehrt eine bereits getroffene Routing-Entscheidung aus. Er kapselt statische Adapter fuer AdminBot, OpenHands, Codex und Claude Code, ohne selbst neue Decision-Logik einzufuehren. OpenHands wird in F1 als self-hosted HTTP-Service angesprochen; Claude Code und Codex werden in F1 als kontrollierte headless CLI-Adapter behandelt. Agent Creation und Feedback Loop liegen explizit neben dem Routing und bleiben vom gehärteten Core getrennt. Details stehen in [EXECUTION_LAYER_AND_AGENT_CREATION.md](./EXECUTION_LAYER_AND_AGENT_CREATION.md) und [NATIVE_DEV_AGENT_ADAPTERS.md](./NATIVE_DEV_AGENT_ADAPTERS.md).
 
 ### Learning System
 

@@ -22,6 +22,7 @@ class ExecutionResult(BaseModel):
     output: Any | None = None
     raw_output: Any | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
+    warnings: list[str] = Field(default_factory=list)
     error: StructuredError | None = None
     duration_ms: int | None = None
     cost: float | None = None

@@ -17,7 +17,7 @@ def test_agent_creation_creates_code_agent_and_registers_it():
     )
 
     assert descriptor.source_type.value == "openhands"
-    assert descriptor.execution_kind.value == "local_process"
+    assert descriptor.execution_kind.value == "http_service"
     assert registry.get(descriptor.agent_id) is not None
 
 
