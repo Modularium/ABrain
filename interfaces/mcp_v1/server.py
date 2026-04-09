@@ -12,9 +12,9 @@ from uuid import uuid4
 from pydantic import ValidationError
 
 from core.models import (
-    AdminBotGetHealthInput,
-    AdminBotGetServiceStatusInput,
-    AdminBotGetStatusInput,
+    AdminBotServiceStatusInput,
+    AdminBotSystemHealthInput,
+    AdminBotSystemStatusInput,
     CoreExecutionError,
     ListAgentsToolInput,
     RequesterIdentity,
@@ -51,18 +51,18 @@ EXPOSED_TOOLS: dict[str, ExposedTool] = {
     ),
     "adminbot_system_status": ExposedTool(
         name="adminbot_system_status",
-        description="Get AdminBot summary or daemon status.",
-        input_model=AdminBotGetStatusInput,
+        description="Get system-level status from AdminBot v2.",
+        input_model=AdminBotSystemStatusInput,
     ),
     "adminbot_system_health": ExposedTool(
         name="adminbot_system_health",
-        description="Get AdminBot health status.",
-        input_model=AdminBotGetHealthInput,
+        description="Get system-level health from AdminBot v2.",
+        input_model=AdminBotSystemHealthInput,
     ),
     "adminbot_service_status": ExposedTool(
         name="adminbot_service_status",
-        description="Get validated service status from AdminBot.",
-        input_model=AdminBotGetServiceStatusInput,
+        description="Get validated service status from AdminBot v2.",
+        input_model=AdminBotServiceStatusInput,
     ),
 }
 

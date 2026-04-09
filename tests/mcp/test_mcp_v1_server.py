@@ -118,14 +118,14 @@ def test_adminbot_tool_call_is_forwarded_to_core_execute_tool():
             "method": "tools/call",
             "params": {
                 "name": "adminbot_system_status",
-                "arguments": {"target": "summary"},
+                "arguments": {},
             },
         }
     )
 
     assert response["result"]["isError"] is False
     assert calls[0][0] == "adminbot_system_status"
-    assert calls[0][1] == {"target": "summary"}
+    assert calls[0][1] == {}
     assert calls[0][2]["correlation_id"] == "mcp-v1:5"
     assert calls[0][2]["requested_by"].id == "mcp-v1:pytest-client"
 
