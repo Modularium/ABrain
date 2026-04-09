@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-reviews/red_team_review_abrain_adminbot" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.8.1">
+<title data-rh="true">Red-Team Review: ABrain Core / AdminBot | ABrain Documentation</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://ecospheretwork.github.io/Agent-NN/reviews/red_team_review_abrain_adminbot"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Red-Team Review: ABrain Core / AdminBot | ABrain Documentation"><meta data-rh="true" name="description" content="Datum: 2026-04-07"><meta data-rh="true" property="og:description" content="Datum: 2026-04-07"><link data-rh="true" rel="icon" href="/Agent-NN/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://ecospheretwork.github.io/Agent-NN/reviews/red_team_review_abrain_adminbot"><link data-rh="true" rel="alternate" href="https://ecospheretwork.github.io/Agent-NN/reviews/red_team_review_abrain_adminbot" hreflang="en"><link data-rh="true" rel="alternate" href="https://ecospheretwork.github.io/Agent-NN/reviews/red_team_review_abrain_adminbot" hreflang="x-default"><link rel="stylesheet" href="/Agent-NN/assets/css/styles.49a6e941.css">
+<script src="/Agent-NN/assets/js/runtime~main.dd2bba0e.js" defer="defer"></script>
+<script src="/Agent-NN/assets/js/main.2826a9a7.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t="light";var e=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",e||t),document.documentElement.setAttribute("data-theme-choice",e||t)}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><a class="navbar__brand" href="/Agent-NN/"></a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><main class="docMainContainer_TBSr docMainContainerEnhanced_lQrH"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>Red-Team Review: ABrain Core / AdminBot</h1></header>
+<p>Datum: 2026-04-07</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="scope">Scope<a href="#scope" class="hash-link" aria-label="Direct link to Scope" title="Direct link to Scope">​</a></h2>
+<p>Gezielt geprueft wurden:</p>
+<ul>
+<li><code>services/core.py</code></li>
+<li><code>core/execution/dispatcher.py</code></li>
+<li><code>core/tools/*</code></li>
+<li><code>core/models/*</code></li>
+<li><code>adapters/adminbot/*</code></li>
+<li>angrenzende Nebenpfade unter <code>agentnn/mcp/*</code> und <code>mcp/plugin_agent_service/*</code></li>
+<li>zentrale Integrations- und Sicherheitsdoku</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="attack-surface-mapping">Attack Surface Mapping<a href="#attack-surface-mapping" class="hash-link" aria-label="Direct link to Attack Surface Mapping" title="Direct link to Attack Surface Mapping">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="canonical-path">Canonical path<a href="#canonical-path" class="hash-link" aria-label="Direct link to Canonical path" title="Direct link to Canonical path">​</a></h3>
+<ul>
+<li><code>services/core.py:38</code></li>
+<li><code>core/execution/dispatcher.py:36</code></li>
+<li><code>core/tools/handlers.py:81</code></li>
+<li><code>core/tools/handlers.py:105</code></li>
+<li><code>adapters/adminbot/service.py:31</code></li>
+<li><code>adapters/adminbot/client.py:99</code></li>
+</ul>
+<p>Eigenschaft:
+Fester Tool-Einstieg mit typisierten Inputs, fester Registry, hartem Unknown-Tool-Reject und exakt verdrahtetem AdminBot-Mapping.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="legacy-disabled-path">Legacy (disabled) path<a href="#legacy-disabled-path" class="hash-link" aria-label="Direct link to Legacy (disabled) path" title="Direct link to Legacy (disabled) path">​</a></h3>
+<ul>
+<li><code>agentnn/mcp/mcp_server.py:97</code></li>
+<li><code>agentnn/mcp/mcp_gateway.py:28</code></li>
+<li><code>mcp/plugin_agent_service/api.py:16</code></li>
+<li><code>mcp/plugin_agent_service/service.py:24</code></li>
+</ul>
+<p>Eigenschaft:
+Historischer generischer Tool-/Plugin-Pfad ausserhalb des <code>canonical path</code>, jetzt <code>legacy (disabled)</code>.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="externally-reachable-path">Externally reachable path<a href="#externally-reachable-path" class="hash-link" aria-label="Direct link to Externally reachable path" title="Direct link to Externally reachable path">​</a></h3>
+<ul>
+<li><code>agentnn/mcp/mcp_server.py:97</code></li>
+<li><code>agentnn/mcp/mcp_gateway.py:28</code></li>
+<li><code>mcp/plugin_agent_service/api.py:16</code></li>
+</ul>
+<p>Eigenschaft:
+HTTP-Routen, die vor dem Fix als generische Tool-Proxies oder Plugin-Execution-Flächen missbrauchbar gewesen waeren.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="locally-callable-path">Locally callable path<a href="#locally-callable-path" class="hash-link" aria-label="Direct link to Locally callable path" title="Direct link to Locally callable path">​</a></h3>
+<ul>
+<li><code>services/core.py:38</code></li>
+<li><code>mcp/plugin_agent_service/service.py:24</code></li>
+</ul>
+<p>Eigenschaft:
+Direkte Python-Callsites. Der kanonische Pfad bleibt erlaubt; der Legacy-Pfad wurde deaktiviert.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="findings">Findings<a href="#findings" class="hash-link" aria-label="Direct link to Findings" title="Direct link to Findings">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="high--legacy-generic-tool-proxy-bypassed-the-hardened-core">HIGH — Legacy generic tool proxy bypassed the hardened core<a href="#high--legacy-generic-tool-proxy-bypassed-the-hardened-core" class="hash-link" aria-label="Direct link to HIGH — Legacy generic tool proxy bypassed the hardened core" title="Direct link to HIGH — Legacy generic tool proxy bypassed the hardened core">​</a></h3>
+<ul>
+<li>Kategorie: Dispatcher / Registry Bypass, Legacy Path Abuse, Trust Boundary Drift</li>
+<li>Betroffener Pfad:<!-- -->
+<ul>
+<li><code>agentnn/mcp/mcp_server.py:97</code></li>
+<li><code>agentnn/mcp/mcp_gateway.py:28</code></li>
+<li><code>mcp/plugin_agent_service/api.py:16</code></li>
+<li><code>mcp/plugin_agent_service/service.py:24</code></li>
+</ul>
+</li>
+<li>Reproduktion / Prüfweg:<!-- -->
+<ol>
+<li><code>agentnn/mcp/mcp_server.py</code> nahm beliebige Nutzlasten auf <code>/v1/mcp/tool/use</code> an.</li>
+<li>Der Pfad leitete an <code>plugin_agent_service:/execute_tool</code> weiter.</li>
+<li><code>mcp/plugin_agent_service/service.py</code> fuehrte dynamisch geladene Plugins fuer beliebige <code>tool_name</code>- und Input-Werte aus.</li>
+<li>Die Doku bewarb diesen Pfad zusaetzlich mit Beispielen fuer <code>filesystem</code>-Nutzung.</li>
+</ol>
+</li>
+<li>Sicherheitsauswirkung:
+Der feste Dispatcher-/Registry-Pfad konnte umgangen werden. Damit existierte parallel zur gehärteten Tool-Oberfläche wieder ein generischer Tool-Proxy mit freier Payload.</li>
+<li>Minimalfix:<!-- -->
+<ul>
+<li><code>agentnn/mcp/mcp_server.py:97</code> liefert jetzt <code>410 Gone</code></li>
+<li><code>agentnn/mcp/mcp_gateway.py:28</code> liefert jetzt ebenfalls <code>410 Gone</code></li>
+<li><code>mcp/plugin_agent_service/api.py:16</code> liefert <code>410 Gone</code></li>
+<li><code>mcp/plugin_agent_service/service.py:24</code> fuehrt keine Plugins mehr aus und gibt nur noch einen strukturierten Disable-Fehler zurueck</li>
+</ul>
+</li>
+<li>Status:
+Sofort gefixt</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="low--historical--legacy-not-active-runtime-path-openapi-artifact-still-described-the-removed-route">LOW — Historical / legacy (not active runtime path) OpenAPI artifact still described the removed route<a href="#low--historical--legacy-not-active-runtime-path-openapi-artifact-still-described-the-removed-route" class="hash-link" aria-label="Direct link to LOW — Historical / legacy (not active runtime path) OpenAPI artifact still described the removed route" title="Direct link to LOW — Historical / legacy (not active runtime path) OpenAPI artifact still described the removed route">​</a></h3>
+<ul>
+<li>Kategorie: Docs-vs-Implementation Security Mismatch</li>
+<li>Betroffener Pfad:<!-- -->
+<ul>
+<li><code>docs/api/openapi/plugin_agent_service.json</code></li>
+<li><code>docs/api/_openapi_index.md:11</code></li>
+</ul>
+</li>
+<li>Reproduktion / Prüfweg:
+Die statische OpenAPI-Datei beschreibt weiterhin <code>/execute_tool</code>, obwohl der Runtime-Pfad jetzt deaktiviert ist.</li>
+<li>Sicherheitsauswirkung:
+Kein direkter Runtime-Impact, aber moegliche Fehlsteuerung fuer Integratoren, die nur das generierte JSON lesen.</li>
+<li>Minimalfix:
+Der zentrale Index wurde als <code>historical / legacy (not active runtime path)</code> markiert (<code>docs/api/_openapi_index.md:11</code>).</li>
+<li>Status:
+Follow-up sinnvoll, aber nicht blocker</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="no-finding--not-confirmed">No Finding / Not Confirmed<a href="#no-finding--not-confirmed" class="hash-link" aria-label="Direct link to No Finding / Not Confirmed" title="Direct link to No Finding / Not Confirmed">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="action-injection-into-adminbot">Action injection into AdminBot<a href="#action-injection-into-adminbot" class="hash-link" aria-label="Direct link to Action injection into AdminBot" title="Direct link to Action injection into AdminBot">​</a></h3>
+<p>Nicht bestaetigt.</p>
+<ul>
+<li><code>core/models/adminbot.py:18</code></li>
+<li><code>core/models/adminbot.py:34</code></li>
+<li><code>adapters/adminbot/service.py:31</code></li>
+<li><code>adapters/adminbot/service.py:57</code></li>
+<li><code>tests/adapters/test_adminbot_tools.py:145</code></li>
+</ul>
+<p>Begruendung:
+Keine freie <code>action</code>-Uebergabe aus Tool-Payloads. Extra-Felder werden verworfen, und die drei AdminBot-Aktionen sind exakt fest verdrahtet.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="input-contract-bypass">Input contract bypass<a href="#input-contract-bypass" class="hash-link" aria-label="Direct link to Input contract bypass" title="Direct link to Input contract bypass">​</a></h3>
+<p>Nicht bestaetigt.</p>
+<ul>
+<li><code>core/models/tooling.py:52</code></li>
+<li><code>core/models/adminbot.py:21</code></li>
+<li><code>core/models/adminbot.py:37</code></li>
+<li><code>core/models/adminbot.py:42</code></li>
+<li><code>core/execution/dispatcher.py:51</code></li>
+</ul>
+<p>Begruendung:
+<code>extra=&quot;forbid&quot;</code> ist auf Request- und AdminBot-Input-Modellen gesetzt. Problematische <code>service_name</code>-Zeichen werden abgewiesen.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="identity-spoofing-against-adminbot">Identity spoofing against AdminBot<a href="#identity-spoofing-against-adminbot" class="hash-link" aria-label="Direct link to Identity spoofing against AdminBot" title="Direct link to Identity spoofing against AdminBot">​</a></h3>
+<p>Nicht bestaetigt.</p>
+<ul>
+<li><code>adapters/adminbot/service.py:81</code></li>
+<li><code>adapters/adminbot/service.py:84</code></li>
+<li><code>adapters/adminbot/service.py:89</code></li>
+<li><code>core/models/adminbot.py:57</code></li>
+<li><code>tests/adapters/test_adminbot_tools.py:59</code></li>
+</ul>
+<p>Begruendung:
+<code>requested_by</code> wird fuer AdminBot immer neu als <code>type=&quot;agent&quot;</code> plus feste Adapter-ID gebaut. Aus dem Tool-Request werden nur <code>run_id</code> und <code>correlation_id</code> uebernommen.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="error-semantics-corruption-on-the-canonical-adminbot-path">Error semantics corruption on the canonical AdminBot path<a href="#error-semantics-corruption-on-the-canonical-adminbot-path" class="hash-link" aria-label="Direct link to Error semantics corruption on the canonical AdminBot path" title="Direct link to Error semantics corruption on the canonical AdminBot path">​</a></h3>
+<p>Nicht bestaetigt.</p>
+<ul>
+<li><code>adapters/adminbot/client.py:154</code></li>
+<li><code>adapters/adminbot/client.py:158</code></li>
+<li><code>adapters/adminbot/client.py:160</code></li>
+<li><code>adapters/adminbot/client.py:161</code></li>
+<li><code>adapters/adminbot/client.py:162</code></li>
+<li><code>core/execution/dispatcher.py:67</code></li>
+<li><code>tests/adapters/test_adminbot_client.py:37</code></li>
+</ul>
+<p>Begruendung:
+Strukturierte AdminBot-Fehler behalten <code>error_code</code>, <code>message</code>, <code>details</code>, <code>audit_ref</code> und <code>warnings</code>. Nur Transport- und Protokollfehler werden lokal auf Adapter-Fehlercodes gemappt.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="dispatcher--registry-bypass-on-the-canonical-path">Dispatcher / registry bypass on the canonical path<a href="#dispatcher--registry-bypass-on-the-canonical-path" class="hash-link" aria-label="Direct link to Dispatcher / registry bypass on the canonical path" title="Direct link to Dispatcher / registry bypass on the canonical path">​</a></h3>
+<p>Nicht bestaetigt.</p>
+<ul>
+<li><code>services/core.py:38</code></li>
+<li><code>core/execution/dispatcher.py:38</code></li>
+<li><code>core/execution/dispatcher.py:51</code></li>
+<li><code>core/tools/handlers.py:105</code></li>
+</ul>
+<p>Begruendung:
+Der gehärtete Core nutzt nur die feste Registry. Unbekannte Tools werden hart abgelehnt, es gibt keine Default-Route.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="tests-and-repros">Tests and Repros<a href="#tests-and-repros" class="hash-link" aria-label="Direct link to Tests and Repros" title="Direct link to Tests and Repros">​</a></h2>
+<p>Ausgefuehrt:</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">.venv/bin/python -m pytest -o python_files=&#x27;test_*.py&#x27; \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  tests/adapters \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  tests/core \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  tests/services \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  tests/integration/test_node_export.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  tests/integration/test_mcp_server.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  tests/integration/test_mcp_gateway.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  tests/test_plugin_agent_service.py</span><br></span></code></pre></div></div>
+<p>Ergebnis:</p>
+<ul>
+<li><code>30 passed</code></li>
+<li><code>4 skipped</code></li>
+</ul>
+<p>Zusaetzlich:</p>
+<div class="language-bash codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#bfc7d5;--prism-background-color:#292d3e"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar" style="color:#bfc7d5;background-color:#292d3e"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#bfc7d5"><span class="token plain">.venv/bin/python -m py_compile \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  services/core.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  core/execution/dispatcher.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  core/tools/__init__.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  core/tools/registry.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  core/tools/handlers.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  core/models/tooling.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  core/models/identity.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  core/models/errors.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  core/models/adminbot.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  adapters/adminbot/client.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  adapters/adminbot/service.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  mcp/plugin_agent_service/service.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  mcp/plugin_agent_service/api.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  agentnn/mcp/mcp_server.py \</span><br></span><span class="token-line" style="color:#bfc7d5"><span class="token plain">  agentnn/mcp/mcp_gateway.py</span><br></span></code></pre></div></div>
+<p>Ergebnis:</p>
+<ul>
+<li>erfolgreich</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="final-assessment">Final Assessment<a href="#final-assessment" class="hash-link" aria-label="Direct link to Final Assessment" title="Direct link to Final Assessment">​</a></h2>
+<ul>
+<li>CRITICAL: 0</li>
+<li>HIGH: 1</li>
+<li>MEDIUM: 0</li>
+<li>LOW: 1</li>
+</ul>
+<p>Urteil:</p>
+<p>Der gehärtete Core und der AdminBot-Adapter sind im aktuellen Sicherheitsmodell konsistent. Der einzige bestaetigte ernste Befund war ein paralleler generischer Tool-Pfad ausserhalb des <code>canonical path</code>. Dieser ist jetzt explizit als <code>legacy (disabled)</code> behandelt. AdminBot bleibt weiterhin die Sicherheitsgrenze; ABrain trifft auf dem kanonischen Adapter-Pfad keine eigenen Policy-Entscheidungen.</p></div></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#scope" class="table-of-contents__link toc-highlight">Scope</a></li><li><a href="#attack-surface-mapping" class="table-of-contents__link toc-highlight">Attack Surface Mapping</a><ul><li><a href="#canonical-path" class="table-of-contents__link toc-highlight">Canonical path</a></li><li><a href="#legacy-disabled-path" class="table-of-contents__link toc-highlight">Legacy (disabled) path</a></li><li><a href="#externally-reachable-path" class="table-of-contents__link toc-highlight">Externally reachable path</a></li><li><a href="#locally-callable-path" class="table-of-contents__link toc-highlight">Locally callable path</a></li></ul></li><li><a href="#findings" class="table-of-contents__link toc-highlight">Findings</a><ul><li><a href="#high--legacy-generic-tool-proxy-bypassed-the-hardened-core" class="table-of-contents__link toc-highlight">HIGH — Legacy generic tool proxy bypassed the hardened core</a></li><li><a href="#low--historical--legacy-not-active-runtime-path-openapi-artifact-still-described-the-removed-route" class="table-of-contents__link toc-highlight">LOW — Historical / legacy (not active runtime path) OpenAPI artifact still described the removed route</a></li></ul></li><li><a href="#no-finding--not-confirmed" class="table-of-contents__link toc-highlight">No Finding / Not Confirmed</a><ul><li><a href="#action-injection-into-adminbot" class="table-of-contents__link toc-highlight">Action injection into AdminBot</a></li><li><a href="#input-contract-bypass" class="table-of-contents__link toc-highlight">Input contract bypass</a></li><li><a href="#identity-spoofing-against-adminbot" class="table-of-contents__link toc-highlight">Identity spoofing against AdminBot</a></li><li><a href="#error-semantics-corruption-on-the-canonical-adminbot-path" class="table-of-contents__link toc-highlight">Error semantics corruption on the canonical AdminBot path</a></li><li><a href="#dispatcher--registry-bypass-on-the-canonical-path" class="table-of-contents__link toc-highlight">Dispatcher / registry bypass on the canonical path</a></li></ul></li><li><a href="#tests-and-repros" class="table-of-contents__link toc-highlight">Tests and Repros</a></li><li><a href="#final-assessment" class="table-of-contents__link toc-highlight">Final Assessment</a></li></ul></div></div></div></div></main></div></div></div></div>
+</body>
+</html>
