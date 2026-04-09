@@ -6,11 +6,13 @@ from dataclasses import dataclass
 
 from .client import AdminBotClient, AdminBotClientConfig
 from core.models.adminbot import (
-    AdminBotGetHealthInput,
-    AdminBotGetServiceStatusInput,
-    AdminBotGetStatusInput,
+    AdminBotAction,
     AdminBotRequestEnvelope,
     AdminBotRequestedBy,
+    AdminBotServiceStatusInput,
+    AdminBotSystemHealthInput,
+    AdminBotSystemStatusInput,
+    AdminBotToolName,
 )
 from core.models.tooling import ToolExecutionRequest
 
@@ -28,44 +30,46 @@ class AdminBotService:
         """Build the service from static adapter config."""
         return cls(client=AdminBotClient(config or AdminBotClientConfig()))
 
-    def get_status(
+    def system_status(
         self,
         tool_request: ToolExecutionRequest,
-        payload: AdminBotGetStatusInput,
+        payload: AdminBotSystemStatusInput,
     ) -> dict[str, object]:
-        """Map ``adminbot_get_status`` to ``get_status``."""
+        """Map ``adminbot_system_status`` to ``system.status``."""
         envelope = self._build_envelope(
-            action="get_status",
+            action="system.status",
+            tool_name="adminbot_system_status",
             tool_request=tool_request,
-            payload={"target": payload.target.value},
+            params={},
         )
         return self.client.send_request(envelope)
 
-    def get_health(
+    def system_health(
         self,
         tool_request: ToolExecutionRequest,
-        payload: AdminBotGetHealthInput,
+        payload: AdminBotSystemHealthInput,
     ) -> dict[str, object]:
-        """Map ``adminbot_get_health`` to ``get_health``."""
+        """Map ``adminbot_system_health`` to ``system.health``."""
         envelope = self._build_envelope(
-            action="get_health",
+            action="system.health",
+            tool_name="adminbot_system_health",
             tool_request=tool_request,
-            payload={"include_checks": payload.include_checks},
+            params={},
         )
         return self.client.send_request(envelope)
 
-    def get_service_status(
+    def service_status(
         self,
         tool_request: ToolExecutionRequest,
-        payload: AdminBotGetServiceStatusInput,
+        payload: AdminBotServiceStatusInput,
     ) -> dict[str, object]:
-        """Map ``adminbot_get_service_status`` to ``get_service_status``."""
+        """Map ``adminbot_service_status`` to ``service.status``."""
         envelope = self._build_envelope(
-            action="get_service_status",
+            action="service.status",
+            tool_name="adminbot_service_status",
             tool_request=tool_request,
-            payload={
+            params={
                 "service_name": payload.service_name,
-                "allow_nonsystem": payload.allow_nonsystem,
             },
         )
         return self.client.send_request(envelope)
@@ -73,19 +77,22 @@ class AdminBotService:
     def _build_envelope(
         self,
         *,
-        action: str,
+        action: AdminBotAction,
+        tool_name: AdminBotToolName,
         tool_request: ToolExecutionRequest,
-        payload: dict[str, object],
+        params: dict[str, object],
     ) -> AdminBotRequestEnvelope:
         """Build the strict AdminBot request envelope."""
         return AdminBotRequestEnvelope(
             version=1,
-            action=action,
+            tool_name=tool_name,
             requested_by=AdminBotRequestedBy(
                 type="agent",
                 id=self.client.config.adapter_id,
             ),
-            payload=payload,
-            run_id=tool_request.run_id,
+            agent_run_id=tool_request.run_id,
             correlation_id=tool_request.correlation_id,
+            action=action,
+            params=params,
+            timeout_ms=max(1, int(self.client.config.timeout_seconds * 1000)),
         )

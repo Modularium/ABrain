@@ -11,14 +11,14 @@ except Exception:  # pragma: no cover - optional deps
 from .audit_log import AuditLog, AuditEntry
 from .execution import ExecutionDispatcher, maybe_await, run_sync
 from .models import (
+    AdminBotAction,
     AdminBotErrorPayload,
-    AdminBotGetHealthInput,
-    AdminBotGetServiceStatusInput,
-    AdminBotGetStatusInput,
     AdminBotRequestEnvelope,
     AdminBotRequestedBy,
-    AdminBotStatusTarget,
+    AdminBotServiceStatusInput,
     AdminBotSuccessPayload,
+    AdminBotSystemHealthInput,
+    AdminBotSystemStatusInput,
     CoreErrorCode,
     CoreExecutionError,
     DispatchTaskToolInput,
@@ -38,14 +38,14 @@ except Exception:  # pragma: no cover - optional heavy legacy deps
     AgentRuntime = None
 
 __all__ = [
+    "AdminBotAction",
     "AdminBotErrorPayload",
-    "AdminBotGetHealthInput",
-    "AdminBotGetServiceStatusInput",
-    "AdminBotGetStatusInput",
     "AdminBotRequestEnvelope",
     "AdminBotRequestedBy",
-    "AdminBotStatusTarget",
+    "AdminBotServiceStatusInput",
     "AdminBotSuccessPayload",
+    "AdminBotSystemHealthInput",
+    "AdminBotSystemStatusInput",
     "AgentRuntime",
     "AuditLog",
     "AuditEntry",

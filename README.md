@@ -1,16 +1,19 @@
 # ABrain
 
-ABrain ist der aktuelle Projektname für den gehärteten Multi-Agent- und Service-Stack in diesem Repository. Der sicherheitsrelevante Schwerpunkt des aktuellen Stands liegt auf einer kleinen Core-Schicht mit festem Dispatcher-/Registry-System und einem dünnen, strikt typisierten AdminBot-Adapter.
+ABrain ist der aktuelle Projektname für den gehärteten Multi-Agent- und Service-Stack in diesem Repository. Der sicherheitsrelevante Schwerpunkt des aktuellen Stands liegt auf einer kleinen Core-Schicht mit festem Dispatcher-/Registry-System und einem dünnen, strikt typisierten AdminBot-v2-Adapter. AdminBot wird dabei als spezialisierter Executor-Provider unter mehreren behandelt, nicht als Leitarchitektur des Repos.
 
 Der Arbeitsbaum und einige interne Paket-, Deploy- und Repo-Slugs heißen derzeit noch `Agent-NN`, `agentnn` oder `agent-nn`. Diese technischen Identifiers bleiben in diesem Schritt bewusst erhalten, um keine Import-, Publish- oder Deployment-Regressionen auszulösen.
 
 ## Aktueller Fokus
 
+- canonical runtime stack: `services/*`
 - gehärtete Tool-Ausführung über `services/core.py`
 - feste Tool-Registry in `core/tools/registry.py`
 - kontrollierter Dispatcher in `core/execution/dispatcher.py`
 - getypte Tool- und Identity-Modelle in `core/models/*`
-- sicherer, read-only AdminBot-Adapter in `adapters/adminbot/*`
+- sicherer, read-only AdminBot-v2-Adapter in `adapters/adminbot/*`
+
+Der historische `mcp/*`-Stack, `agentnn/mcp/*`-Bridges und die Smolitux-Altpfade sind nicht mehr produktiv. Sie bleiben nur als `legacy (disabled)` im Repository.
 
 ## Wichtige Komponenten
 
@@ -43,7 +46,7 @@ Der Arbeitsbaum und einige interne Paket-, Deploy- und Repo-Slugs heißen derzei
 ### Minimaler Prüfpfad für den gehärteten Stand
 
 ```bash
-cd /home/dev/Agent-NN
+cd <repo-root>
 python3 -m venv .venv
 . .venv/bin/activate
 pip install --upgrade pip
@@ -60,7 +63,7 @@ python -m pytest -o python_files='test_*.py' \
 ### Breitere lokale Entwicklungsumgebung
 
 ```bash
-cd /home/dev/Agent-NN
+cd <repo-root>
 python3 -m venv .venv
 . .venv/bin/activate
 pip install --upgrade pip
@@ -76,7 +79,7 @@ poetry install --no-root
 ### Frontend lokal starten
 
 ```bash
-cd /home/dev/Agent-NN/frontend/agent-ui
+cd <repo-root>/frontend/agent-ui
 npm install
 npm run dev
 ```
@@ -120,7 +123,7 @@ Syntaxprüfung der gehärteten Module:
 ## Sicherheitshinweise
 
 - ABrain führt AdminBot nicht generisch fern.
-- Der AdminBot-Adapter bietet nur feste, typisierte read-only Tools.
+- Der AdminBot-v2-Adapter bietet nur feste, typisierte read-only Tools.
 - AdminBot bleibt die Sicherheitsgrenze.
 - Der gehärtete Core darf nicht durch direkte Legacy-Aufrufe umgangen werden.
 
@@ -131,6 +134,7 @@ Für neue sicherheitsrelevante Integrationen gilt der gehärtete Core als Refere
 ## Wichtige Dokumente
 
 - [Projektüberblick](docs/architecture/PROJECT_OVERVIEW.md)
+- [Canonical Runtime Stack](docs/architecture/CANONICAL_RUNTIME_STACK.md)
 - [Core Refactor](docs/architecture/CORE_REFACTOR.md)
 - [Development Setup](docs/setup/DEVELOPMENT_SETUP.md)
 - [AdminBot Integration Plan](docs/integrations/adminbot/AGENT_NN_ADMINBOT_INTEGRATION_PLAN.md)

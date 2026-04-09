@@ -9,11 +9,11 @@ Diese Bedingungen dürfen durch spätere Änderungen am AdminBot-Adapter nicht v
    `id = agentnn-adminbot-adapter`
 4. Aus `ToolExecutionRequest` werden nur `run_id` und `correlation_id` in den AdminBot-Request übernommen.
 5. Im erlaubten Default-Scope existieren nur diese read-only Tools:
-   `adminbot_get_status`
-   `adminbot_get_health`
-   `adminbot_get_service_status`
-6. `adminbot_restart_service` ist nicht registriert.
-7. `adminbot_tail_audit`, `adminbot_validate_policy` und `adminbot_run_gate` sind ebenfalls nicht registriert.
+   `adminbot_system_status`
+   `adminbot_system_health`
+   `adminbot_service_status`
+6. `adminbot_service_restart` ist nicht registriert.
+7. `adminbot_resource_snapshot`, `adminbot_journal_query` und `adminbot_process_snapshot` sind in dieser Phase ebenfalls nicht registriert.
 8. Strukturierte AdminBot-Fehler behalten `error_code`, `message`, optionale `details`, optionales `audit_ref` und optionale `warnings`.
 9. Lokal gemappt werden nur reine Transport- oder Protokollfehler:
    `ADMINBOT_UNAVAILABLE`

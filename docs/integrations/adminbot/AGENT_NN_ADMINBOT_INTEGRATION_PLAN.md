@@ -1,8 +1,10 @@
-# AGENT_NN_ADMINBOT_INTEGRATION_PLAN
+# ABRAIN_ADMINBOT_INTEGRATION_PLAN
 
 ## Ziel
 
-AdminBot wird als externe Sicherheitsgrenze behandelt. ABrain integriert nur einen dünnen, typisierten Adapter für feste Leseoperationen.
+AdminBot v2 wird als externe Sicherheitsgrenze behandelt. ABrain integriert nur einen dünnen, typisierten Adapter für feste Leseoperationen.
+
+ABrain bleibt universeller Orchestrator und Decision Layer. AdminBot ist in diesem Modell nur ein spezialisierter lokaler Executor-Provider unter mehreren.
 
 ## Platzierung im Repo
 
@@ -24,6 +26,20 @@ Der einzige erlaubte Pfad ist:
 4. Exakter Handler in `core/tools/handlers.py`
 5. Feste Action-Zuordnung in `adapters/adminbot/service.py`
 6. Lokaler Unix-Socket-IPC in `adapters/adminbot/client.py`
+
+## AdminBot-v2-Vertrag
+
+- Socket-Pfad: `/run/adminbot/adminbot.sock`
+- Framing: `u32` Length Prefix in Big-Endian plus JSON-Payload
+- produktiv freigegebene Actions in dieser Phase:
+  - `system.status`
+  - `system.health`
+  - `service.status`
+- bewusst noch nicht freigegeben:
+  - `resource.snapshot`
+  - `journal.query`
+  - `process.snapshot`
+  - `service.restart`
 
 ## Warum kein generischer Proxy
 

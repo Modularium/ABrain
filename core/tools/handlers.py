@@ -8,9 +8,9 @@ from typing import Any, Callable
 
 from adapters.adminbot.service import AdminBotService
 from core.models.adminbot import (
-    AdminBotGetHealthInput,
-    AdminBotGetServiceStatusInput,
-    AdminBotGetStatusInput,
+    AdminBotServiceStatusInput,
+    AdminBotSystemHealthInput,
+    AdminBotSystemStatusInput,
 )
 from core.models.tooling import (
     DispatchTaskToolInput,
@@ -78,28 +78,28 @@ def list_agents_tool(
     return factory().list_agents()
 
 
-def handle_adminbot_get_status(
+def handle_adminbot_system_status(
     tool_request: ToolExecutionRequest,
-    payload: AdminBotGetStatusInput,
+    payload: AdminBotSystemStatusInput,
 ):
-    """Handle ``adminbot_get_status``."""
-    return _adminbot_service.get_status(tool_request, payload)
+    """Handle ``adminbot_system_status``."""
+    return _adminbot_service.system_status(tool_request, payload)
 
 
-def handle_adminbot_get_health(
+def handle_adminbot_system_health(
     tool_request: ToolExecutionRequest,
-    payload: AdminBotGetHealthInput,
+    payload: AdminBotSystemHealthInput,
 ):
-    """Handle ``adminbot_get_health``."""
-    return _adminbot_service.get_health(tool_request, payload)
+    """Handle ``adminbot_system_health``."""
+    return _adminbot_service.system_health(tool_request, payload)
 
 
-def handle_adminbot_get_service_status(
+def handle_adminbot_service_status(
     tool_request: ToolExecutionRequest,
-    payload: AdminBotGetServiceStatusInput,
+    payload: AdminBotServiceStatusInput,
 ):
-    """Handle ``adminbot_get_service_status``."""
-    return _adminbot_service.get_service_status(tool_request, payload)
+    """Handle ``adminbot_service_status``."""
+    return _adminbot_service.service_status(tool_request, payload)
 
 
 def build_default_registry(
@@ -129,22 +129,22 @@ def build_default_registry(
                 ),
             ),
             ToolDefinition(
-                name="adminbot_get_status",
-                description="Get AdminBot summary or daemon status.",
-                input_model=AdminBotGetStatusInput,
-                handler=handle_adminbot_get_status,
+                name="adminbot_system_status",
+                description="Get system-level status from AdminBot v2.",
+                input_model=AdminBotSystemStatusInput,
+                handler=handle_adminbot_system_status,
             ),
             ToolDefinition(
-                name="adminbot_get_health",
-                description="Get AdminBot health status.",
-                input_model=AdminBotGetHealthInput,
-                handler=handle_adminbot_get_health,
+                name="adminbot_system_health",
+                description="Get system-level health from AdminBot v2.",
+                input_model=AdminBotSystemHealthInput,
+                handler=handle_adminbot_system_health,
             ),
             ToolDefinition(
-                name="adminbot_get_service_status",
-                description="Get validated service status from AdminBot.",
-                input_model=AdminBotGetServiceStatusInput,
-                handler=handle_adminbot_get_service_status,
+                name="adminbot_service_status",
+                description="Get validated service status from AdminBot v2.",
+                input_model=AdminBotServiceStatusInput,
+                handler=handle_adminbot_service_status,
             ),
         ],
         frozen=True,

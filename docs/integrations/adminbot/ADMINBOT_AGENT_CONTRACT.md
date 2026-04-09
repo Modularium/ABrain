@@ -2,31 +2,41 @@
 
 ## Grundsatz
 
-Dieser Adapter ist ausschließlich für Agent-Nutzung ausgelegt.
+Dieser Adapter ist ausschließlich für Agent-Nutzung ausgelegt und spricht das AdminBot-v2-IPC-Protokoll.
 
 - `requested_by.type` gegenüber AdminBot ist immer `agent`
 - keine Human-Session-Vererbung
 - keine lokale Operator-Identität als Fallback
 - keine eigene Autorisierung oder Policy-Entscheidung in ABrain
+- Socket-Pfad: `/run/adminbot/adminbot.sock`
+- Framing: `u32` Length Prefix in Big-Endian plus JSON
+- Request-Felder: `version`, `request_id`, optional `correlation_id`, `requested_by`, `tool_name`, optional `agent_run_id`, `action`, `params`, `dry_run`, `timeout_ms`
 
 ## Erlaubte Inputs
 
-### `adminbot_get_status`
+### `adminbot_system_status`
 
-- `target`: optional
-- erlaubt: `daemon`, `summary`
-- Default: `summary`
+- kein Tool-Payload-Feld
+- `params` ist leer
+- keine freien Filter oder Targets
 
-### `adminbot_get_health`
+### `adminbot_system_health`
 
-- `include_checks`: optional `bool`
-- Default: `true`
+- kein Tool-Payload-Feld
+- `params` ist leer
+- keine freien Check-Parameter
 
-### `adminbot_get_service_status`
+### `adminbot_service_status`
 
 - `service_name`: Pflichtfeld
-- `allow_nonsystem`: optional `bool`, Default `false`
+- `service_name` liegt unter `params.service_name`
 - `service_name` ist zeichenbasiert validiert und nicht frei erweiterbar
+
+## Feste Action-Mappings
+
+- `adminbot_system_status` -> `system.status`
+- `adminbot_system_health` -> `system.health`
+- `adminbot_service_status` -> `service.status`
 
 ## Nicht erlaubt
 
@@ -37,13 +47,16 @@ Dieser Adapter ist ausschließlich für Agent-Nutzung ausgelegt.
 
 ## Fehlervertrag
 
-AdminBot-Fehler werden semantisch nicht verschleiert:
+AdminBot-v2-Antworten enthalten mindestens `request_id` und `status`.
 
-- `error_code`
+Fehlerantworten enthalten unter `error` mindestens:
+
+- `code`
 - `message`
 - optionale `details`
-- optional `audit_ref`
-- optionale `warnings`
+- optional `retryable`
+
+ABrain hebt diese Fehler als `CoreExecutionError` an und übernimmt `code`, `message` und `details` semantisch direkt. `request_id`, `status` und `retryable` bleiben in `details` erhalten.
 
 Nur reine Transport-/Protokollfehler werden lokal übersetzt:
 

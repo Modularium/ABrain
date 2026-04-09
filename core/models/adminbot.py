@@ -1,43 +1,39 @@
-"""Typed models for the AdminBot adapter surface."""
+"""Typed models for the AdminBot v2 adapter surface."""
 
 from __future__ import annotations
 
-from enum import Enum
 from typing import Any, Literal
+from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class AdminBotStatusTarget(str, Enum):
-    """Allowed targets for status lookups."""
-
-    DAEMON = "daemon"
-    SUMMARY = "summary"
-
-
-class AdminBotGetStatusInput(BaseModel):
-    """Input model for ``adminbot_get_status``."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    target: AdminBotStatusTarget = AdminBotStatusTarget.SUMMARY
+AdminBotAction = Literal["system.status", "system.health", "service.status"]
+AdminBotToolName = Literal[
+    "adminbot_system_status",
+    "adminbot_system_health",
+    "adminbot_service_status",
+]
 
 
-class AdminBotGetHealthInput(BaseModel):
-    """Input model for ``adminbot_get_health``."""
+class AdminBotSystemStatusInput(BaseModel):
+    """Input model for ``adminbot_system_status``."""
 
     model_config = ConfigDict(extra="forbid")
 
-    include_checks: bool = True
+
+class AdminBotSystemHealthInput(BaseModel):
+    """Input model for ``adminbot_system_health``."""
+
+    model_config = ConfigDict(extra="forbid")
 
 
-class AdminBotGetServiceStatusInput(BaseModel):
-    """Input model for ``adminbot_get_service_status``."""
+class AdminBotServiceStatusInput(BaseModel):
+    """Input model for ``adminbot_service_status``."""
 
     model_config = ConfigDict(extra="forbid")
 
     service_name: str = Field(..., min_length=1, max_length=128)
-    allow_nonsystem: bool = False
 
     @field_validator("service_name")
     @classmethod
@@ -69,31 +65,50 @@ class AdminBotRequestEnvelope(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     version: Literal[1] = 1
-    action: Literal["get_status", "get_health", "get_service_status"]
-    requested_by: AdminBotRequestedBy
-    payload: dict[str, Any]
-    run_id: str | None = None
+    request_id: str = Field(default_factory=lambda: str(uuid4()), min_length=1)
     correlation_id: str | None = None
+    requested_by: AdminBotRequestedBy
+    tool_name: AdminBotToolName
+    agent_run_id: str | None = None
+    action: AdminBotAction
+    params: dict[str, Any]
+    dry_run: Literal[False] = False
+    timeout_ms: int = Field(default=5000, ge=1)
 
 
 class AdminBotErrorPayload(BaseModel):
-    """Structured error returned by AdminBot."""
+    """Structured error body returned by AdminBot v2."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="allow")
 
-    error_code: str
+    code: str
     message: str
     details: dict[str, Any] | None = None
-    audit_ref: str | None = None
-    warnings: list[str] | None = None
+    retryable: bool | None = None
+
+
+class AdminBotErrorResponse(BaseModel):
+    """Structured error envelope returned by AdminBot v2."""
+
+    model_config = ConfigDict(extra="allow")
+
+    request_id: str | None = None
+    status: Literal["error"]
+    error: AdminBotErrorPayload
 
 
 class AdminBotSuccessPayload(BaseModel):
-    """Structured success payload returned by AdminBot."""
+    """Structured non-error envelope returned by AdminBot v2."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="allow")
 
-    ok: Literal[True] = True
-    result: dict[str, Any]
-    warnings: list[str] | None = None
-    audit_ref: str | None = None
+    request_id: str | None = None
+    status: str
+
+    @field_validator("status")
+    @classmethod
+    def validate_non_error_status(cls, value: str) -> str:
+        """Reject error responses in the success model."""
+        if value == "error":
+            raise ValueError("status must not be error")
+        return value
