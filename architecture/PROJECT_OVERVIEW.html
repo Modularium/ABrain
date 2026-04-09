@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.8.1">
 <title data-rh="true">ABrain Project Overview | ABrain Documentation</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://ecospheretwork.github.io/Agent-NN/architecture/PROJECT_OVERVIEW"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="ABrain Project Overview | ABrain Documentation"><meta data-rh="true" name="description" content="Kurzbeschreibung"><meta data-rh="true" property="og:description" content="Kurzbeschreibung"><link data-rh="true" rel="icon" href="/Agent-NN/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://ecospheretwork.github.io/Agent-NN/architecture/PROJECT_OVERVIEW"><link data-rh="true" rel="alternate" href="https://ecospheretwork.github.io/Agent-NN/architecture/PROJECT_OVERVIEW" hreflang="en"><link data-rh="true" rel="alternate" href="https://ecospheretwork.github.io/Agent-NN/architecture/PROJECT_OVERVIEW" hreflang="x-default"><link rel="stylesheet" href="/Agent-NN/assets/css/styles.49a6e941.css">
-<script src="/Agent-NN/assets/js/runtime~main.980fc92e.js" defer="defer"></script>
-<script src="/Agent-NN/assets/js/main.46d1d969.js" defer="defer"></script>
+<script src="/Agent-NN/assets/js/runtime~main.16dbd60a.js" defer="defer"></script>
+<script src="/Agent-NN/assets/js/main.bdcd5cf6.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
@@ -25,6 +25,34 @@
 </ul>
 <p>Diese Schicht ist der bevorzugte Einstieg für kontrollierte Tool-Ausführung. Sie validiert Requests, kapselt feste Tool-Definitionen und verhindert rohe Direktpfade.</p>
 <p>Der canonical runtime stack liegt in <code>services/*</code>. Die Kurzbegründung und die verworfenen Alternativen stehen in <a href="/Agent-NN/architecture/CANONICAL_RUNTIME_STACK">CANONICAL_RUNTIME_STACK.md</a>.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="canonical-agent-model">Canonical Agent Model<a href="#canonical-agent-model" class="hash-link" aria-label="Direct link to Canonical Agent Model" title="Direct link to Canonical Agent Model">​</a></h3>
+<ul>
+<li><code>core/decision/*</code></li>
+<li><code>services/agent_registry/*</code> als Migrationskante</li>
+<li><code>adapters/flowise/*</code> als Interop-Schicht</li>
+</ul>
+<p>ABrain fuehrt nun ein eigenes kanonisches <code>AgentDescriptor</code>-Modell. Dieses Format ist die interne Wahrheit fuer spaeteres Routing, Planning und Bewertung. Flowise wird davon explizit getrennt als externer Interop- und UI-Layer behandelt. Die Details stehen in <a href="/Agent-NN/architecture/AGENT_MODEL_AND_FLOWISE_INTEROP">AGENT_MODEL_AND_FLOWISE_INTEROP.md</a>.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="decision-layer">Decision Layer<a href="#decision-layer" class="hash-link" aria-label="Direct link to Decision Layer" title="Direct link to Decision Layer">​</a></h3>
+<ul>
+<li><code>core/decision/planner.py</code></li>
+<li><code>core/decision/candidate_filter.py</code></li>
+<li><code>core/decision/neural_policy.py</code></li>
+<li><code>core/decision/routing_engine.py</code></li>
+</ul>
+<p>Der kanonische Decision Layer trennt nun Planner, deterministische Kandidatenfilterung und verpflichtendes NeuralPolicyModel explizit. Das NN ist immer aktiv, ersetzt aber nicht die harte Sicherheitsgrenze. Es rankt nur bereits sicher gefilterte Kandidaten. Die Zielarchitektur steht in <a href="/Agent-NN/architecture/DECISION_LAYER_AND_NEURAL_POLICY">DECISION_LAYER_AND_NEURAL_POLICY.md</a>.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="execution-layer">Execution Layer<a href="#execution-layer" class="hash-link" aria-label="Direct link to Execution Layer" title="Direct link to Execution Layer">​</a></h3>
+<ul>
+<li><code>core/execution/adapters/*</code></li>
+<li><code>core/execution/execution_engine.py</code></li>
+<li><code>core/decision/agent_creation.py</code></li>
+<li><code>core/decision/feedback_loop.py</code></li>
+</ul>
+<p>Der Execution Layer fuehrt eine bereits getroffene Routing-Entscheidung aus. Er kapselt statische Adapter fuer AdminBot, OpenHands, Codex und Claude Code, ohne selbst neue Decision-Logik einzufuehren. Agent Creation und Feedback Loop liegen explizit neben dem Routing und bleiben vom gehärteten Core getrennt. Details stehen in <a href="/Agent-NN/architecture/EXECUTION_LAYER_AND_AGENT_CREATION">EXECUTION_LAYER_AND_AGENT_CREATION.md</a>.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="learning-system">Learning System<a href="#learning-system" class="hash-link" aria-label="Direct link to Learning System" title="Direct link to Learning System">​</a></h3>
+<ul>
+<li><code>core/decision/learning/*</code></li>
+</ul>
+<p>Das Learning-System sammelt strukturierte Trainingsdaten aus realen Executions, berechnet einen deterministischen Reward und trainiert das verpflichtende NeuralPolicyModel schrittweise nach. Es beeinflusst nur das Ranking innerhalb der bereits sicher gefilterten Kandidatenmenge.</p>
 <h3 class="anchor anchorWithStickyNavbar_LWe7" id="api--fastapi">API / FastAPI<a href="#api--fastapi" class="hash-link" aria-label="Direct link to API / FastAPI" title="Direct link to API / FastAPI">​</a></h3>
 <ul>
 <li><code>server/main.py</code></li>
@@ -75,6 +103,6 @@
 <li>flächendeckende Modernisierung aller Legacy-Bereiche</li>
 </ul>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="bewusst-verbleibende-historische-identifiers">Bewusst verbleibende historische Identifiers<a href="#bewusst-verbleibende-historische-identifiers" class="hash-link" aria-label="Direct link to Bewusst verbleibende historische Identifiers" title="Direct link to Bewusst verbleibende historische Identifiers">​</a></h2>
-<p>Einige technische Namen bleiben vorerst bestehen, z. B. <code>agentnn</code>, <code>agent_nn</code> oder <code>agent-nn</code> in Paket-, Helm- oder Image-Slugs. Diese sind Follow-up-Kandidaten für einen separaten, technisch riskanteren Migrationsschritt.</p></div></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#kurzbeschreibung" class="table-of-contents__link toc-highlight">Kurzbeschreibung</a></li><li><a href="#hauptkomponenten" class="table-of-contents__link toc-highlight">Hauptkomponenten</a><ul><li><a href="#hardened-core" class="table-of-contents__link toc-highlight">Hardened Core</a></li><li><a href="#api--fastapi" class="table-of-contents__link toc-highlight">API / FastAPI</a></li><li><a href="#adminbot-adapter" class="table-of-contents__link toc-highlight">AdminBot-Adapter</a></li><li><a href="#sdk--cli" class="table-of-contents__link toc-highlight">SDK / CLI</a></li><li><a href="#frontend--monitoring" class="table-of-contents__link toc-highlight">Frontend / Monitoring</a></li></ul></li><li><a href="#path-labeling" class="table-of-contents__link toc-highlight">Path Labeling</a></li><li><a href="#aktueller-scope" class="table-of-contents__link toc-highlight">Aktueller Scope</a></li><li><a href="#bewusst-verbleibende-historische-identifiers" class="table-of-contents__link toc-highlight">Bewusst verbleibende historische Identifiers</a></li></ul></div></div></div></div></main></div></div></div></div>
+<p>Einige technische Namen bleiben vorerst bestehen, z. B. <code>agentnn</code>, <code>agent_nn</code> oder <code>agent-nn</code> in Paket-, Helm- oder Image-Slugs. Diese sind Follow-up-Kandidaten für einen separaten, technisch riskanteren Migrationsschritt.</p></div></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#kurzbeschreibung" class="table-of-contents__link toc-highlight">Kurzbeschreibung</a></li><li><a href="#hauptkomponenten" class="table-of-contents__link toc-highlight">Hauptkomponenten</a><ul><li><a href="#hardened-core" class="table-of-contents__link toc-highlight">Hardened Core</a></li><li><a href="#canonical-agent-model" class="table-of-contents__link toc-highlight">Canonical Agent Model</a></li><li><a href="#decision-layer" class="table-of-contents__link toc-highlight">Decision Layer</a></li><li><a href="#execution-layer" class="table-of-contents__link toc-highlight">Execution Layer</a></li><li><a href="#learning-system" class="table-of-contents__link toc-highlight">Learning System</a></li><li><a href="#api--fastapi" class="table-of-contents__link toc-highlight">API / FastAPI</a></li><li><a href="#adminbot-adapter" class="table-of-contents__link toc-highlight">AdminBot-Adapter</a></li><li><a href="#sdk--cli" class="table-of-contents__link toc-highlight">SDK / CLI</a></li><li><a href="#frontend--monitoring" class="table-of-contents__link toc-highlight">Frontend / Monitoring</a></li></ul></li><li><a href="#path-labeling" class="table-of-contents__link toc-highlight">Path Labeling</a></li><li><a href="#aktueller-scope" class="table-of-contents__link toc-highlight">Aktueller Scope</a></li><li><a href="#bewusst-verbleibende-historische-identifiers" class="table-of-contents__link toc-highlight">Bewusst verbleibende historische Identifiers</a></li></ul></div></div></div></div></main></div></div></div></div>
 </body>
 </html>
