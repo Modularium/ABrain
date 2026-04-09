@@ -46,6 +46,8 @@ Der historische `mcp/*`-Stack, `agentnn/mcp/*`-Bridges und die Smolitux-Altpfade
 - `adapters/flowise/*`
 - `docs/architecture/AGENT_MODEL_AND_FLOWISE_INTEROP.md`
 
+Der Flowise-Pfad ist bewusst nur ein Import-/Export- und UI-Layer. Er ist weder Teil des Decision Layers noch Teil des Execution Layers und definiert keine interne Wahrheit.
+
 ### Decision Layer
 
 - `core/decision/planner.py`
