@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-architecture/NATIVE_DEV_AGENT_ADAPTERS" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.8.1">
+<title data-rh="true">Native Dev Agent Adapters | ABrain Documentation</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://ecospheretwork.github.io/Agent-NN/architecture/NATIVE_DEV_AGENT_ADAPTERS"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Native Dev Agent Adapters | ABrain Documentation"><meta data-rh="true" name="description" content="Rolle von OpenHands, Codex und Claude Code in ABrain"><meta data-rh="true" property="og:description" content="Rolle von OpenHands, Codex und Claude Code in ABrain"><link data-rh="true" rel="icon" href="/Agent-NN/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://ecospheretwork.github.io/Agent-NN/architecture/NATIVE_DEV_AGENT_ADAPTERS"><link data-rh="true" rel="alternate" href="https://ecospheretwork.github.io/Agent-NN/architecture/NATIVE_DEV_AGENT_ADAPTERS" hreflang="en"><link data-rh="true" rel="alternate" href="https://ecospheretwork.github.io/Agent-NN/architecture/NATIVE_DEV_AGENT_ADAPTERS" hreflang="x-default"><link rel="stylesheet" href="/Agent-NN/assets/css/styles.49a6e941.css">
+<script src="/Agent-NN/assets/js/runtime~main.6aef2dfe.js" defer="defer"></script>
+<script src="/Agent-NN/assets/js/main.01a065be.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t="light";var e=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",e||t),document.documentElement.setAttribute("data-theme-choice",e||t)}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><a class="navbar__brand" href="/Agent-NN/"></a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><main class="docMainContainer_TBSr docMainContainerEnhanced_lQrH"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>Native Dev Agent Adapters</h1></header>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="rolle-von-openhands-codex-und-claude-code-in-abrain">Rolle von OpenHands, Codex und Claude Code in ABrain<a href="#rolle-von-openhands-codex-und-claude-code-in-abrain" class="hash-link" aria-label="Direct link to Rolle von OpenHands, Codex und Claude Code in ABrain" title="Direct link to Rolle von OpenHands, Codex und Claude Code in ABrain">​</a></h2>
+<p>OpenHands, Codex und Claude Code sind in ABrain Ausfuehrungskomponenten fuer Entwicklungs- und Code-Aufgaben. Sie werden nicht als interne Wahrheit modelliert, sondern als explizite <code>ExecutionAdapter</code> hinter dem bestehenden Foundations-Stack.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="klare-trennung">Klare Trennung<a href="#klare-trennung" class="hash-link" aria-label="Direct link to Klare Trennung" title="Direct link to Klare Trennung">​</a></h2>
+<ul>
+<li><code>ABrain</code> bleibt Decision Layer und Orchestrator.</li>
+<li>Dev-/Code-Agents gehoeren zum Execution Layer.</li>
+<li>Routing, Capability-Filterung und Neural Ranking bleiben in <code>core/decision/*</code>.</li>
+<li>Die eigentliche Ausfuehrung bleibt in <code>core/execution/*</code>.</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="warum-diese-adapter-nicht-zur-internen-wahrheit-werden">Warum diese Adapter nicht zur internen Wahrheit werden<a href="#warum-diese-adapter-nicht-zur-internen-wahrheit-werden" class="hash-link" aria-label="Direct link to Warum diese Adapter nicht zur internen Wahrheit werden" title="Direct link to Warum diese Adapter nicht zur internen Wahrheit werden">​</a></h2>
+<p>Die interne Wahrheit bleibt <code>AgentDescriptor</code> plus Capability-Modell. OpenHands, Codex und Claude Code werden nur ueber statische Adapter angesprochen. Es gibt:</p>
+<ul>
+<li>keine zweite Registry</li>
+<li>keinen generischen Command-Proxy</li>
+<li>keine Plugin-Discovery</li>
+<li>keine direkte Kopplung der Entscheidungsschicht an externe Dev-Agenten</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="adapter-profile-in-f1">Adapter-Profile in F1<a href="#adapter-profile-in-f1" class="hash-link" aria-label="Direct link to Adapter-Profile in F1" title="Direct link to Adapter-Profile in F1">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="openhands">OpenHands<a href="#openhands" class="hash-link" aria-label="Direct link to OpenHands" title="Direct link to OpenHands">​</a></h3>
+<ul>
+<li>Rolle: local/self-hosted dev execution</li>
+<li>kanonischer <code>source_type</code>: <code>openhands</code></li>
+<li>kanonischer <code>execution_kind</code>: <code>http_service</code></li>
+<li>V1-Pfad: <code>POST /api/v1/app-conversations</code></li>
+<li>kein Streaming-Zwang</li>
+<li>keine implizite Session-Engine ausserhalb des Adapters</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="claude-code">Claude Code<a href="#claude-code" class="hash-link" aria-label="Direct link to Claude Code" title="Direct link to Claude Code">​</a></h3>
+<ul>
+<li>Rolle: headless CLI execution</li>
+<li>kanonischer <code>source_type</code>: <code>claude_code</code></li>
+<li>kanonischer <code>execution_kind</code>: <code>local_process</code></li>
+<li>V1-Pfad: <code>claude -p ... --output json</code></li>
+<li>optional konfigurierbar: <code>cwd</code>, <code>allowed_tools</code>, <code>permission_mode</code></li>
+<li>kein interaktiver Modus</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="codex">Codex<a href="#codex" class="hash-link" aria-label="Direct link to Codex" title="Direct link to Codex">​</a></h3>
+<ul>
+<li>Rolle: kontrollierter CLI-basierter Dev-Agent in F1</li>
+<li>kanonischer <code>source_type</code>: <code>codex</code></li>
+<li>kanonischer <code>execution_kind</code>: <code>local_process</code></li>
+<li>V1-Pfad: <code>codex exec --json ...</code></li>
+<li>optional konfigurierbar: <code>cwd</code>, <code>model</code>, <code>sandbox_mode</code>, <code>approval_mode</code></li>
+<li>langfristig bevorzugter Zielpfad: App-Server-/JSON-RPC-Integration</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="typische-capabilities">Typische Capabilities<a href="#typische-capabilities" class="hash-link" aria-label="Direct link to Typische Capabilities" title="Direct link to Typische Capabilities">​</a></h2>
+<p>Die nativen Dev-Agenten tragen typischerweise Capabilities wie:</p>
+<ul>
+<li><code>code.generate</code></li>
+<li><code>code.refactor</code></li>
+<li><code>code.analyze</code></li>
+<li><code>repo.modify</code></li>
+<li><code>tests.run</code></li>
+<li><code>docs.write</code></li>
+<li>optional <code>review.code</code></li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="grenzen-von-f1">Grenzen von F1<a href="#grenzen-von-f1" class="hash-link" aria-label="Direct link to Grenzen von F1" title="Direct link to Grenzen von F1">​</a></h2>
+<ul>
+<li>keine Multi-Agent-Orchestrierung</li>
+<li>keine Live-Synchronisierung mit externen Dev-Agent-Sitzungen</li>
+<li>keine vollstaendige Session- oder Workspace-Verwaltung ausserhalb der Adapter</li>
+<li>keine App-Server-Vollintegration fuer Codex</li>
+<li>keine MCP-Erweiterung</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="folgephasen">Folgephasen<a href="#folgephasen" class="hash-link" aria-label="Direct link to Folgephasen" title="Direct link to Folgephasen">​</a></h2>
+<p>Sinnvolle Folgephasen nach F1:</p>
+<ul>
+<li>vertiefte Adapter mit mehr nativer API-Abdeckung</li>
+<li>feinere capability-aware selection refinement</li>
+<li>Multi-Agent-Orchestrierung</li>
+<li>Codex App Server Full Adapter</li>
+</ul></div></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#rolle-von-openhands-codex-und-claude-code-in-abrain" class="table-of-contents__link toc-highlight">Rolle von OpenHands, Codex und Claude Code in ABrain</a></li><li><a href="#klare-trennung" class="table-of-contents__link toc-highlight">Klare Trennung</a></li><li><a href="#warum-diese-adapter-nicht-zur-internen-wahrheit-werden" class="table-of-contents__link toc-highlight">Warum diese Adapter nicht zur internen Wahrheit werden</a></li><li><a href="#adapter-profile-in-f1" class="table-of-contents__link toc-highlight">Adapter-Profile in F1</a><ul><li><a href="#openhands" class="table-of-contents__link toc-highlight">OpenHands</a></li><li><a href="#claude-code" class="table-of-contents__link toc-highlight">Claude Code</a></li><li><a href="#codex" class="table-of-contents__link toc-highlight">Codex</a></li></ul></li><li><a href="#typische-capabilities" class="table-of-contents__link toc-highlight">Typische Capabilities</a></li><li><a href="#grenzen-von-f1" class="table-of-contents__link toc-highlight">Grenzen von F1</a></li><li><a href="#folgephasen" class="table-of-contents__link toc-highlight">Folgephasen</a></li></ul></div></div></div></div></main></div></div></div></div>
+</body>
+</html>

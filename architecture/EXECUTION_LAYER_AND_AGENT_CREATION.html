@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.8.1">
 <title data-rh="true">Execution Layer And Agent Creation | ABrain Documentation</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://ecospheretwork.github.io/Agent-NN/architecture/EXECUTION_LAYER_AND_AGENT_CREATION"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Execution Layer And Agent Creation | ABrain Documentation"><meta data-rh="true" name="description" content="Rolle des Execution Layers"><meta data-rh="true" property="og:description" content="Rolle des Execution Layers"><link data-rh="true" rel="icon" href="/Agent-NN/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://ecospheretwork.github.io/Agent-NN/architecture/EXECUTION_LAYER_AND_AGENT_CREATION"><link data-rh="true" rel="alternate" href="https://ecospheretwork.github.io/Agent-NN/architecture/EXECUTION_LAYER_AND_AGENT_CREATION" hreflang="en"><link data-rh="true" rel="alternate" href="https://ecospheretwork.github.io/Agent-NN/architecture/EXECUTION_LAYER_AND_AGENT_CREATION" hreflang="x-default"><link rel="stylesheet" href="/Agent-NN/assets/css/styles.49a6e941.css">
-<script src="/Agent-NN/assets/js/runtime~main.3afccbc1.js" defer="defer"></script>
-<script src="/Agent-NN/assets/js/main.64351cfc.js" defer="defer"></script>
+<script src="/Agent-NN/assets/js/runtime~main.6aef2dfe.js" defer="defer"></script>
+<script src="/Agent-NN/assets/js/main.01a065be.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
@@ -36,8 +36,8 @@
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="unterstuetzte-adapter-typen-in-v1">Unterstuetzte Adapter-Typen in V1<a href="#unterstuetzte-adapter-typen-in-v1" class="hash-link" aria-label="Direct link to Unterstuetzte Adapter-Typen in V1" title="Direct link to Unterstuetzte Adapter-Typen in V1">​</a></h2>
 <ul>
 <li><code>system_executor</code>: AdminBot ueber den gehärteten Core</li>
-<li><code>local_process</code>: OpenHands</li>
-<li><code>cloud_agent</code>: Codex oder Claude Code</li>
+<li><code>http_service</code>: OpenHands als self-hosted Dev-Agent</li>
+<li><code>local_process</code>: Codex oder Claude Code im headless CLI-Modus</li>
 <li><code>workflow_engine</code>: noch kein V1-Executor, nur als Zieltyp fuer spaetere Erweiterung modelliert</li>
 </ul>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="agent-creation">Agent Creation<a href="#agent-creation" class="hash-link" aria-label="Direct link to Agent Creation" title="Direct link to Agent Creation">​</a></h2>
@@ -45,7 +45,7 @@
 <p>Heuristik in V1:</p>
 <ul>
 <li><code>system</code> -&gt; AdminBot / <code>system_executor</code></li>
-<li><code>code</code> -&gt; OpenHands / <code>local_process</code></li>
+<li><code>code</code> -&gt; OpenHands / <code>http_service</code>, Claude Code / <code>local_process</code> oder Codex / <code>local_process</code></li>
 <li><code>workflow</code> -&gt; Flowise / <code>workflow_engine</code></li>
 <li>bevorzugte Source Types koennen ueber Execution Hints eingeengt werden</li>
 </ul>
