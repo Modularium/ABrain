@@ -23,8 +23,9 @@ Der canonical runtime stack liegt in `services/*`. Die Kurzbegründung und die v
 - `server/main.py`
 - `api/`
 - `agentnn/mcp/`
+- `interfaces/mcp_v1/`
 
-Das Repo enthält mehrere FastAPI-basierte Einstiegspunkte und Bridges. Produktiv maßgeblich bleiben die gehärtete Core-Schicht und die `services/*`-Runtime. Historische MCP- und Smolitux-Bridges sind `legacy (disabled)` und keine gleichrangigen Runtime-Pfade.
+Das Repo enthält mehrere API-basierte Einstiegspunkte und Bridges. Produktiv maßgeblich bleiben die gehärtete Core-Schicht und die `services/*`-Runtime. Der aktive MCP-Einstieg liegt in `interfaces/mcp_v1/` und bleibt eine dünne Protokollschicht vor dem gehärteten Core. Historische MCP- und Smolitux-Bridges sind `legacy (disabled)` und keine gleichrangigen Runtime-Pfade.
 
 ### AdminBot-Adapter
 

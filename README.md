@@ -12,6 +12,7 @@ Der Arbeitsbaum und einige interne Paket-, Deploy- und Repo-Slugs heißen derzei
 - kontrollierter Dispatcher in `core/execution/dispatcher.py`
 - getypte Tool- und Identity-Modelle in `core/models/*`
 - sicherer, read-only AdminBot-v2-Adapter in `adapters/adminbot/*`
+- MCP-v1-Interface-Schicht in `interfaces/mcp_v1/*`
 
 Der historische `mcp/*`-Stack, `agentnn/mcp/*`-Bridges und die Smolitux-Altpfade sind nicht mehr produktiv. Sie bleiben nur als `legacy (disabled)` im Repository.
 
@@ -33,6 +34,12 @@ Der historische `mcp/*`-Stack, `agentnn/mcp/*`-Bridges und die Smolitux-Altpfade
 - `adapters/adminbot/service.py`
 - `core/models/adminbot.py`
 - `docs/integrations/adminbot/*`
+
+### MCP V1 Interface
+
+- `interfaces/mcp_v1/server.py`
+- `scripts/abrain_mcp.py`
+- `docs/mcp/*`
 
 ### Weitere Bereiche
 
@@ -126,6 +133,7 @@ Syntaxprüfung der gehärteten Module:
 - Der AdminBot-v2-Adapter bietet nur feste, typisierte read-only Tools.
 - AdminBot bleibt die Sicherheitsgrenze.
 - Der gehärtete Core darf nicht durch direkte Legacy-Aufrufe umgangen werden.
+- MCP v1 bleibt nur eine externe Protokollschicht vor dem kanonischen Core-Pfad.
 
 ## Entwicklungsstatus
 
@@ -135,6 +143,8 @@ Für neue sicherheitsrelevante Integrationen gilt der gehärtete Core als Refere
 
 - [Projektüberblick](docs/architecture/PROJECT_OVERVIEW.md)
 - [Canonical Runtime Stack](docs/architecture/CANONICAL_RUNTIME_STACK.md)
+- [MCP Architektur](docs/architecture/MCP_V1_SERVER.md)
+- [MCP Usage](docs/mcp/MCP_SERVER_USAGE.md)
 - [Core Refactor](docs/architecture/CORE_REFACTOR.md)
 - [Development Setup](docs/setup/DEVELOPMENT_SETUP.md)
 - [AdminBot Integration Plan](docs/integrations/adminbot/AGENT_NN_ADMINBOT_INTEGRATION_PLAN.md)

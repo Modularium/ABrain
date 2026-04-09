@@ -35,7 +35,9 @@ readme = "README.md"
 packages = [
   { include = "agentnn" },
   { include = "sdk" },
-  { include = "mcp" }
+  { include = "mcp" },
+  { include = "interfaces" },
+  { include = "scripts" }
 ]
 
 [tool.poetry.dependencies]
@@ -78,9 +80,13 @@ black = "*"
 [tool.poetry.extras]
 sdk = []
 
+[project.scripts]
+abrain-mcp = "scripts.abrain_mcp:main"
+
 [tool.poetry.scripts]
 agentnn = "sdk.cli.main:app"
 mcp_cli = "mcp.cli:app"
+abrain-mcp = "scripts.abrain_mcp:main"
 
 [build-system]
 requires = ["poetry-core>=1.7.0"]
