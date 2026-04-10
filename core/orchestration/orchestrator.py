@@ -4,17 +4,32 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 import json
 import logging
 from typing import Any
 
+from core.approval import ApprovalPolicy, ApprovalRequest, ApprovalStore
 from core.decision import AgentCreationEngine, AgentDescriptor, AgentRegistry, FeedbackLoop, RoutingDecision, RoutingEngine
 from core.decision.plan_models import ExecutionPlan, PlanStep, PlanStrategy
 from core.execution.execution_engine import ExecutionEngine
 
-from .result_aggregation import PlanExecutionResult, ResultAggregator, StepExecutionResult
+from .result_aggregation import (
+    OrchestrationStatus,
+    PlanExecutionResult,
+    PlanExecutionState,
+    ResultAggregator,
+    StepExecutionResult,
+)
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class _StepOutcome:
+    step_result: StepExecutionResult | None = None
+    approval_request: ApprovalRequest | None = None
+    approval_metadata: dict[str, Any] | None = None
 
 
 class PlanExecutionOrchestrator:
@@ -40,11 +55,21 @@ class PlanExecutionOrchestrator:
         feedback_loop: FeedbackLoop,
         *,
         creation_engine: AgentCreationEngine | None = None,
+        approval_policy: ApprovalPolicy | None = None,
+        approval_store: ApprovalStore | None = None,
+        start_step_index: int = 0,
+        existing_step_results: list[StepExecutionResult] | None = None,
+        approved_step_ids: set[str] | None = None,
     ) -> PlanExecutionResult:
         creation_engine = creation_engine or AgentCreationEngine()
-        ordered_results: list[StepExecutionResult] = []
-        results_by_step: dict[str, StepExecutionResult] = {}
-        for group in self._iter_step_groups(plan):
+        approval_policy = approval_policy or ApprovalPolicy()
+        approved_step_ids = set(approved_step_ids or set())
+        ordered_results: list[StepExecutionResult] = list(existing_step_results or [])
+        results_by_step: dict[str, StepExecutionResult] = {
+            result.step_id: result for result in ordered_results
+        }
+        remaining_steps = plan.steps[start_step_index:]
+        for group in self._iter_step_groups(plan.strategy, remaining_steps):
             group_results = self._execute_group(
                 group,
                 plan,
@@ -54,7 +79,14 @@ class PlanExecutionOrchestrator:
                 feedback_loop,
                 creation_engine,
                 results_by_step,
+                approval_policy,
+                approval_store,
+                approved_step_ids,
+                step_index_offset=plan.steps.index(group[0]),
+                ordered_results=ordered_results,
             )
+            if isinstance(group_results, PlanExecutionResult):
+                return group_results
             for result in group_results:
                 ordered_results.append(result)
                 results_by_step[result.step_id] = result
@@ -63,6 +95,15 @@ class PlanExecutionOrchestrator:
         return self.result_aggregator.aggregate(
             plan.task_id,
             ordered_results,
+            status=OrchestrationStatus.COMPLETED,
+            state=PlanExecutionState(
+                status=OrchestrationStatus.COMPLETED,
+                next_step_index=None,
+                next_step_id=None,
+                pending_approval_id=None,
+                step_results=ordered_results,
+                metadata={"completed_step_ids": [result.step_id for result in ordered_results]},
+            ),
             metadata={
                 "strategy": plan.strategy.value,
                 "plan_metadata": plan.metadata,
@@ -70,13 +111,13 @@ class PlanExecutionOrchestrator:
             },
         )
 
-    def _iter_step_groups(self, plan: ExecutionPlan) -> list[list[PlanStep]]:
-        if plan.strategy != PlanStrategy.PARALLEL_GROUPS:
-            return [[step] for step in plan.steps]
+    def _iter_step_groups(self, strategy: PlanStrategy, steps: list[PlanStep]) -> list[list[PlanStep]]:
+        if strategy != PlanStrategy.PARALLEL_GROUPS:
+            return [[step] for step in steps]
         groups: list[list[PlanStep]] = []
         pending_group: list[PlanStep] = []
         current_group_id: str | None = None
-        for step in plan.steps:
+        for step in steps:
             if step.allow_parallel_group is None:
                 if pending_group:
                     groups.append(pending_group)
@@ -105,22 +146,42 @@ class PlanExecutionOrchestrator:
         feedback_loop: FeedbackLoop,
         creation_engine: AgentCreationEngine,
         results_by_step: dict[str, StepExecutionResult],
-    ) -> list[StepExecutionResult]:
+        approval_policy: ApprovalPolicy,
+        approval_store: ApprovalStore | None,
+        approved_step_ids: set[str],
+        *,
+        step_index_offset: int,
+        ordered_results: list[StepExecutionResult],
+    ) -> list[StepExecutionResult] | PlanExecutionResult:
         if len(steps) == 1 or not self.allow_parallel_groups:
             results: list[StepExecutionResult] = []
-            for step in steps:
-                results.append(
-                    self._execute_step(
-                        step,
-                        plan,
-                        registry,
-                        routing_engine,
-                        execution_engine,
-                        feedback_loop,
-                        creation_engine,
-                        results_by_step,
-                    )
+            for index, step in enumerate(steps):
+                outcome = self._execute_step(
+                    step,
+                    step_index=step_index_offset + index,
+                    plan=plan,
+                    registry=registry,
+                    routing_engine=routing_engine,
+                    execution_engine=execution_engine,
+                    feedback_loop=feedback_loop,
+                    creation_engine=creation_engine,
+                    results_by_step=results_by_step,
+                    approval_policy=approval_policy,
+                    approval_store=approval_store,
+                    approved_step_ids=approved_step_ids,
                 )
+                if outcome.approval_request is not None:
+                    return self._build_paused_result(
+                        plan,
+                        ordered_results + results,
+                        step_index=step_index_offset + index,
+                        step=step,
+                        approval_request=outcome.approval_request,
+                        approval_metadata=outcome.approval_metadata or {},
+                        approval_store=approval_store,
+                    )
+                assert outcome.step_result is not None
+                results.append(outcome.step_result)
             return results
 
         with ThreadPoolExecutor(max_workers=min(len(steps), self.max_parallel_steps)) as pool:
@@ -128,21 +189,40 @@ class PlanExecutionOrchestrator:
                 pool.submit(
                     self._execute_step,
                     step,
-                    plan,
-                    registry,
-                    routing_engine,
-                    execution_engine,
-                    feedback_loop,
-                    creation_engine,
-                    results_by_step,
+                    step_index=step_index_offset + index,
+                    plan=plan,
+                    registry=registry,
+                    routing_engine=routing_engine,
+                    execution_engine=execution_engine,
+                    feedback_loop=feedback_loop,
+                    creation_engine=creation_engine,
+                    results_by_step=results_by_step,
+                    approval_policy=approval_policy,
+                    approval_store=approval_store,
+                    approved_step_ids=approved_step_ids,
                 )
-                for step in steps
+                for index, step in enumerate(steps)
             ]
-            return [future.result() for future in futures]
+            outcomes = [future.result() for future in futures]
+            paused = next((outcome for outcome in outcomes if outcome.approval_request is not None), None)
+            if paused is not None:
+                paused_index = next(index for index, outcome in enumerate(outcomes) if outcome.approval_request is not None)
+                return self._build_paused_result(
+                    plan,
+                    ordered_results,
+                    step_index=step_index_offset + paused_index,
+                    step=steps[paused_index],
+                    approval_request=paused.approval_request,
+                    approval_metadata=paused.approval_metadata or {},
+                    approval_store=approval_store,
+                )
+            return [outcome.step_result for outcome in outcomes if outcome.step_result is not None]
 
     def _execute_step(
         self,
         step: PlanStep,
+        *,
+        step_index: int,
         plan: ExecutionPlan,
         registry: AgentRegistry | Sequence[AgentDescriptor] | Mapping[str, AgentDescriptor],
         routing_engine: RoutingEngine,
@@ -150,7 +230,10 @@ class PlanExecutionOrchestrator:
         feedback_loop: FeedbackLoop,
         creation_engine: AgentCreationEngine,
         results_by_step: dict[str, StepExecutionResult],
-    ) -> StepExecutionResult:
+        approval_policy: ApprovalPolicy,
+        approval_store: ApprovalStore | None,
+        approved_step_ids: set[str],
+    ) -> _StepOutcome:
         step_task = self._build_step_task(plan, step, results_by_step)
         descriptors = registry.list_descriptors() if isinstance(registry, AgentRegistry) else registry
         decision = routing_engine.route_step(step, step_task, descriptors)
@@ -173,6 +256,43 @@ class PlanExecutionOrchestrator:
                     selected_agent_id=created_agent.agent_id,
                     selected_score=decision.selected_score,
                     diagnostics={**decision.diagnostics, "created_agent": created_agent.agent_id},
+                )
+        selected_descriptor = self._resolve_descriptor(decision.selected_agent_id, registry)
+        if approval_store is not None and step.step_id not in approved_step_ids:
+            approval_check = approval_policy.evaluate(
+                step,
+                selected_descriptor,
+                task=step_task,
+            )
+            if approval_check.required:
+                approval_request = ApprovalRequest(
+                    plan_id=plan.task_id,
+                    step_id=step.step_id,
+                    task_summary=step.description,
+                    agent_id=decision.selected_agent_id,
+                    source_type=selected_descriptor.source_type if selected_descriptor else None,
+                    execution_kind=selected_descriptor.execution_kind if selected_descriptor else None,
+                    reason=approval_check.reason or "approval_required",
+                    risk=step.risk,
+                    preview={
+                        "task_type": step_task["task_type"],
+                        "required_capabilities": list(step.required_capabilities),
+                        "dependencies": list(step.inputs_from_steps),
+                    },
+                    proposed_action_summary=approval_check.proposed_action_summary,
+                    metadata={
+                        "matched_rules": approval_check.matched_rules,
+                        "plan": plan.model_dump(mode="json"),
+                    },
+                )
+                return _StepOutcome(
+                    approval_request=approval_request,
+                    approval_metadata={
+                        "routing_decision": decision.model_dump(mode="json"),
+                        "created_agent": created_agent.model_dump(mode="json") if created_agent else None,
+                        "selected_agent": selected_descriptor.model_dump(mode="json") if selected_descriptor else None,
+                        "step_index": step_index,
+                    },
                 )
         execution = execution_engine.execute(step_task, decision, registry)
         feedback = None
@@ -216,7 +336,51 @@ class PlanExecutionOrchestrator:
         }
         if feedback:
             execution.warnings.extend(warning for warning in feedback.warnings if warning not in execution.warnings)
-        return StepExecutionResult.from_execution_result(step.step_id, execution, metadata=metadata)
+        return _StepOutcome(
+            step_result=StepExecutionResult.from_execution_result(step.step_id, execution, metadata=metadata)
+        )
+
+    def _build_paused_result(
+        self,
+        plan: ExecutionPlan,
+        ordered_results: list[StepExecutionResult],
+        *,
+        step_index: int,
+        step: PlanStep,
+        approval_request: ApprovalRequest,
+        approval_metadata: dict[str, Any],
+        approval_store: ApprovalStore | None,
+    ) -> PlanExecutionResult:
+        state = PlanExecutionState(
+            status=OrchestrationStatus.PAUSED,
+            next_step_index=step_index,
+            next_step_id=step.step_id,
+            pending_approval_id=approval_request.approval_id,
+            step_results=ordered_results,
+            metadata={
+                "approval_request": approval_request.model_dump(mode="json"),
+                "approval_context": approval_metadata,
+            },
+        )
+        approval_request.metadata.update(
+            {
+                "plan_state": state.model_dump(mode="json"),
+            }
+        )
+        if approval_store is not None and approval_store.get_request(approval_request.approval_id) is None:
+            approval_store.create_request(approval_request)
+        return self.result_aggregator.aggregate(
+            plan.task_id,
+            ordered_results,
+            status=OrchestrationStatus.PAUSED,
+            state=state,
+            metadata={
+                "strategy": plan.strategy.value,
+                "plan_metadata": plan.metadata,
+                "parallel_groups_enabled": self.allow_parallel_groups,
+                "pending_approval_id": approval_request.approval_id,
+            },
+        )
 
     def _build_step_task(
         self,
@@ -255,3 +419,19 @@ class PlanExecutionOrchestrator:
                 "plan_strategy": plan.strategy.value,
             },
         }
+
+    def _resolve_descriptor(
+        self,
+        agent_id: str | None,
+        registry: AgentRegistry | Sequence[AgentDescriptor] | Mapping[str, AgentDescriptor],
+    ) -> AgentDescriptor | None:
+        if not agent_id:
+            return None
+        if isinstance(registry, AgentRegistry):
+            return registry.get(agent_id)
+        if isinstance(registry, Mapping):
+            return registry.get(agent_id)
+        for descriptor in registry:
+            if descriptor.agent_id == agent_id:
+                return descriptor
+        return None

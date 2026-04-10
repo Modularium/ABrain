@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -43,6 +44,27 @@ class StepExecutionResult(BaseModel):
         )
 
 
+class OrchestrationStatus(StrEnum):
+    """Lifecycle state of a plan execution."""
+
+    COMPLETED = "completed"
+    PAUSED = "paused"
+    REJECTED = "rejected"
+
+
+class PlanExecutionState(BaseModel):
+    """Serializable state for paused or completed orchestration."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    status: OrchestrationStatus
+    next_step_index: int | None = None
+    next_step_id: str | None = None
+    pending_approval_id: str | None = None
+    step_results: list[StepExecutionResult] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class PlanExecutionResult(BaseModel):
     """Aggregated result for a full execution plan."""
 
@@ -50,9 +72,11 @@ class PlanExecutionResult(BaseModel):
 
     plan_id: str
     success: bool
+    status: OrchestrationStatus = OrchestrationStatus.COMPLETED
     step_results: list[StepExecutionResult] = Field(default_factory=list)
     final_output: Any | None = None
     aggregated_warnings: list[str] = Field(default_factory=list)
+    state: PlanExecutionState | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -64,11 +88,13 @@ class ResultAggregator:
         plan_id: str,
         step_results: list[StepExecutionResult],
         *,
+        status: OrchestrationStatus = OrchestrationStatus.COMPLETED,
+        state: PlanExecutionState | None = None,
         metadata: dict[str, Any] | None = None,
     ) -> PlanExecutionResult:
         aggregated_warnings: list[str] = []
         outputs_by_step: dict[str, Any] = {}
-        success = True
+        success = status == OrchestrationStatus.COMPLETED
         for step_result in step_results:
             outputs_by_step[step_result.step_id] = step_result.output
             aggregated_warnings.extend(step_result.warnings)
@@ -77,9 +103,11 @@ class ResultAggregator:
         return PlanExecutionResult(
             plan_id=plan_id,
             success=success,
+            status=status,
             step_results=step_results,
             final_output=final_output,
             aggregated_warnings=aggregated_warnings,
+            state=state,
             metadata={
                 **(metadata or {}),
                 "step_count": len(step_results),

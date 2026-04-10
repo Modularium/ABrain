@@ -59,6 +59,13 @@ class FeedbackLoop:
         task: TaskContext | ModelContext | Mapping[str, Any] | None = None,
         agent_descriptor: AgentDescriptor | None = None,
     ) -> FeedbackUpdate:
+        if str(result.metadata.get("approval_status") or "") in {"rejected", "cancelled", "expired"}:
+            return FeedbackUpdate(
+                agent_id=agent_id,
+                performance=self.performance_history.get(agent_id),
+                score_delta=0,
+                warnings=["approval_outcome_not_learned"],
+            )
         updated = self.performance_history.record_result(
             agent_id,
             success=result.success,

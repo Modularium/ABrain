@@ -13,12 +13,15 @@ from core.model_context import ModelContext
 from core.tools import build_default_registry
 
 __all__ = [
+    "approve_plan_step",
     "create_agent",
     "dispatch_task",
     "evaluate_agent",
     "execute_tool",
+    "list_pending_approvals",
     "list_agents",
     "load_model",
+    "reject_plan_step",
     "run_task",
     "run_task_plan",
     "train_model",
@@ -216,8 +219,11 @@ def run_task_plan(
     creation_engine: Any | None = None,
     plan_builder: Any | None = None,
     orchestrator: Any | None = None,
+    approval_store: Any | None = None,
+    approval_policy: Any | None = None,
 ) -> Dict[str, Any]:
     """Run the canonical multi-step plan -> route -> execute -> feedback pipeline."""
+    from core.approval import ApprovalPolicy, ApprovalStore
     from core.decision import (
         AgentCreationEngine,
         AgentRegistry,
@@ -233,6 +239,9 @@ def run_task_plan(
     registry = registry or AgentRegistry()
     routing_engine = routing_engine or RoutingEngine()
     execution_engine = execution_engine or ExecutionEngine()
+    approval_state = _get_approval_state()
+    approval_store = approval_store or approval_state["store"]
+    approval_policy = approval_policy or approval_state["policy"]
     learning_state = _get_learning_state()
     feedback_loop = feedback_loop or FeedbackLoop(
         performance_history=routing_engine.performance_history,
@@ -252,10 +261,89 @@ def run_task_plan(
         execution_engine,
         feedback_loop,
         creation_engine=creation_engine,
+        approval_policy=approval_policy,
+        approval_store=approval_store,
     )
     return {
         "plan": plan.model_dump(mode="json"),
         "result": result.model_dump(mode="json"),
+    }
+
+
+def approve_plan_step(
+    approval_id: str,
+    *,
+    decided_by: str = "human",
+    comment: str | None = None,
+    registry: Any | None = None,
+    routing_engine: Any | None = None,
+    execution_engine: Any | None = None,
+    feedback_loop: Any | None = None,
+    creation_engine: Any | None = None,
+    orchestrator: Any | None = None,
+    approval_store: Any | None = None,
+    approval_policy: Any | None = None,
+    metadata: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    """Approve a paused plan step and resume execution."""
+    return _decide_plan_step(
+        approval_id,
+        decision="approved",
+        decided_by=decided_by,
+        comment=comment,
+        registry=registry,
+        routing_engine=routing_engine,
+        execution_engine=execution_engine,
+        feedback_loop=feedback_loop,
+        creation_engine=creation_engine,
+        orchestrator=orchestrator,
+        approval_store=approval_store,
+        approval_policy=approval_policy,
+        metadata=metadata,
+    )
+
+
+def reject_plan_step(
+    approval_id: str,
+    *,
+    decided_by: str = "human",
+    comment: str | None = None,
+    registry: Any | None = None,
+    routing_engine: Any | None = None,
+    execution_engine: Any | None = None,
+    feedback_loop: Any | None = None,
+    creation_engine: Any | None = None,
+    orchestrator: Any | None = None,
+    approval_store: Any | None = None,
+    approval_policy: Any | None = None,
+    metadata: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    """Reject a paused plan step and return the terminal plan result."""
+    return _decide_plan_step(
+        approval_id,
+        decision="rejected",
+        decided_by=decided_by,
+        comment=comment,
+        registry=registry,
+        routing_engine=routing_engine,
+        execution_engine=execution_engine,
+        feedback_loop=feedback_loop,
+        creation_engine=creation_engine,
+        orchestrator=orchestrator,
+        approval_store=approval_store,
+        approval_policy=approval_policy,
+        metadata=metadata,
+    )
+
+
+def list_pending_approvals(*, approval_store: Any | None = None) -> Dict[str, Any]:
+    """List pending approval requests from the canonical approval store."""
+    approval_state = _get_approval_state()
+    approval_store = approval_store or approval_state["store"]
+    return {
+        "approvals": [
+            request.model_dump(mode="json") for request in approval_store.list_pending()
+        ]
     }
 
 
@@ -271,3 +359,86 @@ def _get_learning_state() -> dict[str, Any]:
             "trainer": NeuralTrainer(),
         }
     return _get_learning_state._state
+
+
+def _get_approval_state() -> dict[str, Any]:
+    """Return process-local approval state for pause/resume orchestration."""
+    if not hasattr(_get_approval_state, "_state"):
+        from core.approval import ApprovalPolicy, ApprovalStore
+
+        _get_approval_state._state = {
+            "store": ApprovalStore(),
+            "policy": ApprovalPolicy(),
+        }
+    return _get_approval_state._state
+
+
+def _decide_plan_step(
+    approval_id: str,
+    *,
+    decision: str,
+    decided_by: str,
+    comment: str | None,
+    registry: Any | None,
+    routing_engine: Any | None,
+    execution_engine: Any | None,
+    feedback_loop: Any | None,
+    creation_engine: Any | None,
+    orchestrator: Any | None,
+    approval_store: Any | None,
+    approval_policy: Any | None,
+    metadata: Dict[str, Any] | None,
+) -> Dict[str, Any]:
+    """Apply an approval decision and resume or reject the paused plan."""
+    from core.approval import ApprovalDecision, ApprovalStatus
+    from core.decision import (
+        AgentCreationEngine,
+        AgentRegistry,
+        FeedbackLoop,
+        RoutingEngine,
+    )
+    from core.execution.execution_engine import ExecutionEngine
+    from core.orchestration import PlanExecutionOrchestrator, resume_plan
+
+    approval_state = _get_approval_state()
+    approval_store = approval_store or approval_state["store"]
+    approval_policy = approval_policy or approval_state["policy"]
+    registry = registry or AgentRegistry()
+    routing_engine = routing_engine or RoutingEngine()
+    execution_engine = execution_engine or ExecutionEngine()
+    learning_state = _get_learning_state()
+    feedback_loop = feedback_loop or FeedbackLoop(
+        performance_history=routing_engine.performance_history,
+        online_updater=learning_state["online_updater"],
+        trainer=learning_state["trainer"],
+        neural_policy=routing_engine.neural_policy,
+    )
+    creation_engine = creation_engine or AgentCreationEngine()
+    orchestrator = orchestrator or PlanExecutionOrchestrator()
+
+    updated_request = approval_store.record_decision(
+        approval_id,
+        ApprovalDecision(
+            approval_id=approval_id,
+            decision=ApprovalStatus(decision),
+            decided_by=decided_by,
+            comment=comment,
+            metadata=dict(metadata or {}),
+        ),
+    )
+    result = resume_plan(
+        updated_request,
+        registry=registry,
+        routing_engine=routing_engine,
+        execution_engine=execution_engine,
+        feedback_loop=feedback_loop,
+        creation_engine=creation_engine,
+        approval_policy=approval_policy,
+        approval_store=approval_store,
+        orchestrator=orchestrator,
+    )
+    return {
+        "approval": updated_request.model_dump(mode="json"),
+        "plan": updated_request.metadata.get("plan"),
+        "result": result.model_dump(mode="json"),
+    }
