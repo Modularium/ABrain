@@ -1,14 +1,63 @@
 import time
-from fastapi import APIRouter, Request
-from fastapi.responses import Response
-from starlette.middleware.base import BaseHTTPMiddleware
-from prometheus_client import (
-    Counter,
-    Gauge,
-    Histogram,
-    generate_latest,
-    CONTENT_TYPE_LATEST,
-)
+
+try:  # pragma: no cover - depends on optional runtime extras
+    from prometheus_client import (
+        Counter,
+        Gauge,
+        Histogram,
+        generate_latest,
+        CONTENT_TYPE_LATEST,
+    )
+except ModuleNotFoundError:  # pragma: no cover - fallback for slim test envs
+    class _NoOpMetric:
+        def labels(self, *args, **kwargs):
+            return self
+
+        def inc(self, *args, **kwargs) -> None:
+            return None
+
+        def observe(self, *args, **kwargs) -> None:
+            return None
+
+    def Counter(*args, **kwargs):  # type: ignore[misc]
+        return _NoOpMetric()
+
+    def Gauge(*args, **kwargs):  # type: ignore[misc]
+        return _NoOpMetric()
+
+    def Histogram(*args, **kwargs):  # type: ignore[misc]
+        return _NoOpMetric()
+
+    def generate_latest() -> bytes:
+        return b""
+
+    CONTENT_TYPE_LATEST = "text/plain"
+
+try:  # pragma: no cover - depends on optional runtime extras
+    from fastapi import APIRouter, Request
+    from fastapi.responses import Response
+    from starlette.middleware.base import BaseHTTPMiddleware
+except ModuleNotFoundError:  # pragma: no cover - fallback for slim test envs
+    class Request:  # type: ignore[override]
+        def __init__(self, url=None):
+            self.url = url
+
+    class Response:  # type: ignore[override]
+        def __init__(self, content=None, media_type: str | None = None, status_code: int = 200):
+            self.content = content
+            self.media_type = media_type
+            self.status_code = status_code
+
+    class APIRouter:  # type: ignore[override]
+        def get(self, _path: str):
+            def decorator(func):
+                return func
+
+            return decorator
+
+    class BaseHTTPMiddleware:  # type: ignore[override]
+        def __init__(self, app):
+            self.app = app
 
 TASKS_PROCESSED = Counter(
     "agentnn_tasks_processed_total", "Total processed tasks", ["service"]

@@ -50,6 +50,7 @@ class OrchestrationStatus(StrEnum):
     COMPLETED = "completed"
     PAUSED = "paused"
     REJECTED = "rejected"
+    DENIED = "denied"
 
 
 class PlanExecutionState(BaseModel):

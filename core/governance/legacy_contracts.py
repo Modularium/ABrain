@@ -1,26 +1,28 @@
+"""Legacy governance contract model kept for compatibility."""
+
 from __future__ import annotations
 
 import json
 import os
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
-from .privacy import AccessLevel
+from core.privacy import AccessLevel
 
 CONTRACT_DIR = Path(os.getenv("CONTRACT_DIR", "contracts"))
 
 
 @dataclass
 class AgentContract:
-    """Governance contract for an agent."""
+    """Legacy governance contract for older trust/role flows."""
 
     agent: str
-    allowed_roles: List[str]
+    allowed_roles: list[str]
     max_tokens: int
     trust_level_required: float
-    constraints: Dict[str, Any]
-    temp_roles: List[str] | None = None
+    constraints: dict[str, Any]
+    temp_roles: list[str] | None = None
     max_access_level: AccessLevel = AccessLevel.INTERNAL
     require_signature: bool = False
 
@@ -29,7 +31,7 @@ class AgentContract:
         CONTRACT_DIR.mkdir(parents=True, exist_ok=True)
         path = CONTRACT_DIR / f"{agent}.json"
         if path.exists():
-            with open(path, encoding="utf-8") as fh:
+            with path.open(encoding="utf-8") as fh:
                 data = json.load(fh)
             defaults = asdict(
                 cls(
@@ -59,5 +61,5 @@ class AgentContract:
     def save(self) -> None:
         CONTRACT_DIR.mkdir(parents=True, exist_ok=True)
         path = CONTRACT_DIR / f"{self.agent}.json"
-        with open(path, "w", encoding="utf-8") as fh:
+        with path.open("w", encoding="utf-8") as fh:
             json.dump(asdict(self), fh, indent=2)

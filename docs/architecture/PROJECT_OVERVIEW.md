@@ -69,6 +69,14 @@ Der neue Orchestrierungspfad erweitert in diesem Branch den vorhandenen Kern um 
 
 Der Approval-Layer erweitert in diesem Branch den bestehenden Planpfad um strukturierte Pause-/Resume-Logik fuer sensible Schritte. CandidateFilter und die deterministische Policy bleiben die harte Sicherheitsgrenze; HITL fuegt nur einen zusaetzlichen menschlichen Kontrollpunkt hinzu. Solange der Branch nicht gemerged ist, bleibt diese Schicht ein Review-/Merge-Kandidat und noch nicht Teil von `main` oder des Releases `v1.1.0`. Details stehen in [HITL_AND_APPROVAL_LAYER.md](./HITL_AND_APPROVAL_LAYER.md).
 
+### Governance Layer
+
+- `core/governance/*`
+- `services/core.py`
+- `core/orchestration/orchestrator.py`
+
+Der Governance-Layer fuehrt in diesem Branch eine verpflichtende, deterministische Policy-Pruefung nach Routing und vor Execution ein. Die Policy Engine kann eine konkret ausgewaehlte Aktion erlauben, blockieren oder in den bestehenden Approval-Pfad ueberfuehren. CandidateFilter bleibt weiterhin die harte Sicherheitsgrenze vor dem NeuralPolicyModel; Governance bewertet nicht die Kandidatenmenge, sondern die bereits geroutete Aktion. Solange der Branch nicht gemerged ist, bleibt auch diese Schicht ein Review-/Merge-Kandidat und noch nicht Teil von `main` oder des Releases `v1.1.0`. Details stehen in [GOVERNANCE_LAYER.md](./GOVERNANCE_LAYER.md).
+
 ### API / FastAPI
 
 - `server/main.py`
@@ -130,6 +138,7 @@ Stabil und gezielt abgesichert sind aktuell vor allem:
 Noch nicht das Ziel dieses Schritts:
 
 - HITL-/Approval-Layer auf `main`
+- Governance-Layer auf `main`
 - breite MCP-Tool-Expansion
 - voll ausgereifte native Spezialadapter
 - fortgeschrittenes kontinuierliches Training oder RL

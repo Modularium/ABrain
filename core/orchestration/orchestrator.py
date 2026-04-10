@@ -12,7 +12,9 @@ from typing import Any
 from core.approval import ApprovalPolicy, ApprovalRequest, ApprovalStore
 from core.decision import AgentCreationEngine, AgentDescriptor, AgentRegistry, FeedbackLoop, RoutingDecision, RoutingEngine
 from core.decision.plan_models import ExecutionPlan, PlanStep, PlanStrategy
+from core.decision.task_intent import TaskIntent
 from core.execution.execution_engine import ExecutionEngine
+from core.governance import PolicyEngine, PolicyViolationError, enforce_policy
 
 from .result_aggregation import (
     OrchestrationStatus,
@@ -57,12 +59,14 @@ class PlanExecutionOrchestrator:
         creation_engine: AgentCreationEngine | None = None,
         approval_policy: ApprovalPolicy | None = None,
         approval_store: ApprovalStore | None = None,
+        policy_engine: PolicyEngine | None = None,
         start_step_index: int = 0,
         existing_step_results: list[StepExecutionResult] | None = None,
         approved_step_ids: set[str] | None = None,
     ) -> PlanExecutionResult:
         creation_engine = creation_engine or AgentCreationEngine()
         approval_policy = approval_policy or ApprovalPolicy()
+        policy_engine = policy_engine or PolicyEngine()
         approved_step_ids = set(approved_step_ids or set())
         ordered_results: list[StepExecutionResult] = list(existing_step_results or [])
         results_by_step: dict[str, StepExecutionResult] = {
@@ -79,6 +83,7 @@ class PlanExecutionOrchestrator:
                 feedback_loop,
                 creation_engine,
                 results_by_step,
+                policy_engine,
                 approval_policy,
                 approval_store,
                 approved_step_ids,
@@ -146,6 +151,7 @@ class PlanExecutionOrchestrator:
         feedback_loop: FeedbackLoop,
         creation_engine: AgentCreationEngine,
         results_by_step: dict[str, StepExecutionResult],
+        policy_engine: PolicyEngine,
         approval_policy: ApprovalPolicy,
         approval_store: ApprovalStore | None,
         approved_step_ids: set[str],
@@ -166,6 +172,7 @@ class PlanExecutionOrchestrator:
                     feedback_loop=feedback_loop,
                     creation_engine=creation_engine,
                     results_by_step=results_by_step,
+                    policy_engine=policy_engine,
                     approval_policy=approval_policy,
                     approval_store=approval_store,
                     approved_step_ids=approved_step_ids,
@@ -181,6 +188,12 @@ class PlanExecutionOrchestrator:
                         approval_store=approval_store,
                     )
                 assert outcome.step_result is not None
+                if outcome.step_result.metadata.get("policy_effect") == "deny":
+                    return self._build_denied_result(
+                        plan,
+                        ordered_results + results + [outcome.step_result],
+                        denied_step=step,
+                    )
                 results.append(outcome.step_result)
             return results
 
@@ -197,6 +210,7 @@ class PlanExecutionOrchestrator:
                     feedback_loop=feedback_loop,
                     creation_engine=creation_engine,
                     results_by_step=results_by_step,
+                    policy_engine=policy_engine,
                     approval_policy=approval_policy,
                     approval_store=approval_store,
                     approved_step_ids=approved_step_ids,
@@ -216,7 +230,19 @@ class PlanExecutionOrchestrator:
                     approval_metadata=paused.approval_metadata or {},
                     approval_store=approval_store,
                 )
-            return [outcome.step_result for outcome in outcomes if outcome.step_result is not None]
+            step_results = [outcome.step_result for outcome in outcomes if outcome.step_result is not None]
+            denied = next(
+                (result for result in step_results if result.metadata.get("policy_effect") == "deny"),
+                None,
+            )
+            if denied is not None:
+                denied_step = next(step for step in steps if step.step_id == denied.step_id)
+                return self._build_denied_result(
+                    plan,
+                    ordered_results + step_results,
+                    denied_step=denied_step,
+                )
+            return step_results
 
     def _execute_step(
         self,
@@ -230,6 +256,7 @@ class PlanExecutionOrchestrator:
         feedback_loop: FeedbackLoop,
         creation_engine: AgentCreationEngine,
         results_by_step: dict[str, StepExecutionResult],
+        policy_engine: PolicyEngine,
         approval_policy: ApprovalPolicy,
         approval_store: ApprovalStore | None,
         approved_step_ids: set[str],
@@ -258,6 +285,86 @@ class PlanExecutionOrchestrator:
                     diagnostics={**decision.diagnostics, "created_agent": created_agent.agent_id},
                 )
         selected_descriptor = self._resolve_descriptor(decision.selected_agent_id, registry)
+        step_intent = self._build_step_intent(plan, step, step_task)
+        policy_decision = policy_engine.evaluate(
+            step_intent,
+            selected_descriptor,
+            policy_engine.build_execution_context(
+                step_intent,
+                selected_descriptor,
+                task=step_task,
+                task_id=step_task["task_id"],
+                plan_id=plan.task_id,
+                step_id=step.step_id,
+                metadata={
+                    "external_side_effect": step.metadata.get("external_side_effect"),
+                    "risky_operation": step.metadata.get("risky_operation"),
+                    "requires_human_approval": step.metadata.get("requires_human_approval"),
+                },
+            ),
+        )
+        try:
+            policy_result = enforce_policy(policy_decision)
+        except PolicyViolationError:
+            return _StepOutcome(
+                step_result=StepExecutionResult(
+                    step_id=step.step_id,
+                    selected_agent_id=decision.selected_agent_id,
+                    success=False,
+                    output={
+                        "policy_status": "deny",
+                        "step_id": step.step_id,
+                    },
+                    warnings=["policy_denied"],
+                    metadata={
+                        "title": step.title,
+                        "policy_effect": "deny",
+                        "policy_decision": policy_decision.model_dump(mode="json"),
+                        "routing_decision": decision.model_dump(mode="json"),
+                        "created_agent": created_agent.model_dump(mode="json") if created_agent else None,
+                        "dependencies": list(step.inputs_from_steps),
+                    },
+                )
+            )
+        if (
+            policy_result == "approval_required"
+            and approval_store is not None
+            and step.step_id not in approved_step_ids
+        ):
+            approval_request = ApprovalRequest(
+                plan_id=plan.task_id,
+                step_id=step.step_id,
+                task_summary=step.description,
+                agent_id=decision.selected_agent_id,
+                source_type=selected_descriptor.source_type if selected_descriptor else None,
+                execution_kind=selected_descriptor.execution_kind if selected_descriptor else None,
+                reason=policy_decision.reason,
+                risk=step.risk,
+                preview={
+                    "task_type": step_task["task_type"],
+                    "required_capabilities": list(step.required_capabilities),
+                    "dependencies": list(step.inputs_from_steps),
+                },
+                proposed_action_summary=(
+                    f"Governed step {step.step_id} ({step.title}) via "
+                    f"{selected_descriptor.display_name if selected_descriptor else 'unselected-agent'}"
+                ),
+                metadata={
+                    "policy_decision": policy_decision.model_dump(mode="json"),
+                    "plan": plan.model_dump(mode="json"),
+                    "approval_origin": "governance",
+                },
+            )
+            return _StepOutcome(
+                approval_request=approval_request,
+                approval_metadata={
+                    "routing_decision": decision.model_dump(mode="json"),
+                    "created_agent": created_agent.model_dump(mode="json") if created_agent else None,
+                    "selected_agent": selected_descriptor.model_dump(mode="json") if selected_descriptor else None,
+                    "step_index": step_index,
+                    "policy_decision": policy_decision.model_dump(mode="json"),
+                },
+            )
         if approval_store is not None and step.step_id not in approved_step_ids:
             approval_check = approval_policy.evaluate(
                 step,
@@ -283,6 +390,8 @@ class PlanExecutionOrchestrator:
                     metadata={
                         "matched_rules": approval_check.matched_rules,
                         "plan": plan.model_dump(mode="json"),
+                        "policy_decision": policy_decision.model_dump(mode="json"),
+                        "approval_origin": "approval_policy",
                     },
                 )
                 return _StepOutcome(
@@ -292,6 +401,7 @@ class PlanExecutionOrchestrator:
                         "created_agent": created_agent.model_dump(mode="json") if created_agent else None,
                         "selected_agent": selected_descriptor.model_dump(mode="json") if selected_descriptor else None,
                         "step_index": step_index,
+                        "policy_decision": policy_decision.model_dump(mode="json"),
                     },
                 )
         execution = execution_engine.execute(step_task, decision, registry)
@@ -328,6 +438,7 @@ class PlanExecutionOrchestrator:
                 )
         metadata = {
             "title": step.title,
+            "policy_decision": policy_decision.model_dump(mode="json"),
             "routing_decision": decision.model_dump(mode="json"),
             "feedback": feedback.model_dump(mode="json") if feedback else None,
             "feedback_error": feedback_error,
@@ -338,6 +449,32 @@ class PlanExecutionOrchestrator:
             execution.warnings.extend(warning for warning in feedback.warnings if warning not in execution.warnings)
         return _StepOutcome(
             step_result=StepExecutionResult.from_execution_result(step.step_id, execution, metadata=metadata)
+        )
+
+    def _build_denied_result(
+        self,
+        plan: ExecutionPlan,
+        ordered_results: list[StepExecutionResult],
+        *,
+        denied_step: PlanStep,
+    ) -> PlanExecutionResult:
+        return self.result_aggregator.aggregate(
+            plan.task_id,
+            ordered_results,
+            status=OrchestrationStatus.DENIED,
+            state=PlanExecutionState(
+                status=OrchestrationStatus.DENIED,
+                next_step_index=None,
+                next_step_id=denied_step.step_id,
+                pending_approval_id=None,
+                step_results=ordered_results,
+                metadata={"denied_step_id": denied_step.step_id},
+            ),
+            metadata={
+                "strategy": plan.strategy.value,
+                "plan_metadata": plan.metadata,
+                "denied_step_id": denied_step.step_id,
+            },
         )
 
     def _build_paused_result(
@@ -419,6 +556,23 @@ class PlanExecutionOrchestrator:
                 "plan_strategy": plan.strategy.value,
             },
         }
+
+    def _build_step_intent(
+        self,
+        plan: ExecutionPlan,
+        step: PlanStep,
+        step_task: Mapping[str, Any],
+    ) -> TaskIntent:
+        preferences = dict(step_task.get("preferences") or {})
+        execution_hints = dict(preferences.get("execution_hints") or {})
+        return TaskIntent(
+            task_type=str(step.metadata.get("task_type") or step.step_id),
+            domain=str(step.metadata.get("domain") or plan.metadata.get("intent_domain") or "analysis"),
+            risk=step.risk,
+            required_capabilities=list(step.required_capabilities),
+            execution_hints=execution_hints,
+            description=step.description,
+        )
 
     def _resolve_descriptor(
         self,

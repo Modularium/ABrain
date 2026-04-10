@@ -5,20 +5,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Dict
-
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric.ed25519 import (
-    Ed25519PrivateKey,
-    Ed25519PublicKey,
-)
-from cryptography.hazmat.primitives.serialization import (
-    Encoding,
-    PrivateFormat,
-    PublicFormat,
-    NoEncryption,
-)
-from cryptography.exceptions import InvalidSignature
+from typing import Any, Dict
 
 KEY_DIR = Path(os.getenv("KEY_DIR", "keys"))
 
@@ -35,6 +22,16 @@ def _pub_path(agent_id: str) -> Path:
 
 def generate_keypair(agent_id: str) -> None:
     """Create a new Ed25519 keypair for ``agent_id``."""
+    (
+        _serialization,
+        Ed25519PrivateKey,
+        _Ed25519PublicKey,
+        Encoding,
+        PrivateFormat,
+        PublicFormat,
+        NoEncryption,
+        _InvalidSignature,
+    ) = _crypto_components()
     private = Ed25519PrivateKey.generate()
     priv_bytes = private.private_bytes(
         encoding=Encoding.PEM,
@@ -52,13 +49,15 @@ def generate_keypair(agent_id: str) -> None:
         fh.write(pub_bytes)
 
 
-def _load_private(agent_id: str) -> Ed25519PrivateKey:
+def _load_private(agent_id: str) -> Any:
+    serialization, *_ = _crypto_components()
     with open(_priv_path(agent_id), "rb") as fh:
         data = fh.read()
     return serialization.load_pem_private_key(data, password=None)
 
 
-def _load_public(agent_id: str) -> Ed25519PublicKey:
+def _load_public(agent_id: str) -> Any:
+    serialization, *_ = _crypto_components()
     with open(_pub_path(agent_id), "rb") as fh:
         data = fh.read()
     return serialization.load_pem_public_key(data)
@@ -74,6 +73,16 @@ def sign_payload(agent_id: str, payload: Dict) -> Dict:
 
 def verify_signature(agent_id: str, payload: Dict, signature: str) -> bool:
     """Verify ``signature`` against ``payload`` for ``agent_id``."""
+    (
+        _serialization,
+        _Ed25519PrivateKey,
+        _Ed25519PublicKey,
+        _Encoding,
+        _PrivateFormat,
+        _PublicFormat,
+        _NoEncryption,
+        InvalidSignature,
+    ) = _crypto_components()
     try:
         pub = _load_public(agent_id)
     except FileNotFoundError:
@@ -84,3 +93,29 @@ def verify_signature(agent_id: str, payload: Dict, signature: str) -> bool:
         return True
     except (InvalidSignature, ValueError):
         return False
+
+
+def _crypto_components() -> tuple[Any, ...]:
+    from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+        Ed25519PrivateKey,
+        Ed25519PublicKey,
+    )
+    from cryptography.hazmat.primitives.serialization import (
+        Encoding,
+        NoEncryption,
+        PrivateFormat,
+        PublicFormat,
+    )
+
+    return (
+        serialization,
+        Ed25519PrivateKey,
+        Ed25519PublicKey,
+        Encoding,
+        PrivateFormat,
+        PublicFormat,
+        NoEncryption,
+        InvalidSignature,
+    )

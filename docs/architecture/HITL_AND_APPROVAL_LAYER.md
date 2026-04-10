@@ -38,7 +38,7 @@ Der Flow ist explizit und serialisierbar:
 
 ## Integration in Plan Execution
 
-Approval liegt im Orchestrator direkt vor der Step-Execution. Dadurch sieht die Policy:
+Approval liegt im Orchestrator direkt vor der Step-Execution. In diesem Branch laeuft davor bereits der deterministische Governance-Check. Dadurch sieht der Approval-Layer:
 
 - den `PlanStep`
 - den gerouteten Agenten

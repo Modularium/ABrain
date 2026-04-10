@@ -8,6 +8,7 @@ from core.approval import ApprovalDecision, ApprovalPolicy, ApprovalRequest, App
 from core.decision import AgentCreationEngine, AgentDescriptor, AgentRegistry, FeedbackLoop, RoutingEngine
 from core.decision.plan_models import ExecutionPlan
 from core.execution.execution_engine import ExecutionEngine
+from core.governance import PolicyEngine
 
 from .orchestrator import PlanExecutionOrchestrator
 from .result_aggregation import OrchestrationStatus, PlanExecutionResult, PlanExecutionState, ResultAggregator, StepExecutionResult
@@ -23,6 +24,7 @@ def resume_plan(
     creation_engine: AgentCreationEngine | None = None,
     approval_policy: ApprovalPolicy | None = None,
     approval_store: ApprovalStore | None = None,
+    policy_engine: PolicyEngine | None = None,
     orchestrator: PlanExecutionOrchestrator | None = None,
 ) -> PlanExecutionResult:
     """Resume a previously paused plan from a stored approval request."""
@@ -43,6 +45,7 @@ def resume_plan(
             creation_engine=creation_engine,
             approval_policy=approval_policy,
             approval_store=approval_store,
+            policy_engine=policy_engine,
             start_step_index=state.next_step_index or 0,
             existing_step_results=list(state.step_results),
             approved_step_ids={state.next_step_id} if state.next_step_id else set(),
