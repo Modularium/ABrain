@@ -20,6 +20,7 @@ __all__ = [
     "list_agents",
     "load_model",
     "run_task",
+    "run_task_plan",
     "train_model",
 ]
 
@@ -202,6 +203,59 @@ def run_task(
         "created_agent": created_agent.model_dump(mode="json") if created_agent else None,
         "feedback": feedback.model_dump(mode="json") if feedback else None,
         "warnings": warnings,
+    }
+
+
+def run_task_plan(
+    task: Any,
+    *,
+    registry: Any | None = None,
+    routing_engine: Any | None = None,
+    execution_engine: Any | None = None,
+    feedback_loop: Any | None = None,
+    creation_engine: Any | None = None,
+    plan_builder: Any | None = None,
+    orchestrator: Any | None = None,
+) -> Dict[str, Any]:
+    """Run the canonical multi-step plan -> route -> execute -> feedback pipeline."""
+    from core.decision import (
+        AgentCreationEngine,
+        AgentRegistry,
+        FeedbackLoop,
+        NeuralTrainer,
+        OnlineUpdater,
+        PlanBuilder,
+        RoutingEngine,
+    )
+    from core.execution.execution_engine import ExecutionEngine
+    from core.orchestration import PlanExecutionOrchestrator
+
+    registry = registry or AgentRegistry()
+    routing_engine = routing_engine or RoutingEngine()
+    execution_engine = execution_engine or ExecutionEngine()
+    learning_state = _get_learning_state()
+    feedback_loop = feedback_loop or FeedbackLoop(
+        performance_history=routing_engine.performance_history,
+        online_updater=learning_state["online_updater"],
+        trainer=learning_state["trainer"],
+        neural_policy=routing_engine.neural_policy,
+    )
+    creation_engine = creation_engine or AgentCreationEngine()
+    plan_builder = plan_builder or PlanBuilder(planner=routing_engine.planner)
+    orchestrator = orchestrator or PlanExecutionOrchestrator()
+
+    plan = plan_builder.build(task)
+    result = orchestrator.execute_plan(
+        plan,
+        registry,
+        routing_engine,
+        execution_engine,
+        feedback_loop,
+        creation_engine=creation_engine,
+    )
+    return {
+        "plan": plan.model_dump(mode="json"),
+        "result": result.model_dump(mode="json"),
     }
 
 

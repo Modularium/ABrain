@@ -20,6 +20,8 @@ from .learning.online_updater import OnlineUpdater
 from .learning.reward_model import RewardModel
 from .learning.trainer import NeuralTrainer, TrainingMetrics
 from .neural_policy import NeuralPolicyModel, ScoredCandidate
+from .plan_builder import PlanBuilder
+from .plan_models import ExecutionPlan, PlanStep, PlanStrategy
 from .performance_history import AgentPerformanceHistory, PerformanceHistoryStore
 from .planner import Planner, PlannerResult
 from .routing_engine import RankedCandidate, RoutingDecision, RoutingEngine
@@ -49,6 +51,10 @@ __all__ = [
     "OnlineUpdater",
     "RewardModel",
     "NeuralPolicyModel",
+    "ExecutionPlan",
+    "PlanBuilder",
+    "PlanStep",
+    "PlanStrategy",
     "PerformanceHistoryStore",
     "Planner",
     "PlannerResult",

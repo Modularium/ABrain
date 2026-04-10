@@ -13,7 +13,9 @@ from .agent_descriptor import AgentDescriptor
 from .candidate_filter import CandidateFilter
 from .neural_policy import NeuralPolicyModel
 from .performance_history import PerformanceHistoryStore
+from .plan_models import PlanStep
 from .planner import Planner
+from .task_intent import TaskIntent
 
 
 class RankedCandidate(BaseModel):
@@ -64,12 +66,60 @@ class RoutingEngine:
         descriptors: Sequence[AgentDescriptor],
     ) -> RoutingDecision:
         plan = self.planner.plan(task)
-        candidate_set = self.candidate_filter.filter_candidates(
+        return self.route_intent(
             plan.intent,
+            descriptors,
+            diagnostics={"planner": plan.diagnostics},
+        )
+
+    def route_step(
+        self,
+        step: PlanStep,
+        task: TaskContext | ModelContext | Mapping[str, Any],
+        descriptors: Sequence[AgentDescriptor],
+    ) -> RoutingDecision:
+        preferences = {}
+        if isinstance(task, TaskContext):
+            preferences = dict(task.preferences or {})
+        elif isinstance(task, Mapping):
+            raw_preferences = task.get("preferences")
+            preferences = dict(raw_preferences) if isinstance(raw_preferences, Mapping) else {}
+        execution_hints = dict(preferences.get("execution_hints") or {})
+        if step.preferred_source_types:
+            execution_hints["allowed_source_types"] = [item.value for item in step.preferred_source_types]
+        if step.preferred_execution_kinds:
+            execution_hints["allowed_execution_kinds"] = [item.value for item in step.preferred_execution_kinds]
+        intent = TaskIntent(
+            task_type=str(step.metadata.get("task_type") or step.step_id),
+            domain=str(step.metadata.get("domain") or preferences.get("domain") or "analysis"),
+            risk=step.risk,
+            required_capabilities=list(step.required_capabilities),
+            execution_hints=execution_hints,
+            description=step.description,
+        )
+        return self.route_intent(
+            intent,
+            descriptors,
+            diagnostics={
+                "step_id": step.step_id,
+                "inputs_from_steps": list(step.inputs_from_steps),
+                "allow_parallel_group": step.allow_parallel_group,
+            },
+        )
+
+    def route_intent(
+        self,
+        intent: TaskIntent,
+        descriptors: Sequence[AgentDescriptor],
+        *,
+        diagnostics: dict[str, Any] | None = None,
+    ) -> RoutingDecision:
+        candidate_set = self.candidate_filter.filter_candidates(
+            intent,
             list(descriptors),
         )
         scored_candidates = self.neural_policy.score_candidates(
-            plan.intent,
+            intent,
             candidate_set,
             self.performance_history,
         )
@@ -102,13 +152,13 @@ class RoutingEngine:
         ]
         selected = ranked_candidates[0] if ranked_candidates else None
         return RoutingDecision(
-            task_type=plan.intent.task_type,
-            required_capabilities=list(plan.intent.required_capabilities),
+            task_type=intent.task_type,
+            required_capabilities=list(intent.required_capabilities),
             ranked_candidates=ranked_candidates,
             selected_agent_id=selected.agent_id if selected else None,
             selected_score=selected.score if selected else None,
             diagnostics={
-                "planner": plan.diagnostics,
+                **(diagnostics or {}),
                 "candidate_filter": candidate_set.diagnostics,
                 "rejected_agents": [
                     rejected.model_dump(mode="json") for rejected in candidate_set.rejected

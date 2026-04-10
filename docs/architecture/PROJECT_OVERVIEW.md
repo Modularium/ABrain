@@ -52,6 +52,15 @@ Das Learning-System sammelt strukturierte Trainingsdaten aus realen Executions, 
 
 Die Lernschicht ist im Runtime-Pfad bewusst best-effort: Learning- oder Trainingsfehler duerfen eine bereits erfolgreiche Execution nicht nachtraeglich scheitern lassen.
 
+### Multi-Agent Orchestration
+
+- `core/decision/plan_models.py`
+- `core/decision/plan_builder.py`
+- `core/orchestration/*`
+- `services/core.py` mit `run_task_plan(...)`
+
+Der neue Orchestrierungspfad erweitert den vorhandenen Kern um kontrollierte Multi-Step-Plan-Ausfuehrung. ABrain bleibt der zentrale Orchestrator. Pro PlanStep werden weiterhin derselbe Planner-/Filter-/NN-/Execution-/Feedback-Pfad genutzt. Es gibt damit keine zweite Runtime und keinen Rueckfall in alte Supervisor- oder Manager-Pfade. Details stehen in [MULTI_AGENT_ORCHESTRATION.md](./MULTI_AGENT_ORCHESTRATION.md).
+
 ### API / FastAPI
 
 - `server/main.py`

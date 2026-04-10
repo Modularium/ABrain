@@ -17,6 +17,7 @@ Der Arbeitsbaum und einige interne Paket-, Deploy- und Repo-Slugs heißen derzei
 - getrennter Execution Layer mit statischen Adaptern, Agent Creation und Feedback Loop
 - native Dev-/Code-Agent-Adapter fuer OpenHands, Codex und Claude Code im Execution Layer
 - Workflow-Adapter-Layer fuer n8n und Flowise im Execution Layer
+- Multi-Agent-Orchestrierung mit PlanBuilder, Step-Level-Routing und strukturierter Aggregation
 - sicherer, read-only AdminBot-v2-Adapter in `adapters/adminbot/*`
 - MCP-v1-Interface-Schicht in `interfaces/mcp_v1/*`
 - Flowise-Interop-Layer in `adapters/flowise/*`
@@ -80,6 +81,16 @@ OpenHands, Codex, Claude Code, n8n und Flowise werden dabei nur als kontrolliert
 - `docs/architecture/WORKFLOW_ADAPTER_LAYER.md`
 
 n8n wird in F2 als kontrollierter Workflow-Executor angesprochen. Flowise bleibt primaer Interop-/UI-Layer und ist nur zusaetzlich als kleiner, strikt begrenzter Execution-Adapter verfuegbar. Alte Integrations- und Plugin-Reste unter `integrations/*` sind nicht der kanonische Runtime-Pfad.
+
+### Multi-Agent Orchestration
+
+- `core/decision/plan_models.py`
+- `core/decision/plan_builder.py`
+- `core/orchestration/*`
+- `services/core.py` mit `run_task_plan(...)`
+- `docs/architecture/MULTI_AGENT_ORCHESTRATION.md`
+
+ABrain kann Aufgaben damit in mehrere kontrollierte Schritte zerlegen, pro Schritt erneut den kanonischen Routing-Pfad anwenden, Ergebnisse aggregieren und Feedback pro Schritt erfassen. Das ist bewusst keine freie Schwarm-Architektur und keine zweite Runtime.
 
 ### Learning System
 
@@ -204,6 +215,7 @@ Der aktuelle Release-Scope des neuen Kerns ist bewusst begrenzt: kanonisches Age
 - [Execution Layer And Agent Creation](docs/architecture/EXECUTION_LAYER_AND_AGENT_CREATION.md)
 - [Native Dev Agent Adapters](docs/architecture/NATIVE_DEV_AGENT_ADAPTERS.md)
 - [Workflow Adapter Layer](docs/architecture/WORKFLOW_ADAPTER_LAYER.md)
+- [Multi-Agent Orchestration](docs/architecture/MULTI_AGENT_ORCHESTRATION.md)
 - [Foundations Release Scope](docs/releases/FOUNDATIONS_RELEASE_SCOPE.md)
 - [Foundations Release Notes](docs/releases/RELEASE_NOTES_FOUNDATIONS.md)
 - [MCP Architektur](docs/architecture/MCP_V1_SERVER.md)
