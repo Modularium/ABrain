@@ -2,7 +2,7 @@
 
 ## Rolle der Governance Engine
 
-Der Governance-Layer erweitert ABrain um eine deterministische Runtime-Enforcement-Schicht zwischen Routing und Execution.
+Der Governance-Layer erweitert ABrain auf `main` um eine deterministische Runtime-Enforcement-Schicht zwischen Routing und Execution.
 
 Die Zielpipeline in diesem Branch lautet:
 

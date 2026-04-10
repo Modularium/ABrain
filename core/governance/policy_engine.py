@@ -39,6 +39,8 @@ class PolicyEngine:
             return PolicyDecision(
                 effect="allow",
                 matched_rules=[],
+                winning_rule_id=None,
+                winning_priority=None,
                 reason="no_policy_matched",
             )
         winner = matched[0]
@@ -47,6 +49,8 @@ class PolicyEngine:
         return PolicyDecision(
             effect=winner.effect,
             matched_rules=matched_rules,
+            winning_rule_id=winner.id,
+            winning_priority=winner.priority,
             reason=f"{winner.id}: {winner.description} for {target}",
         )
 

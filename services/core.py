@@ -19,7 +19,10 @@ __all__ = [
     "dispatch_task",
     "evaluate_agent",
     "execute_tool",
+    "get_explainability",
+    "get_trace",
     "list_pending_approvals",
+    "list_recent_traces",
     "list_agents",
     "load_model",
     "reject_plan_step",
@@ -136,6 +139,7 @@ def run_task(
     creation_engine: Any | None = None,
     approval_store: Any | None = None,
     policy_engine: Any | None = None,
+    trace_store: Any | None = None,
 ) -> Dict[str, Any]:
     """Run the canonical decision -> execution -> feedback pipeline."""
     from core.decision import (
@@ -147,6 +151,7 @@ def run_task(
         RoutingEngine,
         TrainingDataset,
     )
+    from core.audit import create_trace_context, finish_span, record_error, start_child_span
     from core.execution.execution_engine import ExecutionEngine
     from core.governance import PolicyEngine, PolicyViolationError, enforce_policy
 
@@ -157,6 +162,8 @@ def run_task(
     approval_store = approval_store or approval_state["store"]
     governance_state = _get_governance_state()
     policy_engine = policy_engine or governance_state["engine"]
+    trace_state = _get_trace_state()
+    trace_store = trace_store if trace_store is not None else trace_state["store"]
     learning_state = _get_learning_state()
     feedback_loop = feedback_loop or FeedbackLoop(
         performance_history=routing_engine.performance_history,
@@ -165,40 +172,84 @@ def run_task(
         neural_policy=routing_engine.neural_policy,
     )
     creation_engine = creation_engine or AgentCreationEngine()
-
-    descriptors = registry.list_descriptors()
-    planner_result = routing_engine.planner.plan(task)
-    decision = routing_engine.route_intent(
-        planner_result.intent,
-        descriptors,
-        diagnostics={"planner": planner_result.diagnostics},
+    task_mapping = _as_mapping(task)
+    trace_context = create_trace_context(
+        trace_store,
+        workflow_name="run_task",
+        task_id=_resolve_trace_task_id(task_mapping, default_prefix="task"),
+        metadata={
+            "entrypoint": "run_task",
+            "task_type": str(task_mapping.get("task_type") or ""),
+        },
     )
-    created_agent = None
-    if creation_engine.should_create_agent(decision.selected_score):
-        created_agent = creation_engine.create_agent_from_task(
-            task,
-            decision.required_capabilities,
-            registry=registry,
-        )
-        rerouted = routing_engine.route_intent(
+
+    routing_span = start_child_span(
+        trace_context,
+        span_type="decision",
+        name="routing",
+        attributes={"task_type": str(task_mapping.get("task_type") or "analysis")},
+    )
+    try:
+        descriptors = registry.list_descriptors()
+        planner_result = routing_engine.planner.plan(task)
+        decision = routing_engine.route_intent(
             planner_result.intent,
-            registry.list_descriptors(),
+            descriptors,
             diagnostics={"planner": planner_result.diagnostics},
         )
-        if rerouted.selected_agent_id:
-            decision = rerouted
-        else:
-            decision.selected_agent_id = created_agent.agent_id
+        created_agent = None
+        if creation_engine.should_create_agent(decision.selected_score):
+            created_agent = creation_engine.create_agent_from_task(
+                task,
+                decision.required_capabilities,
+                registry=registry,
+            )
+            rerouted = routing_engine.route_intent(
+                planner_result.intent,
+                registry.list_descriptors(),
+                diagnostics={"planner": planner_result.diagnostics},
+            )
+            if rerouted.selected_agent_id:
+                decision = rerouted
+            else:
+                decision.selected_agent_id = created_agent.agent_id
+        finish_span(
+            trace_context,
+            routing_span,
+            status="completed",
+            attributes={
+                "selected_agent_id": decision.selected_agent_id,
+                "selected_score": decision.selected_score,
+                "candidate_count": len(decision.ranked_candidates),
+                "rejected_count": len(decision.diagnostics.get("rejected_agents") or []),
+            },
+        )
+    except Exception as exc:
+        record_error(
+            trace_context,
+            routing_span,
+            exc,
+            message="routing_failed",
+            payload={"task_type": str(task_mapping.get("task_type") or "analysis")},
+        )
+        trace_context.finish_trace(status="failed", metadata={"failed_stage": "routing"})
+        raise
 
     selected_descriptor = registry.get(decision.selected_agent_id) if decision.selected_agent_id else None
+    governance_span = start_child_span(
+        trace_context,
+        span_type="governance",
+        name="policy_check",
+        attributes={"selected_agent_id": decision.selected_agent_id},
+    )
     policy_decision = policy_engine.evaluate(
         planner_result.intent,
         selected_descriptor,
         policy_engine.build_execution_context(
             planner_result.intent,
             selected_descriptor,
-            task=_as_mapping(task),
-            task_id=_as_mapping(task).get("task_id"),
+            task=task_mapping,
+            task_id=task_mapping.get("task_id"),
             metadata={
                 "external_side_effect": _extract_task_flag(task, "external_side_effect"),
                 "risky_operation": _extract_task_flag(task, "risky_operation"),
@@ -212,6 +263,24 @@ def run_task(
         from core.execution.adapters.base import ExecutionResult
         from core.models.errors import StructuredError
 
+        _store_trace_explainability(
+            trace_context,
+            step_id="execute",
+            decision=decision,
+            policy_decision=policy_decision,
+            approval_required=False,
+            approval_id=None,
+            created_agent=created_agent,
+        )
+        finish_span(
+            trace_context,
+            governance_span,
+            status="denied",
+            attributes={
+                "effect": "deny",
+                "matched_rules": policy_decision.matched_rules,
+            },
+        )
         denied_execution = ExecutionResult(
             agent_id=decision.selected_agent_id or "",
             success=False,
@@ -226,6 +295,13 @@ def run_task(
             metadata={"governance": policy_decision.model_dump(mode="json")},
             warnings=["policy_denied"],
         )
+        trace_context.finish_trace(
+            status="denied",
+            metadata={
+                "selected_agent_id": decision.selected_agent_id,
+                "policy_effect": "deny",
+            },
+        )
         return {
             "status": "denied",
             "decision": decision.model_dump(mode="json"),
@@ -235,6 +311,7 @@ def run_task(
             "warnings": ["policy_denied"],
             "governance": policy_decision.model_dump(mode="json"),
             "approval": None,
+            "trace": trace_context.summary(),
         }
     if governance_result == "approval_required":
         approval_payload = _build_single_step_approval_result(
@@ -244,6 +321,33 @@ def run_task(
             selected_descriptor=selected_descriptor,
             policy_decision=policy_decision,
             approval_store=approval_store,
+            trace_context=trace_context,
+        )
+        _store_trace_explainability(
+            trace_context,
+            step_id="execute",
+            decision=decision,
+            policy_decision=policy_decision,
+            approval_required=True,
+            approval_id=approval_payload["approval"]["approval_id"],
+            created_agent=created_agent,
+        )
+        finish_span(
+            trace_context,
+            governance_span,
+            status="approval_required",
+            attributes={
+                "effect": "require_approval",
+                "approval_id": approval_payload["approval"]["approval_id"],
+                "matched_rules": policy_decision.matched_rules,
+            },
+        )
+        trace_context.finish_trace(
+            status="paused",
+            metadata={
+                "pending_approval_id": approval_payload["approval"]["approval_id"],
+                "policy_effect": "require_approval",
+            },
         )
         return {
             "status": "paused",
@@ -254,13 +358,68 @@ def run_task(
             "warnings": [],
             "governance": policy_decision.model_dump(mode="json"),
             **approval_payload,
+            "trace": trace_context.summary(),
         }
+    _store_trace_explainability(
+        trace_context,
+        step_id="execute",
+        decision=decision,
+        policy_decision=policy_decision,
+        approval_required=False,
+        approval_id=None,
+        created_agent=created_agent,
+    )
+    finish_span(
+        trace_context,
+        governance_span,
+        status="completed",
+        attributes={
+            "effect": policy_decision.effect,
+            "matched_rules": policy_decision.matched_rules,
+        },
+    )
 
-    execution = execution_engine.execute(task, decision, registry)
+    execution_span = start_child_span(
+        trace_context,
+        span_type="execution",
+        name="adapter_execution",
+        attributes={"selected_agent_id": decision.selected_agent_id},
+    )
+    try:
+        execution = execution_engine.execute(task, decision, registry)
+        finish_span(
+            trace_context,
+            execution_span,
+            status="completed" if execution.success else "failed",
+            attributes={
+                "success": execution.success,
+                "duration_ms": execution.duration_ms,
+                "cost": execution.cost,
+                "warning_count": len(execution.warnings),
+                "adapter_name": execution.metadata.get("adapter_name"),
+            },
+            error=execution.error.model_dump(mode="json") if execution.error is not None else None,
+        )
+    except Exception as exc:
+        record_error(
+            trace_context,
+            execution_span,
+            exc,
+            message="execution_failed",
+            payload={"selected_agent_id": decision.selected_agent_id},
+        )
+        trace_context.finish_trace(status="failed", metadata={"failed_stage": "execution"})
+        raise
     feedback = None
     warnings: list[str] = []
     if execution.agent_id:
         selected_descriptor = registry.get(execution.agent_id)
+        feedback_span = start_child_span(
+            trace_context,
+            span_type="learning",
+            name="feedback_update",
+            attributes={"agent_id": execution.agent_id},
+        )
         try:
             feedback = feedback_loop.update_performance(
                 execution.agent_id,
@@ -269,6 +428,17 @@ def run_task(
                 agent_descriptor=selected_descriptor,
             )
             warnings.extend(feedback.warnings)
+            finish_span(
+                trace_context,
+                feedback_span,
+                status="completed",
+                attributes={
+                    "reward": feedback.reward,
+                    "dataset_size": feedback.dataset_size,
+                    "training_triggered": feedback.training_metrics is not None,
+                    "warning_count": len(feedback.warnings),
+                },
+            )
         except Exception as exc:  # pragma: no cover - defensive containment
             warnings.append(f"feedback_loop_failed:{exc.__class__.__name__}")
             logger.warning(
@@ -282,7 +452,22 @@ def run_task(
                     sort_keys=True,
                 )
             )
+            record_error(
+                trace_context,
+                feedback_span,
+                exc,
+                message="feedback_loop_failed",
+                payload={"agent_id": execution.agent_id},
+            )
 
+    trace_context.finish_trace(
+        status="completed" if execution.success else "failed",
+        metadata={
+            "selected_agent_id": execution.agent_id,
+            "warning_count": len(warnings),
+            "execution_success": execution.success,
+        },
+    )
     return {
         "decision": decision.model_dump(mode="json"),
         "execution": execution.model_dump(mode="json"),
@@ -292,6 +477,7 @@ def run_task(
         "governance": policy_decision.model_dump(mode="json"),
         "approval": None,
         "status": "completed",
+        "trace": trace_context.summary(),
     }
 
 
@@ -308,6 +494,7 @@ def run_task_plan(
     approval_store: Any | None = None,
     approval_policy: Any | None = None,
     policy_engine: Any | None = None,
+    trace_store: Any | None = None,
 ) -> Dict[str, Any]:
     """Run the canonical multi-step plan -> route -> execute -> feedback pipeline."""
     from core.approval import ApprovalPolicy, ApprovalStore
@@ -320,6 +507,7 @@ def run_task_plan(
         PlanBuilder,
         RoutingEngine,
     )
+    from core.audit import create_trace_context, finish_span, record_error, start_child_span
     from core.execution.execution_engine import ExecutionEngine
     from core.governance import PolicyEngine
     from core.orchestration import PlanExecutionOrchestrator
@@ -332,6 +520,8 @@ def run_task_plan(
     approval_policy = approval_policy or approval_state["policy"]
     governance_state = _get_governance_state()
     policy_engine = policy_engine or governance_state["engine"]
+    trace_state = _get_trace_state()
+    trace_store = trace_store if trace_store is not None else trace_state["store"]
     learning_state = _get_learning_state()
     feedback_loop = feedback_loop or FeedbackLoop(
         performance_history=routing_engine.performance_history,
@@ -342,22 +532,64 @@ def run_task_plan(
     creation_engine = creation_engine or AgentCreationEngine()
     plan_builder = plan_builder or PlanBuilder(planner=routing_engine.planner)
     orchestrator = orchestrator or PlanExecutionOrchestrator()
-
-    plan = plan_builder.build(task)
-    result = orchestrator.execute_plan(
-        plan,
-        registry,
-        routing_engine,
-        execution_engine,
-        feedback_loop,
-        creation_engine=creation_engine,
-        approval_policy=approval_policy,
-        approval_store=approval_store,
-        policy_engine=policy_engine,
+    task_mapping = _as_mapping(task)
+    trace_context = create_trace_context(
+        trace_store,
+        workflow_name="run_task_plan",
+        task_id=_resolve_trace_task_id(task_mapping, default_prefix="plan"),
+        metadata={
+            "entrypoint": "run_task_plan",
+            "task_type": str(task_mapping.get("task_type") or ""),
+        },
     )
+    planning_span = start_child_span(
+        trace_context,
+        span_type="planning",
+        name="build_execution_plan",
+        attributes={"task_type": str(task_mapping.get("task_type") or "analysis")},
+    )
+    try:
+        plan = plan_builder.build(task)
+        finish_span(
+            trace_context,
+            planning_span,
+            status="completed",
+            attributes={
+                "plan_id": plan.task_id,
+                "strategy": plan.strategy.value,
+                "step_count": len(plan.steps),
+            },
+        )
+    except Exception as exc:
+        record_error(
+            trace_context,
+            planning_span,
+            exc,
+            message="plan_build_failed",
+            payload={"task_type": str(task_mapping.get("task_type") or "analysis")},
+        )
+        trace_context.finish_trace(status="failed", metadata={"failed_stage": "planning"})
+        raise
+    try:
+        result = orchestrator.execute_plan(
+            plan,
+            registry,
+            routing_engine,
+            execution_engine,
+            feedback_loop,
+            creation_engine=creation_engine,
+            approval_policy=approval_policy,
+            approval_store=approval_store,
+            policy_engine=policy_engine,
+            trace_context=trace_context,
+        )
+    except Exception:
+        trace_context.finish_trace(status="failed", metadata={"failed_stage": "plan_execution"})
+        raise
     return {
         "plan": plan.model_dump(mode="json"),
         "result": result.model_dump(mode="json"),
+        "trace": trace_context.summary(),
     }
 
 
@@ -375,6 +607,7 @@ def approve_plan_step(
     approval_store: Any | None = None,
     approval_policy: Any | None = None,
     policy_engine: Any | None = None,
+    trace_store: Any | None = None,
     metadata: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     """Approve a paused plan step and resume execution."""
@@ -392,6 +625,7 @@ def approve_plan_step(
         approval_store=approval_store,
         approval_policy=approval_policy,
         policy_engine=policy_engine,
+        trace_store=trace_store,
         metadata=metadata,
     )
 
@@ -410,6 +644,7 @@ def reject_plan_step(
     approval_store: Any | None = None,
     approval_policy: Any | None = None,
     policy_engine: Any | None = None,
+    trace_store: Any | None = None,
     metadata: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     """Reject a paused plan step and return the terminal plan result."""
@@ -427,6 +662,7 @@ def reject_plan_step(
         approval_store=approval_store,
         approval_policy=approval_policy,
         policy_engine=policy_engine,
+        trace_store=trace_store,
         metadata=metadata,
     )
 
@@ -438,6 +674,42 @@ def list_pending_approvals(*, approval_store: Any | None = None) -> Dict[str, An
     return {
         "approvals": [
             request.model_dump(mode="json") for request in approval_store.list_pending()
+        ]
+    }
+
+
+def get_trace(trace_id: str, *, trace_store: Any | None = None) -> Dict[str, Any]:
+    """Return a stored trace snapshot for internal inspection."""
+    trace_state = _get_trace_state()
+    trace_store = trace_store if trace_store is not None else trace_state["store"]
+    if trace_store is None:
+        return {"trace": None}
+    snapshot = trace_store.get_trace(trace_id)
+    return {"trace": snapshot.model_dump(mode="json") if snapshot is not None else None}
+
+
+def list_recent_traces(limit: int = 10, *, trace_store: Any | None = None) -> Dict[str, Any]:
+    """List recent traces for internal diagnostics."""
+    trace_state = _get_trace_state()
+    trace_store = trace_store if trace_store is not None else trace_state["store"]
+    if trace_store is None:
+        return {"traces": []}
+    return {
+        "traces": [
+            record.model_dump(mode="json") for record in trace_store.list_recent_traces(limit=limit)
+        ]
+    }
+
+
+def get_explainability(trace_id: str, *, trace_store: Any | None = None) -> Dict[str, Any]:
+    """Return explainability records for a stored trace."""
+    trace_state = _get_trace_state()
+    trace_store = trace_store if trace_store is not None else trace_state["store"]
+    if trace_store is None:
+        return {"explainability": []}
+    return {
+        "explainability": [
+            record.model_dump(mode="json") for record in trace_store.get_explainability(trace_id)
         ]
     }
 
@@ -468,6 +740,34 @@ def _get_approval_state() -> dict[str, Any]:
     return _get_approval_state._state
 
 
+def _get_trace_state() -> dict[str, Any]:
+    """Return process-local trace state for best-effort audit storage."""
+    if not hasattr(_get_trace_state, "_state"):
+        from core.audit import TraceStore
+
+        path = os.getenv("ABRAIN_TRACE_DB_PATH", "runtime/abrain_traces.sqlite3")
+        store = None
+        try:
+            store = TraceStore(path)
+        except Exception as exc:  # pragma: no cover - defensive containment
+            logger.warning(
+                json.dumps(
+                    {
+                        "event": "trace_store_init_failed",
+                        "error_type": exc.__class__.__name__,
+                        "error": str(exc),
+                        "path": path,
+                    },
+                    sort_keys=True,
+                )
+            )
+        _get_trace_state._state = {
+            "store": store,
+            "path": path,
+        }
+    return _get_trace_state._state
+
+
 def _decide_plan_step(
     approval_id: str,
     *,
@@ -483,10 +783,12 @@ def _decide_plan_step(
     approval_store: Any | None,
     approval_policy: Any | None,
     policy_engine: Any | None,
+    trace_store: Any | None,
     metadata: Dict[str, Any] | None,
 ) -> Dict[str, Any]:
     """Apply an approval decision and resume or reject the paused plan."""
     from core.approval import ApprovalDecision, ApprovalStatus
+    from core.audit import attach_trace_context
     from core.decision import (
         AgentCreationEngine,
         AgentRegistry,
@@ -502,6 +804,8 @@ def _decide_plan_step(
     approval_policy = approval_policy or approval_state["policy"]
     governance_state = _get_governance_state()
     policy_engine = policy_engine or governance_state["engine"]
+    trace_state = _get_trace_state()
+    trace_store = trace_store if trace_store is not None else trace_state["store"]
     registry = registry or AgentRegistry()
     routing_engine = routing_engine or RoutingEngine()
     execution_engine = execution_engine or ExecutionEngine()
@@ -525,6 +829,11 @@ def _decide_plan_step(
             metadata=dict(metadata or {}),
         ),
     )
+    trace_context = attach_trace_context(
+        trace_store,
+        trace_id=str(updated_request.metadata.get("trace_id") or "") or None,
+        workflow_name=f"{decision}_plan_step",
+    )
     result = resume_plan(
         updated_request,
         registry=registry,
@@ -536,11 +845,13 @@ def _decide_plan_step(
         approval_store=approval_store,
         policy_engine=policy_engine,
         orchestrator=orchestrator,
+        trace_context=trace_context,
     )
     return {
         "approval": updated_request.model_dump(mode="json"),
         "plan": updated_request.metadata.get("plan"),
         "result": result.model_dump(mode="json"),
+        "trace": trace_context.summary(),
     }
 
 
@@ -566,6 +877,7 @@ def _build_single_step_approval_result(
     selected_descriptor: Any,
     policy_decision: Any,
     approval_store: Any,
+    trace_context: Any | None = None,
 ) -> Dict[str, Any]:
     """Create a serializable paused approval artifact for single-step tasks."""
     from core.approval import ApprovalRequest
@@ -615,6 +927,7 @@ def _build_single_step_approval_result(
             "approval_origin": "governance",
             "policy_decision": policy_decision.model_dump(mode="json"),
             "plan": plan.model_dump(mode="json"),
+            "trace_id": getattr(trace_context, "trace_id", None),
         },
     )
     state = PlanExecutionState(
@@ -629,6 +942,7 @@ def _build_single_step_approval_result(
                 "routing_decision": decision.model_dump(mode="json"),
                 "policy_decision": policy_decision.model_dump(mode="json"),
                 "selected_agent": selected_descriptor.model_dump(mode="json") if selected_descriptor else None,
+                "trace_id": getattr(trace_context, "trace_id", None),
             },
         },
     )
@@ -673,3 +987,60 @@ def _extract_task_flag(task: Any, name: str) -> Any:
     if isinstance(execution_hints, dict) and name in execution_hints:
         return execution_hints[name]
     return None
+
+
+def _resolve_trace_task_id(task_mapping: Dict[str, Any], *, default_prefix: str) -> str:
+    task_id = str(task_mapping.get("task_id") or "").strip()
+    if task_id:
+        return task_id
+    task_type = str(task_mapping.get("task_type") or "analysis").strip() or "analysis"
+    return f"{default_prefix}-{task_type}"
+
+
+def _build_routing_reason_summary(decision: Any) -> str:
+    selected = decision.selected_agent_id or "unselected-agent"
+    score = (
+        f"{decision.selected_score:.3f}" if isinstance(decision.selected_score, (int, float)) else "n/a"
+    )
+    rejected_count = len(decision.diagnostics.get("rejected_agents") or [])
+    candidate_count = len(decision.ranked_candidates or [])
+    return (
+        f"selected {selected} with score {score}; "
+        f"{candidate_count} ranked candidates; {rejected_count} rejected by CandidateFilter"
+    )
+
+
+def _store_trace_explainability(
+    trace_context: Any,
+    *,
+    step_id: str,
+    decision: Any,
+    policy_decision: Any,
+    approval_required: bool,
+    approval_id: str | None,
+    created_agent: Any | None,
+) -> None:
+    from core.audit import ExplainabilityRecord
+
+    if trace_context is None or not getattr(trace_context, "trace_id", None):
+        return
+    trace_context.store_explainability(
+        ExplainabilityRecord(
+            trace_id=trace_context.trace_id,
+            step_id=step_id,
+            selected_agent_id=decision.selected_agent_id,
+            candidate_agent_ids=[candidate.agent_id for candidate in decision.ranked_candidates],
+            selected_score=decision.selected_score,
+            routing_reason_summary=_build_routing_reason_summary(decision),
+            matched_policy_ids=list(policy_decision.matched_rules),
+            approval_required=approval_required,
+            approval_id=approval_id,
+            metadata={
+                "routing_decision": decision.model_dump(mode="json"),
+                "rejected_agents": decision.diagnostics.get("rejected_agents") or [],
+                "candidate_filter": decision.diagnostics.get("candidate_filter") or {},
+                "created_agent": created_agent.model_dump(mode="json") if created_agent else None,
+                "winning_policy_rule": policy_decision.winning_rule_id,
+            },
+        )
+    )

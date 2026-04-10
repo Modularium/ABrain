@@ -42,6 +42,9 @@ class ExecutionEngine:
         result = adapter.execute(task, descriptor)
         result.metadata.setdefault("execution_engine", "v1")
         result.metadata.setdefault("selected_agent_id", decision.selected_agent_id)
+        result.metadata.setdefault("source_type", descriptor.source_type.value)
+        result.metadata.setdefault("execution_kind", descriptor.execution_kind.value)
+        result.metadata.setdefault("adapter_name", getattr(adapter, "adapter_name", adapter.__class__.__name__))
         return result
 
     def _resolve_descriptor(

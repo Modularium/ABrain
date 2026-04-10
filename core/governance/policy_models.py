@@ -108,4 +108,6 @@ class PolicyDecision(BaseModel):
 
     effect: PolicyEffect
     matched_rules: list[str] = Field(default_factory=list)
+    winning_rule_id: str | None = None
+    winning_priority: int | None = None
     reason: str

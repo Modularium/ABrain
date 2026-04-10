@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from core.approval import ApprovalDecision, ApprovalPolicy, ApprovalRequest, ApprovalStatus, ApprovalStore
+from core.audit import add_span_event, finish_span, start_child_span
 from core.decision import AgentCreationEngine, AgentDescriptor, AgentRegistry, FeedbackLoop, RoutingEngine
 from core.decision.plan_models import ExecutionPlan
 from core.execution.execution_engine import ExecutionEngine
@@ -26,6 +27,7 @@ def resume_plan(
     approval_store: ApprovalStore | None = None,
     policy_engine: PolicyEngine | None = None,
     orchestrator: PlanExecutionOrchestrator | None = None,
+    trace_context: Any | None = None,
 ) -> PlanExecutionResult:
     """Resume a previously paused plan from a stored approval request."""
     decision = ApprovalDecision.model_validate(approval_request.metadata.get("decision") or {})
@@ -34,9 +36,29 @@ def resume_plan(
     if state.status != OrchestrationStatus.PAUSED:
         raise ValueError("resume_plan requires a paused plan state")
 
+    resume_span = start_child_span(
+        trace_context,
+        span_type="approval",
+        name="resume_plan",
+        attributes={"approval_id": approval_request.approval_id, "decision": decision.decision.value},
+    )
     if decision.decision == ApprovalStatus.APPROVED:
+        add_span_event(
+            trace_context,
+            resume_span,
+            event_type="approval_approved",
+            message="human approval granted",
+            payload={"approval_id": approval_request.approval_id},
+        )
+        add_span_event(
+            trace_context,
+            resume_span,
+            event_type="plan_resumed",
+            message="paused plan resumed after approval",
+            payload={"step_id": approval_request.step_id},
+        )
         orchestrator = orchestrator or PlanExecutionOrchestrator()
-        return orchestrator.execute_plan(
+        result = orchestrator.execute_plan(
             plan,
             registry,
             routing_engine,
@@ -49,8 +71,23 @@ def resume_plan(
             start_step_index=state.next_step_index or 0,
             existing_step_results=list(state.step_results),
             approved_step_ids={state.next_step_id} if state.next_step_id else set(),
+            trace_context=trace_context,
         )
+        finish_span(
+            trace_context,
+            resume_span,
+            status="completed" if result.success else "failed",
+            attributes={"result_status": result.status.value},
+        )
+        return result
 
+    add_span_event(
+        trace_context,
+        resume_span,
+        event_type="approval_rejected",
+        message="human approval rejected the pending step",
+        payload={"approval_id": approval_request.approval_id, "step_id": approval_request.step_id},
+    )
     rejected_step = StepExecutionResult(
         step_id=approval_request.step_id,
         selected_agent_id=approval_request.agent_id,
@@ -68,7 +105,7 @@ def resume_plan(
     )
     ordered_results = list(state.step_results) + [rejected_step]
     aggregator = (orchestrator.result_aggregator if orchestrator is not None else ResultAggregator())
-    return aggregator.aggregate(
+    result = aggregator.aggregate(
         plan.task_id,
         ordered_results,
         status=OrchestrationStatus.REJECTED,
@@ -89,3 +126,18 @@ def resume_plan(
             "approval_terminal_decision": decision.decision.value,
         },
     )
+    finish_span(
+        trace_context,
+        resume_span,
+        status="rejected",
+        attributes={"result_status": result.status.value},
+    )
+    if trace_context is not None:
+        trace_context.finish_trace(
+            status=result.status.value,
+            metadata={
+                "plan_id": plan.task_id,
+                "approval_terminal_decision": decision.decision.value,
+            },
+        )
+    return result

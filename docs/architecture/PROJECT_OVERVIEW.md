@@ -59,7 +59,7 @@ Die Lernschicht ist im Runtime-Pfad bewusst best-effort: Learning- oder Training
 - `core/orchestration/*`
 - `services/core.py` mit `run_task_plan(...)`
 
-Der neue Orchestrierungspfad erweitert in diesem Branch den vorhandenen Kern um kontrollierte Multi-Step-Plan-Ausfuehrung. ABrain bleibt der zentrale Orchestrator. Pro PlanStep werden weiterhin derselbe Planner-/Filter-/NN-/Execution-/Feedback-Pfad genutzt. Es gibt damit keine zweite Runtime und keinen Rueckfall in alte Supervisor- oder Manager-Pfade. Solange der Branch nicht gemerged ist, bleibt diese Schicht ein Review-/Merge-Kandidat und noch nicht Teil von `main` oder des Releases `v1.1.0`. Details stehen in [MULTI_AGENT_ORCHESTRATION.md](./MULTI_AGENT_ORCHESTRATION.md).
+Der neue Orchestrierungspfad erweitert den vorhandenen Kern um kontrollierte Multi-Step-Plan-Ausfuehrung. ABrain bleibt der zentrale Orchestrator. Pro PlanStep werden weiterhin derselbe Planner-/Filter-/NN-/Execution-/Feedback-Pfad genutzt. Es gibt damit keine zweite Runtime und keinen Rueckfall in alte Supervisor- oder Manager-Pfade. Details stehen in [MULTI_AGENT_ORCHESTRATION.md](./MULTI_AGENT_ORCHESTRATION.md).
 
 ### HITL / Approval Layer
 
@@ -67,7 +67,7 @@ Der neue Orchestrierungspfad erweitert in diesem Branch den vorhandenen Kern um 
 - `core/orchestration/resume.py`
 - `services/core.py` mit `approve_plan_step(...)`, `reject_plan_step(...)` und `list_pending_approvals(...)`
 
-Der Approval-Layer erweitert in diesem Branch den bestehenden Planpfad um strukturierte Pause-/Resume-Logik fuer sensible Schritte. CandidateFilter und die deterministische Policy bleiben die harte Sicherheitsgrenze; HITL fuegt nur einen zusaetzlichen menschlichen Kontrollpunkt hinzu. Solange der Branch nicht gemerged ist, bleibt diese Schicht ein Review-/Merge-Kandidat und noch nicht Teil von `main` oder des Releases `v1.1.0`. Details stehen in [HITL_AND_APPROVAL_LAYER.md](./HITL_AND_APPROVAL_LAYER.md).
+Der Approval-Layer erweitert den bestehenden Planpfad um strukturierte Pause-/Resume-Logik fuer sensible Schritte. CandidateFilter und die deterministische Policy bleiben die harte Sicherheitsgrenze; HITL fuegt nur einen zusaetzlichen menschlichen Kontrollpunkt hinzu. Details stehen in [HITL_AND_APPROVAL_LAYER.md](./HITL_AND_APPROVAL_LAYER.md).
 
 ### Governance Layer
 
@@ -75,7 +75,15 @@ Der Approval-Layer erweitert in diesem Branch den bestehenden Planpfad um strukt
 - `services/core.py`
 - `core/orchestration/orchestrator.py`
 
-Der Governance-Layer fuehrt in diesem Branch eine verpflichtende, deterministische Policy-Pruefung nach Routing und vor Execution ein. Die Policy Engine kann eine konkret ausgewaehlte Aktion erlauben, blockieren oder in den bestehenden Approval-Pfad ueberfuehren. CandidateFilter bleibt weiterhin die harte Sicherheitsgrenze vor dem NeuralPolicyModel; Governance bewertet nicht die Kandidatenmenge, sondern die bereits geroutete Aktion. Solange der Branch nicht gemerged ist, bleibt auch diese Schicht ein Review-/Merge-Kandidat und noch nicht Teil von `main` oder des Releases `v1.1.0`. Details stehen in [GOVERNANCE_LAYER.md](./GOVERNANCE_LAYER.md).
+Der Governance-Layer fuehrt eine verpflichtende, deterministische Policy-Pruefung nach Routing und vor Execution ein. Die Policy Engine kann eine konkret ausgewaehlte Aktion erlauben, blockieren oder in den bestehenden Approval-Pfad ueberfuehren. CandidateFilter bleibt weiterhin die harte Sicherheitsgrenze vor dem NeuralPolicyModel; Governance bewertet nicht die Kandidatenmenge, sondern die bereits geroutete Aktion. Details stehen in [GOVERNANCE_LAYER.md](./GOVERNANCE_LAYER.md).
+
+### Audit / Explainability Layer
+
+- `core/audit/*`
+- `services/core.py`
+- `core/orchestration/orchestrator.py`
+
+Der Audit-/Trace-Layer fuehrt in diesem Branch einen internen, best-effort Instrumentierungspfad fuer den vorhandenen Kern ein. Traces, Spans und Explainability-Records machen Routing, Policy, Approval, Execution und Learning nachvollziehbar, ohne CandidateFilter, Governance oder Approval zu ersetzen. Solange der Branch nicht gemerged ist, bleibt diese Schicht ein Review-/Merge-Kandidat und noch nicht Teil von `main` oder des Releases `v1.1.0`. Details stehen in [AUDIT_AND_EXPLAINABILITY_LAYER.md](./AUDIT_AND_EXPLAINABILITY_LAYER.md).
 
 ### API / FastAPI
 
@@ -137,9 +145,9 @@ Stabil und gezielt abgesichert sind aktuell vor allem:
 
 Noch nicht das Ziel dieses Schritts:
 
-- HITL-/Approval-Layer auf `main`
-- Governance-Layer auf `main`
+- Audit-/Explainability-/Trace-Layer auf `main`
 - breite MCP-Tool-Expansion
+- externe Observability-Backends oder Dashboards
 - voll ausgereifte native Spezialadapter
 - fortgeschrittenes kontinuierliches Training oder RL
 - Umbenennung aller internen Paket- und Deploy-Slugs
