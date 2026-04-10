@@ -18,6 +18,7 @@ Der Arbeitsbaum und einige interne Paket-, Deploy- und Repo-Slugs heißen derzei
 - native Dev-/Code-Agent-Adapter fuer OpenHands, Codex und Claude Code im Execution Layer
 - Workflow-Adapter-Layer fuer n8n und Flowise im Execution Layer
 - Branch-Vorschau fuer Multi-Agent-Orchestrierung mit PlanBuilder, Step-Level-Routing und strukturierter Aggregation
+- Branch-Vorschau fuer einen HITL-/Approval-Layer mit Pause, Approve, Reject und Resume fuer sensible PlanSteps
 - sicherer, read-only AdminBot-v2-Adapter in `adapters/adminbot/*`
 - MCP-v1-Interface-Schicht in `interfaces/mcp_v1/*`
 - Flowise-Interop-Layer in `adapters/flowise/*`
@@ -91,6 +92,14 @@ n8n wird in F2 als kontrollierter Workflow-Executor angesprochen. Flowise bleibt
 - `docs/architecture/MULTI_AGENT_ORCHESTRATION.md`
 
 ABrain kann Aufgaben damit in mehrere kontrollierte Schritte zerlegen, pro Schritt erneut den kanonischen Routing-Pfad anwenden, Ergebnisse aggregieren und Feedback pro Schritt erfassen. Das ist bewusst keine freie Schwarm-Architektur und keine zweite Runtime.
+
+### HITL / Approval Layer
+
+- `core/approval/*`
+- `core/orchestration/resume.py`
+- `docs/architecture/HITL_AND_APPROVAL_LAYER.md`
+
+Der Approval-Layer liegt in diesem Branch oberhalb des bestehenden Routing-/Execution-Pfads. Er pausiert sensible Schritte strukturiert, erzeugt serialisierbare `ApprovalRequest`s und setzt einen Plan nach `approve` oder `reject` reproduzierbar fort. Er ersetzt weder CandidateFilter noch adapterinterne Permission-Mechaniken.
 
 ### Learning System
 
@@ -204,7 +213,7 @@ Syntaxprüfung der gehärteten Module:
 
 Für neue sicherheitsrelevante Integrationen gilt der gehärtete Core als Referenzpfad. Ältere Bereiche und historische Dokumente bleiben im Repository nur dort erhalten, wo sie für Betrieb, Migration oder Rückverfolgbarkeit noch relevant sind; sie sind nicht gleichrangig mit dem Core-/AdminBot-Pfad.
 
-Der aktuelle Release-Scope auf `main` bleibt bewusst begrenzt: kanonisches Agentenmodell, Flowise-Interop, Decision Layer, Execution Layer und Learning-System sind enthalten. Die Multi-Agent-Orchestrierung liegt in diesem Branch als Review-/Merge-Kandidat vor und ist noch nicht Teil von `main` oder des Releases `v1.1.0`. Breite MCP-Expansion und weiter vertiefte Spezialadapter sind ebenfalls noch nicht Teil dieses Releases.
+Der aktuelle Release-Scope auf `main` bleibt bewusst begrenzt: kanonisches Agentenmodell, Flowise-Interop, Decision Layer, Execution Layer, Learning-System und Multi-Agent-Orchestrierung sind enthalten. Der HITL-/Approval-Layer liegt in diesem Branch als Review-/Merge-Kandidat vor und ist noch nicht Teil von `main` oder des Releases `v1.1.0`. Breite MCP-Expansion und weiter vertiefte Spezialadapter sind ebenfalls noch nicht Teil dieses Releases.
 
 ## Wichtige Dokumente
 
@@ -216,6 +225,7 @@ Der aktuelle Release-Scope auf `main` bleibt bewusst begrenzt: kanonisches Agent
 - [Native Dev Agent Adapters](docs/architecture/NATIVE_DEV_AGENT_ADAPTERS.md)
 - [Workflow Adapter Layer](docs/architecture/WORKFLOW_ADAPTER_LAYER.md)
 - [Multi-Agent Orchestration](docs/architecture/MULTI_AGENT_ORCHESTRATION.md)
+- [HITL And Approval Layer](docs/architecture/HITL_AND_APPROVAL_LAYER.md)
 - [Foundations Release Scope](docs/releases/FOUNDATIONS_RELEASE_SCOPE.md)
 - [Foundations Release Notes](docs/releases/RELEASE_NOTES_FOUNDATIONS.md)
 - [MCP Architektur](docs/architecture/MCP_V1_SERVER.md)
