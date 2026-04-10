@@ -17,7 +17,7 @@ Der Arbeitsbaum und einige interne Paket-, Deploy- und Repo-Slugs heißen derzei
 - getrennter Execution Layer mit statischen Adaptern, Agent Creation und Feedback Loop
 - native Dev-/Code-Agent-Adapter fuer OpenHands, Codex und Claude Code im Execution Layer
 - Workflow-Adapter-Layer fuer n8n und Flowise im Execution Layer
-- Multi-Agent-Orchestrierung mit PlanBuilder, Step-Level-Routing und strukturierter Aggregation
+- Branch-Vorschau fuer Multi-Agent-Orchestrierung mit PlanBuilder, Step-Level-Routing und strukturierter Aggregation
 - sicherer, read-only AdminBot-v2-Adapter in `adapters/adminbot/*`
 - MCP-v1-Interface-Schicht in `interfaces/mcp_v1/*`
 - Flowise-Interop-Layer in `adapters/flowise/*`
@@ -204,7 +204,7 @@ Syntaxprüfung der gehärteten Module:
 
 Für neue sicherheitsrelevante Integrationen gilt der gehärtete Core als Referenzpfad. Ältere Bereiche und historische Dokumente bleiben im Repository nur dort erhalten, wo sie für Betrieb, Migration oder Rückverfolgbarkeit noch relevant sind; sie sind nicht gleichrangig mit dem Core-/AdminBot-Pfad.
 
-Der aktuelle Release-Scope des neuen Kerns ist bewusst begrenzt: kanonisches Agentenmodell, Flowise-Interop, Decision Layer, Execution Layer und Learning-System sind enthalten; Multi-Agent-Orchestrierung, breite MCP-Expansion und produktionsreife Spezialadapter noch nicht.
+Der aktuelle Release-Scope auf `main` bleibt bewusst begrenzt: kanonisches Agentenmodell, Flowise-Interop, Decision Layer, Execution Layer und Learning-System sind enthalten. Die Multi-Agent-Orchestrierung liegt in diesem Branch als Review-/Merge-Kandidat vor und ist noch nicht Teil von `main` oder des Releases `v1.1.0`. Breite MCP-Expansion und weiter vertiefte Spezialadapter sind ebenfalls noch nicht Teil dieses Releases.
 
 ## Wichtige Dokumente
 

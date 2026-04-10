@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
+import json
+import logging
 from typing import Any
 
 from core.decision import AgentCreationEngine, AgentDescriptor, AgentRegistry, FeedbackLoop, RoutingDecision, RoutingEngine
@@ -11,6 +13,8 @@ from core.decision.plan_models import ExecutionPlan, PlanStep, PlanStrategy
 from core.execution.execution_engine import ExecutionEngine
 
 from .result_aggregation import PlanExecutionResult, ResultAggregator, StepExecutionResult
+
+logger = logging.getLogger(__name__)
 
 
 class PlanExecutionOrchestrator:
@@ -172,17 +176,41 @@ class PlanExecutionOrchestrator:
                 )
         execution = execution_engine.execute(step_task, decision, registry)
         feedback = None
+        feedback_error: dict[str, Any] | None = None
         if execution.agent_id and isinstance(registry, AgentRegistry):
-            feedback = feedback_loop.update_performance(
-                execution.agent_id,
-                execution,
-                task=step_task,
-                agent_descriptor=registry.get(execution.agent_id),
-            )
+            try:
+                feedback = feedback_loop.update_performance(
+                    execution.agent_id,
+                    execution,
+                    task=step_task,
+                    agent_descriptor=registry.get(execution.agent_id),
+                )
+            except Exception as exc:  # pragma: no cover - defensive containment
+                warning = f"feedback_loop_failed:{exc.__class__.__name__}"
+                execution.warnings.append(warning)
+                feedback_error = {
+                    "error_type": exc.__class__.__name__,
+                    "error": str(exc),
+                    "warning": warning,
+                }
+                logger.warning(
+                    json.dumps(
+                        {
+                            "event": "plan_feedback_loop_failed",
+                            "agent_id": execution.agent_id,
+                            "step_id": step.step_id,
+                            "task_id": plan.task_id,
+                            "error_type": exc.__class__.__name__,
+                            "error": str(exc),
+                        },
+                        sort_keys=True,
+                    )
+                )
         metadata = {
             "title": step.title,
             "routing_decision": decision.model_dump(mode="json"),
             "feedback": feedback.model_dump(mode="json") if feedback else None,
+            "feedback_error": feedback_error,
             "created_agent": created_agent.model_dump(mode="json") if created_agent else None,
             "dependencies": list(step.inputs_from_steps),
         }

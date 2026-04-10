@@ -1,5 +1,7 @@
 # Multi-Agent Orchestration
 
+Diese Architektur beschreibt den Phase-H-Stand auf dem Branch `codex/phaseH-multi-agent-orchestration`. Solange der Branch nicht gemerged ist, bleibt die Multi-Agent-Orchestrierung ein Review-/Merge-Kandidat und noch nicht Teil von `main` oder des Releases `v1.1.0`.
+
 ## Warum Multi-Agent-Orchestrierung jetzt sinnvoll ist
 
 Der Foundations-Stack von ABrain kann bereits Intent bestimmen, sichere Kandidaten filtern, mit dem verpflichtenden NeuralPolicyModel ranken, ausfuehren und pro Execution lernen. Der naechste sinnvolle Schritt ist daher nicht eine neue Runtime, sondern eine kontrollierte Plan Execution ueber genau diesen vorhandenen Kern.

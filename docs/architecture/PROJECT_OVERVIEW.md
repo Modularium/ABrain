@@ -59,7 +59,7 @@ Die Lernschicht ist im Runtime-Pfad bewusst best-effort: Learning- oder Training
 - `core/orchestration/*`
 - `services/core.py` mit `run_task_plan(...)`
 
-Der neue Orchestrierungspfad erweitert den vorhandenen Kern um kontrollierte Multi-Step-Plan-Ausfuehrung. ABrain bleibt der zentrale Orchestrator. Pro PlanStep werden weiterhin derselbe Planner-/Filter-/NN-/Execution-/Feedback-Pfad genutzt. Es gibt damit keine zweite Runtime und keinen Rueckfall in alte Supervisor- oder Manager-Pfade. Details stehen in [MULTI_AGENT_ORCHESTRATION.md](./MULTI_AGENT_ORCHESTRATION.md).
+Der neue Orchestrierungspfad erweitert in diesem Branch den vorhandenen Kern um kontrollierte Multi-Step-Plan-Ausfuehrung. ABrain bleibt der zentrale Orchestrator. Pro PlanStep werden weiterhin derselbe Planner-/Filter-/NN-/Execution-/Feedback-Pfad genutzt. Es gibt damit keine zweite Runtime und keinen Rueckfall in alte Supervisor- oder Manager-Pfade. Solange der Branch nicht gemerged ist, bleibt diese Schicht ein Review-/Merge-Kandidat und noch nicht Teil von `main` oder des Releases `v1.1.0`. Details stehen in [MULTI_AGENT_ORCHESTRATION.md](./MULTI_AGENT_ORCHESTRATION.md).
 
 ### API / FastAPI
 
@@ -121,7 +121,7 @@ Stabil und gezielt abgesichert sind aktuell vor allem:
 
 Noch nicht das Ziel dieses Schritts:
 
-- Multi-Agent-Orchestrierung
+- Multi-Agent-Orchestrierung auf `main`
 - breite MCP-Tool-Expansion
 - voll ausgereifte native Spezialadapter
 - fortgeschrittenes kontinuierliches Training oder RL
