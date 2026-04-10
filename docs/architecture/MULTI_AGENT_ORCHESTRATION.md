@@ -1,6 +1,6 @@
 # Multi-Agent Orchestration
 
-Diese Architektur beschreibt den Phase-H-Stand auf dem Branch `codex/phaseH-multi-agent-orchestration`. Solange der Branch nicht gemerged ist, bleibt die Multi-Agent-Orchestrierung ein Review-/Merge-Kandidat und noch nicht Teil von `main` oder des Releases `v1.1.0`.
+Diese Architektur beschreibt den aktuellen Multi-Agent-Orchestrierungsstand auf `main`. Sie ist Teil des kanonischen ABrain-Kerns und kein separater Branch-only-Prototyp mehr.
 
 ## Warum Multi-Agent-Orchestrierung jetzt sinnvoll ist
 

@@ -160,6 +160,8 @@ class RoutingEngine:
             diagnostics={
                 **(diagnostics or {}),
                 "candidate_filter": candidate_set.diagnostics,
+                "candidate_agent_ids": [candidate.agent_id for candidate in ranked_candidates],
+                "selected_candidate": selected.model_dump(mode="json") if selected else None,
                 "rejected_agents": [
                     rejected.model_dump(mode="json") for rejected in candidate_set.rejected
                 ],

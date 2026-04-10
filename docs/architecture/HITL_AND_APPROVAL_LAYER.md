@@ -1,6 +1,6 @@
 # HITL And Approval Layer
 
-Diese Architektur beschreibt den Phase-I-Stand auf dem Branch `codex/phaseI-hitl-approval-layer`. Solange der Branch nicht gemerged ist, bleibt der Approval-Layer ein Review-/Merge-Kandidat und noch nicht Teil von `main` oder des Releases `v1.1.0`.
+Diese Architektur beschreibt den aktuellen HITL-/Approval-Stand auf `main`. Der Approval-Layer ist Teil des kanonischen Plan- und Resume-Pfads und kein separater Branch-only-Kandidat mehr.
 
 ## Warum HITL jetzt sinnvoll ist
 

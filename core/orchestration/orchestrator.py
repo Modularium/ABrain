@@ -10,6 +10,7 @@ import logging
 from typing import Any
 
 from core.approval import ApprovalPolicy, ApprovalRequest, ApprovalStore
+from core.audit import ExplainabilityRecord, add_span_event, finish_span, record_error, start_child_span
 from core.decision import AgentCreationEngine, AgentDescriptor, AgentRegistry, FeedbackLoop, RoutingDecision, RoutingEngine
 from core.decision.plan_models import ExecutionPlan, PlanStep, PlanStrategy
 from core.decision.task_intent import TaskIntent
@@ -60,6 +61,7 @@ class PlanExecutionOrchestrator:
         approval_policy: ApprovalPolicy | None = None,
         approval_store: ApprovalStore | None = None,
         policy_engine: PolicyEngine | None = None,
+        trace_context: Any | None = None,
         start_step_index: int = 0,
         existing_step_results: list[StepExecutionResult] | None = None,
         approved_step_ids: set[str] | None = None,
@@ -72,6 +74,16 @@ class PlanExecutionOrchestrator:
         results_by_step: dict[str, StepExecutionResult] = {
             result.step_id: result for result in ordered_results
         }
+        orchestration_span = start_child_span(
+            trace_context,
+            span_type="orchestration",
+            name="execute_plan",
+            attributes={
+                "plan_id": plan.task_id,
+                "strategy": plan.strategy.value,
+                "start_step_index": start_step_index,
+            },
+        )
         remaining_steps = plan.steps[start_step_index:]
         for group in self._iter_step_groups(plan.strategy, remaining_steps):
             group_results = self._execute_group(
@@ -87,17 +99,36 @@ class PlanExecutionOrchestrator:
                 approval_policy,
                 approval_store,
                 approved_step_ids,
+                trace_context,
                 step_index_offset=plan.steps.index(group[0]),
                 ordered_results=ordered_results,
             )
             if isinstance(group_results, PlanExecutionResult):
+                finish_span(
+                    trace_context,
+                    orchestration_span,
+                    status=group_results.status.value,
+                    attributes={
+                        "success": group_results.success,
+                        "step_count": len(group_results.step_results),
+                    },
+                )
+                if trace_context is not None:
+                    trace_context.finish_trace(
+                        status=_trace_status_for_plan(group_results),
+                        metadata={
+                            "plan_id": plan.task_id,
+                            "plan_status": group_results.status.value,
+                            "step_count": len(group_results.step_results),
+                        },
+                    )
                 return group_results
             for result in group_results:
                 ordered_results.append(result)
                 results_by_step[result.step_id] = result
             if any(not result.success for result in group_results):
                 break
-        return self.result_aggregator.aggregate(
+        plan_result = self.result_aggregator.aggregate(
             plan.task_id,
             ordered_results,
             status=OrchestrationStatus.COMPLETED,
@@ -115,6 +146,25 @@ class PlanExecutionOrchestrator:
                 "parallel_groups_enabled": self.allow_parallel_groups,
             },
         )
+        finish_span(
+            trace_context,
+            orchestration_span,
+            status="completed" if plan_result.success else "failed",
+            attributes={
+                "success": plan_result.success,
+                "step_count": len(plan_result.step_results),
+            },
+        )
+        if trace_context is not None:
+            trace_context.finish_trace(
+                status=_trace_status_for_plan(plan_result),
+                metadata={
+                    "plan_id": plan.task_id,
+                    "plan_status": plan_result.status.value,
+                    "step_count": len(plan_result.step_results),
+                },
+            )
+        return plan_result
 
     def _iter_step_groups(self, strategy: PlanStrategy, steps: list[PlanStep]) -> list[list[PlanStep]]:
         if strategy != PlanStrategy.PARALLEL_GROUPS:
@@ -155,6 +205,7 @@ class PlanExecutionOrchestrator:
         approval_policy: ApprovalPolicy,
         approval_store: ApprovalStore | None,
         approved_step_ids: set[str],
+        trace_context: Any | None,
         *,
         step_index_offset: int,
         ordered_results: list[StepExecutionResult],
@@ -176,6 +227,7 @@ class PlanExecutionOrchestrator:
                     approval_policy=approval_policy,
                     approval_store=approval_store,
                     approved_step_ids=approved_step_ids,
+                    trace_context=trace_context,
                 )
                 if outcome.approval_request is not None:
                     return self._build_paused_result(
@@ -186,6 +238,7 @@ class PlanExecutionOrchestrator:
                         approval_request=outcome.approval_request,
                         approval_metadata=outcome.approval_metadata or {},
                         approval_store=approval_store,
+                        trace_context=trace_context,
                     )
                 assert outcome.step_result is not None
                 if outcome.step_result.metadata.get("policy_effect") == "deny":
@@ -193,6 +246,7 @@ class PlanExecutionOrchestrator:
                         plan,
                         ordered_results + results + [outcome.step_result],
                         denied_step=step,
+                        trace_context=trace_context,
                     )
                 results.append(outcome.step_result)
             return results
@@ -214,6 +268,7 @@ class PlanExecutionOrchestrator:
                     approval_policy=approval_policy,
                     approval_store=approval_store,
                     approved_step_ids=approved_step_ids,
+                    trace_context=trace_context,
                 )
                 for index, step in enumerate(steps)
             ]
@@ -229,6 +284,7 @@ class PlanExecutionOrchestrator:
                     approval_request=paused.approval_request,
                     approval_metadata=paused.approval_metadata or {},
                     approval_store=approval_store,
+                    trace_context=trace_context,
                 )
             step_results = [outcome.step_result for outcome in outcomes if outcome.step_result is not None]
             denied = next(
@@ -241,6 +297,7 @@ class PlanExecutionOrchestrator:
                     plan,
                     ordered_results + step_results,
                     denied_step=denied_step,
+                    trace_context=trace_context,
                 )
             return step_results
 
@@ -260,10 +317,50 @@ class PlanExecutionOrchestrator:
         approval_policy: ApprovalPolicy,
         approval_store: ApprovalStore | None,
         approved_step_ids: set[str],
+        trace_context: Any | None,
     ) -> _StepOutcome:
+        step_span = start_child_span(
+            trace_context,
+            span_type="step",
+            name=f"plan_step:{step.step_id}",
+            attributes={
+                "step_id": step.step_id,
+                "title": step.title,
+                "step_index": step_index,
+            },
+        )
         step_task = self._build_step_task(plan, step, results_by_step)
         descriptors = registry.list_descriptors() if isinstance(registry, AgentRegistry) else registry
-        decision = routing_engine.route_step(step, step_task, descriptors)
+        routing_span = start_child_span(
+            trace_context,
+            span_type="decision",
+            name="route_step",
+            parent_span_id=step_span,
+            attributes={"step_id": step.step_id},
+        )
+        try:
+            decision = routing_engine.route_step(step, step_task, descriptors)
+            finish_span(
+                trace_context,
+                routing_span,
+                status="completed",
+                attributes={
+                    "selected_agent_id": decision.selected_agent_id,
+                    "selected_score": decision.selected_score,
+                    "candidate_count": len(decision.ranked_candidates),
+                    "rejected_count": len(decision.diagnostics.get("rejected_agents") or []),
+                },
+            )
+        except Exception as exc:
+            record_error(
+                trace_context,
+                routing_span,
+                exc,
+                message="step_routing_failed",
+                payload={"step_id": step.step_id},
+            )
+            finish_span(trace_context, step_span, status="failed")
+            raise
         created_agent = None
         if creation_engine.should_create_agent(decision.selected_score):
             created_agent = creation_engine.create_agent_from_task(
@@ -286,6 +383,13 @@ class PlanExecutionOrchestrator:
                 )
         selected_descriptor = self._resolve_descriptor(decision.selected_agent_id, registry)
         step_intent = self._build_step_intent(plan, step, step_task)
+        policy_span = start_child_span(
+            trace_context,
+            span_type="governance",
+            name="policy_check",
+            parent_span_id=step_span,
+            attributes={"step_id": step.step_id, "selected_agent_id": decision.selected_agent_id},
+        )
         policy_decision = policy_engine.evaluate(
             step_intent,
             selected_descriptor,
@@ -306,6 +410,22 @@ class PlanExecutionOrchestrator:
         try:
             policy_result = enforce_policy(policy_decision)
         except PolicyViolationError:
+            self._store_explainability(
+                trace_context,
+                step=step,
+                decision=decision,
+                policy_decision=policy_decision,
+                approval_required=False,
+                approval_id=None,
+                created_agent=created_agent,
+            )
+            finish_span(
+                trace_context,
+                policy_span,
+                status="denied",
+                attributes={"matched_rules": policy_decision.matched_rules},
+            )
+            finish_span(trace_context, step_span, status="denied")
             return _StepOutcome(
                 step_result=StepExecutionResult(
                     step_id=step.step_id,
@@ -353,18 +473,63 @@ class PlanExecutionOrchestrator:
                     "policy_decision": policy_decision.model_dump(mode="json"),
                     "plan": plan.model_dump(mode="json"),
                     "approval_origin": "governance",
+                    "trace_id": getattr(trace_context, "trace_id", None),
                 },
             )
+            self._store_explainability(
+                trace_context,
+                step=step,
+                decision=decision,
+                policy_decision=policy_decision,
+                approval_required=True,
+                approval_id=approval_request.approval_id,
+                created_agent=created_agent,
+            )
+            approval_span = start_child_span(
+                trace_context,
+                span_type="approval",
+                name="approval_gate",
+                parent_span_id=step_span,
+                attributes={"step_id": step.step_id, "approval_origin": "governance"},
+            )
+            add_span_event(
+                trace_context,
+                approval_span,
+                event_type="approval_requested",
+                message="governance requested human approval",
+                payload={"approval_id": approval_request.approval_id},
+            )
+            add_span_event(
+                trace_context,
+                approval_span,
+                event_type="approval_pending",
+                message="step paused awaiting approval",
+                payload={"approval_id": approval_request.approval_id},
+            )
+            finish_span(
+                trace_context,
+                approval_span,
+                status="paused",
+                attributes={"approval_id": approval_request.approval_id},
+            )
+            finish_span(
+                trace_context,
+                policy_span,
+                status="approval_required",
+                attributes={"matched_rules": policy_decision.matched_rules},
+            )
+            finish_span(trace_context, step_span, status="paused")
             return _StepOutcome(
                 approval_request=approval_request,
                 approval_metadata={
                     "routing_decision": decision.model_dump(mode="json"),
                     "created_agent": created_agent.model_dump(mode="json") if created_agent else None,
                     "selected_agent": selected_descriptor.model_dump(mode="json") if selected_descriptor else None,
-                    "step_index": step_index,
-                    "policy_decision": policy_decision.model_dump(mode="json"),
-                },
-            )
+                        "step_index": step_index,
+                        "policy_decision": policy_decision.model_dump(mode="json"),
+                        "trace_id": getattr(trace_context, "trace_id", None),
+                    },
+                )
         if approval_store is not None and step.step_id not in approved_step_ids:
             approval_check = approval_policy.evaluate(
                 step,
@@ -392,8 +557,52 @@ class PlanExecutionOrchestrator:
                         "plan": plan.model_dump(mode="json"),
                         "policy_decision": policy_decision.model_dump(mode="json"),
                         "approval_origin": "approval_policy",
+                        "trace_id": getattr(trace_context, "trace_id", None),
                     },
                 )
+                self._store_explainability(
+                    trace_context,
+                    step=step,
+                    decision=decision,
+                    policy_decision=policy_decision,
+                    approval_required=True,
+                    approval_id=approval_request.approval_id,
+                    created_agent=created_agent,
+                )
+                approval_span = start_child_span(
+                    trace_context,
+                    span_type="approval",
+                    name="approval_gate",
+                    parent_span_id=step_span,
+                    attributes={"step_id": step.step_id, "approval_origin": "approval_policy"},
+                )
+                add_span_event(
+                    trace_context,
+                    approval_span,
+                    event_type="approval_requested",
+                    message="approval policy requested human approval",
+                    payload={"approval_id": approval_request.approval_id},
+                )
+                add_span_event(
+                    trace_context,
+                    approval_span,
+                    event_type="approval_pending",
+                    message="step paused awaiting approval",
+                    payload={"approval_id": approval_request.approval_id},
+                )
+                finish_span(
+                    trace_context,
+                    approval_span,
+                    status="paused",
+                    attributes={"approval_id": approval_request.approval_id},
+                )
+                finish_span(
+                    trace_context,
+                    policy_span,
+                    status="approval_required",
+                    attributes={"matched_rules": policy_decision.matched_rules},
+                )
+                finish_span(trace_context, step_span, status="paused")
                 return _StepOutcome(
                     approval_request=approval_request,
                     approval_metadata={
@@ -402,18 +611,72 @@ class PlanExecutionOrchestrator:
                         "selected_agent": selected_descriptor.model_dump(mode="json") if selected_descriptor else None,
                         "step_index": step_index,
                         "policy_decision": policy_decision.model_dump(mode="json"),
+                        "trace_id": getattr(trace_context, "trace_id", None),
                     },
                 )
+        finish_span(
+            trace_context,
+            policy_span,
+            status="completed",
+            attributes={"matched_rules": policy_decision.matched_rules},
+        )
+        self._store_explainability(
+            trace_context,
+            step=step,
+            decision=decision,
+            policy_decision=policy_decision,
+            approval_required=False,
+            approval_id=None,
+            created_agent=created_agent,
+        )
+        execution_span = start_child_span(
+            trace_context,
+            span_type="execution",
+            name="adapter_execution",
+            parent_span_id=step_span,
+            attributes={"step_id": step.step_id, "selected_agent_id": decision.selected_agent_id},
+        )
         execution = execution_engine.execute(step_task, decision, registry)
+        finish_span(
+            trace_context,
+            execution_span,
+            status="completed" if execution.success else "failed",
+            attributes={
+                "success": execution.success,
+                "duration_ms": execution.duration_ms,
+                "cost": execution.cost,
+                "warning_count": len(execution.warnings),
+                "adapter_name": execution.metadata.get("adapter_name"),
+            },
+            error=execution.error.model_dump(mode="json") if execution.error is not None else None,
+        )
         feedback = None
         feedback_error: dict[str, Any] | None = None
         if execution.agent_id and isinstance(registry, AgentRegistry):
+            feedback_span = start_child_span(
+                trace_context,
+                span_type="learning",
+                name="feedback_update",
+                parent_span_id=step_span,
+                attributes={"step_id": step.step_id, "agent_id": execution.agent_id},
+            )
             try:
                 feedback = feedback_loop.update_performance(
                     execution.agent_id,
                     execution,
                     task=step_task,
                     agent_descriptor=registry.get(execution.agent_id),
+                )
+                finish_span(
+                    trace_context,
+                    feedback_span,
+                    status="completed",
+                    attributes={
+                        "reward": feedback.reward,
+                        "dataset_size": feedback.dataset_size,
+                        "training_triggered": feedback.training_metrics is not None,
+                        "warning_count": len(feedback.warnings),
+                    },
                 )
             except Exception as exc:  # pragma: no cover - defensive containment
                 warning = f"feedback_loop_failed:{exc.__class__.__name__}"
@@ -436,6 +699,13 @@ class PlanExecutionOrchestrator:
                         sort_keys=True,
                     )
                 )
+                record_error(
+                    trace_context,
+                    feedback_span,
+                    exc,
+                    message="feedback_loop_failed",
+                    payload={"step_id": step.step_id, "agent_id": execution.agent_id},
+                )
         metadata = {
             "title": step.title,
             "policy_decision": policy_decision.model_dump(mode="json"),
@@ -447,6 +717,12 @@ class PlanExecutionOrchestrator:
         }
         if feedback:
             execution.warnings.extend(warning for warning in feedback.warnings if warning not in execution.warnings)
+        finish_span(
+            trace_context,
+            step_span,
+            status="completed" if execution.success else "failed",
+            attributes={"step_id": step.step_id, "success": execution.success},
+        )
         return _StepOutcome(
             step_result=StepExecutionResult.from_execution_result(step.step_id, execution, metadata=metadata)
         )
@@ -457,6 +733,7 @@ class PlanExecutionOrchestrator:
         ordered_results: list[StepExecutionResult],
         *,
         denied_step: PlanStep,
+        trace_context: Any | None = None,
     ) -> PlanExecutionResult:
         return self.result_aggregator.aggregate(
             plan.task_id,
@@ -487,6 +764,7 @@ class PlanExecutionOrchestrator:
         approval_request: ApprovalRequest,
         approval_metadata: dict[str, Any],
         approval_store: ApprovalStore | None,
+        trace_context: Any | None = None,
     ) -> PlanExecutionResult:
         state = PlanExecutionState(
             status=OrchestrationStatus.PAUSED,
@@ -497,11 +775,13 @@ class PlanExecutionOrchestrator:
             metadata={
                 "approval_request": approval_request.model_dump(mode="json"),
                 "approval_context": approval_metadata,
+                "trace_id": getattr(trace_context, "trace_id", None),
             },
         )
         approval_request.metadata.update(
             {
                 "plan_state": state.model_dump(mode="json"),
+                "trace_id": getattr(trace_context, "trace_id", None),
             }
         )
         if approval_store is not None and approval_store.get_request(approval_request.approval_id) is None:
@@ -517,6 +797,40 @@ class PlanExecutionOrchestrator:
                 "parallel_groups_enabled": self.allow_parallel_groups,
                 "pending_approval_id": approval_request.approval_id,
             },
+        )
+
+    def _store_explainability(
+        self,
+        trace_context: Any | None,
+        *,
+        step: PlanStep,
+        decision: RoutingDecision,
+        policy_decision: Any,
+        approval_required: bool,
+        approval_id: str | None,
+        created_agent: AgentDescriptor | None,
+    ) -> None:
+        if trace_context is None or not getattr(trace_context, "trace_id", None):
+            return
+        trace_context.store_explainability(
+            ExplainabilityRecord(
+                trace_id=trace_context.trace_id,
+                step_id=step.step_id,
+                selected_agent_id=decision.selected_agent_id,
+                candidate_agent_ids=[candidate.agent_id for candidate in decision.ranked_candidates],
+                selected_score=decision.selected_score,
+                routing_reason_summary=_build_routing_reason_summary(decision),
+                matched_policy_ids=list(policy_decision.matched_rules),
+                approval_required=approval_required,
+                approval_id=approval_id,
+                metadata={
+                    "routing_decision": decision.model_dump(mode="json"),
+                    "rejected_agents": decision.diagnostics.get("rejected_agents") or [],
+                    "candidate_filter": decision.diagnostics.get("candidate_filter") or {},
+                    "created_agent": created_agent.model_dump(mode="json") if created_agent else None,
+                    "winning_policy_rule": policy_decision.winning_rule_id,
+                },
+            )
         )
 
     def _build_step_task(
@@ -589,3 +903,22 @@ class PlanExecutionOrchestrator:
             if descriptor.agent_id == agent_id:
                 return descriptor
         return None
+
+
+def _build_routing_reason_summary(decision: RoutingDecision) -> str:
+    selected = decision.selected_agent_id or "unselected-agent"
+    score = (
+        f"{decision.selected_score:.3f}" if isinstance(decision.selected_score, (int, float)) else "n/a"
+    )
+    rejected_count = len(decision.diagnostics.get("rejected_agents") or [])
+    candidate_count = len(decision.ranked_candidates or [])
+    return (
+        f"selected {selected} with score {score}; "
+        f"{candidate_count} ranked candidates; {rejected_count} rejected by CandidateFilter"
+    )
+
+
+def _trace_status_for_plan(result: PlanExecutionResult) -> str:
+    if result.status != OrchestrationStatus.COMPLETED:
+        return result.status.value
+    return "completed" if result.success else "failed"
