@@ -590,6 +590,26 @@ def run_task_plan(
     except Exception:
         trace_context.finish_trace(status="failed", metadata={"failed_stage": "plan_execution"})
         raise
+    # Persist the plan execution result so it survives a process restart.
+    plan_state = _get_plan_state_store()
+    if plan_state["store"] is not None:
+        try:
+            plan_state["store"].save_result(
+                result,
+                trace_id=getattr(trace_context, "trace_id", None),
+            )
+        except Exception as exc:  # pragma: no cover - defensive containment
+            logger.warning(
+                json.dumps(
+                    {
+                        "event": "plan_state_save_failed",
+                        "error_type": exc.__class__.__name__,
+                        "error": str(exc),
+                        "plan_id": result.plan_id,
+                    },
+                    sort_keys=True,
+                )
+            )
     return {
         "plan": plan.model_dump(mode="json"),
         "result": result.model_dump(mode="json"),
@@ -723,12 +743,68 @@ def list_recent_plans(
     *,
     trace_store: Any | None = None,
     approval_store: Any | None = None,
+    plan_state_store: Any | None = None,
 ) -> Dict[str, Any]:
-    """Return recent plan executions derived from canonical traces and approvals."""
+    """Return recent plan executions from PlanStateStore (primary) with
+    trace-scan fallback for plans not yet recorded there.
+
+    Priority:
+    1. PlanStateStore — O(1) index on updated_at; always up to date after Phase N.
+    2. Trace scan — backward-compatible fallback for plans recorded before
+       Phase N or when the PlanStateStore is unavailable.
+    """
     trace_state = _get_trace_state()
     trace_store = trace_store if trace_store is not None else trace_state["store"]
     approval_state = _get_approval_state()
     approval_store = approval_store or approval_state["store"]
+
+    # --- Primary path: PlanStateStore ---
+    pss_state = _get_plan_state_store()
+    plan_state_store = plan_state_store if plan_state_store is not None else pss_state["store"]
+
+    if plan_state_store is not None:
+        try:
+            rows = plan_state_store.list_recent(limit)
+            # Enrich each row with approval linkage where relevant.
+            pending_by_plan: dict[str, dict[str, Any]] = {}
+            for request in approval_store.list_pending():
+                if request.plan_id:
+                    pending_by_plan[request.plan_id] = request.model_dump(mode="json")
+
+            plans: list[dict[str, Any]] = []
+            for row in rows:
+                approval = pending_by_plan.get(row["plan_id"])
+                plan_meta = approval.get("metadata", {}).get("plan") if approval else None
+                state_meta = approval.get("metadata", {}).get("plan_state") if approval else None
+                plans.append(
+                    {
+                        "plan_id": row["plan_id"],
+                        "trace_id": row["trace_id"],
+                        "workflow_name": "run_task_plan",
+                        "task_id": None,
+                        "status": row["status"],
+                        "started_at": row["created_at"],
+                        "ended_at": row["updated_at"] if row["status"] != "paused" else None,
+                        "pending_approval_id": row.get("pending_approval_id") or (approval or {}).get("approval_id"),
+                        "policy_effect": None,
+                        "plan": plan_meta,
+                        "state": state_meta,
+                    }
+                )
+            return {"plans": plans}
+        except Exception as exc:  # pragma: no cover - fall through to trace scan
+            logger.warning(
+                json.dumps(
+                    {
+                        "event": "plan_state_store_query_failed",
+                        "error_type": exc.__class__.__name__,
+                        "error": str(exc),
+                    },
+                    sort_keys=True,
+                )
+            )
+
+    # --- Fallback path: trace scan (pre-Phase N or store unavailable) ---
     if trace_store is None:
         return {"plans": []}
 
@@ -738,19 +814,19 @@ def list_recent_plans(
         if trace_id:
             approvals_by_trace_id[trace_id] = request.model_dump(mode="json")
 
-    plans: list[dict[str, Any]] = []
+    plans_fb: list[dict[str, Any]] = []
     traces = trace_store.list_recent_traces(limit=max(limit * 5, limit))
     for record in traces:
         if record.workflow_name != "run_task_plan":
             continue
         approval = approvals_by_trace_id.get(record.trace_id)
-        plan = approval.get("metadata", {}).get("plan") if approval else None
-        state = approval.get("metadata", {}).get("plan_state") if approval else None
+        plan_meta = approval.get("metadata", {}).get("plan") if approval else None
+        state_meta = approval.get("metadata", {}).get("plan_state") if approval else None
         pending_approval_id = (
             record.metadata.get("pending_approval_id")
             or (approval or {}).get("approval_id")
         )
-        plans.append(
+        plans_fb.append(
             {
                 "trace_id": record.trace_id,
                 "plan_id": str(record.metadata.get("plan_id") or record.task_id or record.trace_id),
@@ -761,13 +837,13 @@ def list_recent_plans(
                 "ended_at": record.ended_at.isoformat() if record.ended_at else None,
                 "pending_approval_id": pending_approval_id,
                 "policy_effect": record.metadata.get("policy_effect"),
-                "plan": plan,
-                "state": state,
+                "plan": plan_meta,
+                "state": state_meta,
             }
         )
-        if len(plans) >= limit:
+        if len(plans_fb) >= limit:
             break
-    return {"plans": plans}
+    return {"plans": plans_fb}
 
 
 def list_recent_governance_decisions(
@@ -858,29 +934,136 @@ def get_governance_state() -> Dict[str, Any]:
 
 
 def _get_learning_state() -> dict[str, Any]:
-    """Return process-local training state for online updates."""
+    """Return process-local training state for online updates.
+
+    Performance history is loaded from disk on first call so the routing engine
+    starts with warm priors after a restart.  The training dataset is similarly
+    rehydrated when a persisted file exists.  Neither is auto-saved on update —
+    write frequency does not justify per-call I/O at this stage.
+    """
     if not hasattr(_get_learning_state, "_state"):
         from core.decision import NeuralTrainer, OnlineUpdater, TrainingDataset
+        from core.decision.performance_history import PerformanceHistoryStore
 
-        dataset = TrainingDataset()
+        perf_path = os.getenv("ABRAIN_PERF_HISTORY_PATH", "runtime/abrain_perf_history.json")
+        perf_history: PerformanceHistoryStore
+        if os.path.exists(perf_path):
+            try:
+                perf_history = PerformanceHistoryStore.load_json(perf_path)
+            except Exception as exc:
+                logger.warning(
+                    json.dumps(
+                        {
+                            "event": "perf_history_load_failed",
+                            "error_type": exc.__class__.__name__,
+                            "error": str(exc),
+                            "path": perf_path,
+                        },
+                        sort_keys=True,
+                    )
+                )
+                perf_history = PerformanceHistoryStore()
+        else:
+            perf_history = PerformanceHistoryStore()
+
+        dataset_path = os.getenv("ABRAIN_TRAINING_DATASET_PATH", "runtime/abrain_training_dataset.json")
+        dataset: TrainingDataset
+        if os.path.exists(dataset_path):
+            try:
+                from core.decision.learning.persistence import load_dataset
+                dataset = load_dataset(dataset_path)
+            except Exception as exc:
+                logger.warning(
+                    json.dumps(
+                        {
+                            "event": "training_dataset_load_failed",
+                            "error_type": exc.__class__.__name__,
+                            "error": str(exc),
+                            "path": dataset_path,
+                        },
+                        sort_keys=True,
+                    )
+                )
+                dataset = TrainingDataset()
+        else:
+            dataset = TrainingDataset()
+
         _get_learning_state._state = {
             "dataset": dataset,
             "online_updater": OnlineUpdater(dataset=dataset),
             "trainer": NeuralTrainer(),
+            "perf_history": perf_history,
+            "perf_history_path": perf_path,
+            "dataset_path": dataset_path,
         }
     return _get_learning_state._state
 
 
 def _get_approval_state() -> dict[str, Any]:
-    """Return process-local approval state for pause/resume orchestration."""
+    """Return process-local approval state for pause/resume orchestration.
+
+    The ApprovalStore is wired to a JSON file so pending approvals and their
+    embedded plan state survive a process restart.  On first call the file is
+    loaded if it exists; subsequent mutations auto-save via ApprovalStore's
+    built-in ``_auto_save`` hook.
+    """
     if not hasattr(_get_approval_state, "_state"):
         from core.approval import ApprovalPolicy, ApprovalStore
+        from pathlib import Path
+
+        approval_path = Path(os.getenv("ABRAIN_APPROVAL_STORE_PATH", "runtime/abrain_approvals.json"))
+        store: ApprovalStore
+        if approval_path.exists():
+            try:
+                store = ApprovalStore.load_json(approval_path)
+                # Ensure the loaded store keeps auto-saving to the same path.
+                store.path = approval_path
+            except Exception as exc:
+                logger.warning(
+                    json.dumps(
+                        {
+                            "event": "approval_store_load_failed",
+                            "error_type": exc.__class__.__name__,
+                            "error": str(exc),
+                            "path": str(approval_path),
+                        },
+                        sort_keys=True,
+                    )
+                )
+                store = ApprovalStore(path=approval_path)
+        else:
+            store = ApprovalStore(path=approval_path)
 
         _get_approval_state._state = {
-            "store": ApprovalStore(),
+            "store": store,
             "policy": ApprovalPolicy(),
         }
     return _get_approval_state._state
+
+
+def _get_plan_state_store() -> dict[str, Any]:
+    """Return the process-local PlanStateStore for durable plan run tracking."""
+    if not hasattr(_get_plan_state_store, "_state"):
+        from core.orchestration.state_store import PlanStateStore
+
+        path = os.getenv("ABRAIN_PLAN_STATE_DB_PATH", "runtime/abrain_plan_state.sqlite3")
+        store = None
+        try:
+            store = PlanStateStore(path)
+        except Exception as exc:  # pragma: no cover - defensive containment
+            logger.warning(
+                json.dumps(
+                    {
+                        "event": "plan_state_store_init_failed",
+                        "error_type": exc.__class__.__name__,
+                        "error": str(exc),
+                        "path": path,
+                    },
+                    sort_keys=True,
+                )
+            )
+        _get_plan_state_store._state = {"store": store, "path": path}
+    return _get_plan_state_store._state
 
 
 def _get_trace_state() -> dict[str, Any]:
@@ -990,6 +1173,26 @@ def _decide_plan_step(
         orchestrator=orchestrator,
         trace_context=trace_context,
     )
+    # Update the plan state store so the post-decision result is durable.
+    plan_state = _get_plan_state_store()
+    if plan_state["store"] is not None:
+        try:
+            plan_state["store"].save_result(
+                result,
+                trace_id=str(updated_request.metadata.get("trace_id") or "") or None,
+            )
+        except Exception as exc:  # pragma: no cover - defensive containment
+            logger.warning(
+                json.dumps(
+                    {
+                        "event": "plan_state_save_failed",
+                        "error_type": exc.__class__.__name__,
+                        "error": str(exc),
+                        "plan_id": result.plan_id,
+                    },
+                    sort_keys=True,
+                )
+            )
     return {
         "approval": updated_request.model_dump(mode="json"),
         "plan": updated_request.metadata.get("plan"),
