@@ -1,273 +1,436 @@
+<!--
+ABrain README (DE)
+Meta (suggested):
+- description: Gehärteter Multi-Agent- und Service-Stack mit kanonischem Core (Decision/Governance/Approval/Execution/Learning/Audit) und strikt read-only AdminBot-v2 Adapter.
+- keywords: multi-agent, orchestration, governance, approval, mcp, model-context-protocol, fastapi, adminbot, security, tracing, audit, neural-policy
+- topics (GitHub): multi-agent, mcp, orchestration, fastapi, governance, security, llm, python, docker
+-->
+
 # ABrain
 
-ABrain ist der aktuelle Projektname für den gehärteten Multi-Agent- und Service-Stack in diesem Repository. Der sicherheitsrelevante Schwerpunkt des aktuellen Stands liegt auf einer kleinen Core-Schicht mit festem Dispatcher-/Registry-System und einem dünnen, strikt typisierten AdminBot-v2-Adapter. AdminBot wird dabei als spezialisierter Executor-Provider unter mehreren behandelt, nicht als Leitarchitektur des Repos.
+[![Repo](https://img.shields.io/badge/GitHub-Modularium%2FABrain-blue)](https://github.com/Modularium/ABrain)
+[![Python](https://img.shields.io/badge/python-%3E%3D3.10-informational)](#)
+[![Docker](https://img.shields.io/badge/docker-ready-informational)](#docker--compose)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](#lizenz)
+<!-- Suggested badges (adapt once CI is known):
+[![CI](https://github.com/Modularium/ABrain/actions/workflows/ci.yml/badge.svg)](https://github.com/Modularium/ABrain/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-TODO-lightgrey)](#)
+[![MCP v2](https://img.shields.io/badge/MCP-2025--06--18-informational)](#mcp-v2-stdio-json-rpc)
+-->
 
-Der Arbeitsbaum und einige interne Paket-, Deploy- und Repo-Slugs heißen derzeit noch `Agent-NN`, `agentnn` oder `agent-nn`. Diese technischen Identifiers bleiben in diesem Schritt bewusst erhalten, um keine Import-, Publish- oder Deployment-Regressionen auszulösen.
+ABrain ist der aktuelle Projektname für den gehärteten Multi-Agent- und Service-Stack in diesem Repository. Der sicherheitsrelevante Schwerpunkt liegt auf:
 
-## Aktueller Fokus
+- **kanonischem Core-Pfad** (Decision → Governance/Policy → Approval/HITL → Execution → Feedback/Learning → Audit/Trace)
+- **statischem Tool-Dispatcher/Registry** (keine dynamische Tool-Expansion im Core)
+- **streng typisiertem, read-only AdminBot-v2 Adapter** (AdminBot bleibt Sicherheitsgrenze)
+- **MCP v2 Thin Interface** über dem kanonischen Core (capability-/policy-/approval-/trace-aware)
 
-- canonical runtime stack: `services/*`
-- gehärtete Tool-Ausführung über `services/core.py`
-- feste Tool-Registry in `core/tools/registry.py`
-- kontrollierter Dispatcher in `core/execution/dispatcher.py`
-- getypte Tool- und Identity-Modelle in `core/models/*`
-- kanonisches Agentenmodell in `core/decision/*`
-- kanonischer Decision Layer mit Planner, Candidate Filtering und verpflichtendem NeuralPolicyModel
-- trainierbares Learning-System fuer das NeuralPolicyModel in `core/decision/learning/*`
-- getrennter Execution Layer mit statischen Adaptern, Agent Creation und Feedback Loop
-- native Dev-/Code-Agent-Adapter fuer OpenHands, Codex und Claude Code im Execution Layer
-- Workflow-Adapter-Layer fuer n8n und Flowise im Execution Layer
-- Multi-Agent-Orchestrierung mit PlanBuilder, Step-Level-Routing und strukturierter Aggregation
-- HITL-/Approval-Layer mit Pause, Approve, Reject und Resume fuer sensible PlanSteps
-- verpflichtender Governance-Layer mit deterministischem Policy-Check vor jeder Execution
-- Audit-/Explainability-/Trace-Layer mit internen Traces, Spans und Explainability-Records
-- MCP-v2-Interface-Schicht in `interfaces/mcp/*` als capability-, policy-, approval- und trace-aware Thin Layer ueber dem kanonischen Core
-- sicherer, read-only AdminBot-v2-Adapter in `adapters/adminbot/*`
-- historische MCP-v1-Interface-Schicht in `interfaces/mcp_v1/*`
-- Flowise-Interop-Layer in `adapters/flowise/*`
+> Hinweis zur Umbenennung: **Agent-NN ist der alte technische Name**. Slugs wie `agentnn` / `agent-nn` bleiben vorerst absichtlich bestehen, um Import-/Deploy-Regressions zu vermeiden.
 
-Der historische `mcp/*`-Stack, `agentnn/mcp/*`-Bridges und die Smolitux-Altpfade sind nicht mehr produktiv. Sie bleiben nur als `legacy (disabled)` im Repository.
+## Executive Summary
 
-Aktueller Foundations-Release-Stand: `v1.1.0`.
+ABrain verbindet einen deterministischen, überprüfbaren Kern (Registry/Dispatcher, CandidateFilter + Governance/Policy) mit einem kontrollierten Orchestrations- und Execution-Layer: Entscheidungen werden strukturiert geplant und (nach Policy/Approval) über statische Adapter ausgeführt; Ergebnisse fließen über Feedback in ein best-effort Learning-System zurück. Audit/Trace/Explainability sind als Nachvollziehbarkeitsschicht vorgesehen.
 
-## Wichtige Komponenten
+Dieses Repo enthält außerdem eine service-orientierte Laufzeit (API Gateway + mehrere Services) für lokale/Container-basierte Setups, inkl. Redis/Postgres/Prometheus.
 
-### Hardened Core
+## Quickstart
 
-- `services/core.py`
-- `core/execution/dispatcher.py`
-- `core/tools/registry.py`
-- `core/tools/handlers.py`
-- `core/models/tooling.py`
-- `core/models/identity.py`
-- `core/models/errors.py`
-
-### AdminBot-Adapter
-
-- `adapters/adminbot/client.py`
-- `adapters/adminbot/service.py`
-- `core/models/adminbot.py`
-- `docs/integrations/adminbot/*`
-
-### Agent Model / Flowise Interop
-
-- `core/decision/*`
-- `adapters/flowise/*`
-- `docs/architecture/AGENT_MODEL_AND_FLOWISE_INTEROP.md`
-
-Der Flowise-Pfad ist bewusst nur ein Import-/Export- und UI-Layer. Er ist weder Teil des Decision Layers noch Teil des Execution Layers und definiert keine interne Wahrheit.
-
-### Decision Layer
-
-- `core/decision/planner.py`
-- `core/decision/candidate_filter.py`
-- `core/decision/neural_policy.py`
-- `core/decision/routing_engine.py`
-- `docs/architecture/DECISION_LAYER_AND_NEURAL_POLICY.md`
-
-### Execution Layer
-
-- `core/execution/adapters/*`
-- `core/execution/execution_engine.py`
-- `core/decision/agent_creation.py`
-- `core/decision/feedback_loop.py`
-- `docs/architecture/EXECUTION_LAYER_AND_AGENT_CREATION.md`
-- `docs/architecture/NATIVE_DEV_AGENT_ADAPTERS.md`
-- `docs/architecture/WORKFLOW_ADAPTER_LAYER.md`
-
-OpenHands, Codex, Claude Code, n8n und Flowise werden dabei nur als kontrollierte `ExecutionAdapter` eingebunden. Sie sind nicht Teil der internen Wahrheit und ersetzen weder Decision Layer noch gehärteten Core.
-
-### Workflow Adapter Layer
-
-- `core/execution/adapters/n8n_adapter.py`
-- `core/execution/adapters/flowise_adapter.py`
-- `adapters/flowise/*`
-- `docs/architecture/WORKFLOW_ADAPTER_LAYER.md`
-
-n8n wird in F2 als kontrollierter Workflow-Executor angesprochen. Flowise bleibt primaer Interop-/UI-Layer und ist nur zusaetzlich als kleiner, strikt begrenzter Execution-Adapter verfuegbar. Alte Integrations- und Plugin-Reste unter `integrations/*` sind nicht der kanonische Runtime-Pfad.
-
-### Multi-Agent Orchestration
-
-- `core/decision/plan_models.py`
-- `core/decision/plan_builder.py`
-- `core/orchestration/*`
-- `services/core.py` mit `run_task_plan(...)`
-- `docs/architecture/MULTI_AGENT_ORCHESTRATION.md`
-
-ABrain kann Aufgaben damit in mehrere kontrollierte Schritte zerlegen, pro Schritt erneut den kanonischen Routing-Pfad anwenden, Ergebnisse aggregieren und Feedback pro Schritt erfassen. Das ist bewusst keine freie Schwarm-Architektur und keine zweite Runtime.
-
-### HITL / Approval Layer
-
-- `core/approval/*`
-- `core/orchestration/resume.py`
-- `docs/architecture/HITL_AND_APPROVAL_LAYER.md`
-
-Der Approval-Layer liegt in diesem Branch oberhalb des bestehenden Routing-/Execution-Pfads. Er pausiert sensible Schritte strukturiert, erzeugt serialisierbare `ApprovalRequest`s und setzt einen Plan nach `approve` oder `reject` reproduzierbar fort. Er ersetzt weder CandidateFilter noch adapterinterne Permission-Mechaniken.
-
-### Governance Layer
-
-- `core/governance/*`
-- `docs/architecture/GOVERNANCE_LAYER.md`
-
-Der Governance-Layer erzwingt auf `main` deterministische Runtime-Policies nach Routing und vor Execution. Er kann Aktionen erlauben, blockieren oder in denselben Approval-Pfad ueberfuehren. CandidateFilter bleibt dabei die harte Sicherheitsgrenze vor dem NN; Governance ist eine zusaetzliche Enforcement-Schicht fuer die konkret ausgewaehlte Aktion.
-
-### Audit / Explainability Layer
-
-- `core/audit/*`
-- `docs/architecture/AUDIT_AND_EXPLAINABILITY_LAYER.md`
-
-Der Audit-/Trace-Layer fuehrt interne Traces, Spans und Explainability-Records fuer Routing, Governance, Approval, Execution und Learning ein. Er ist bewusst best-effort, ersetzt keine Sicherheitsgrenzen und fuegt keine zweite Runtime hinzu.
-
-### Learning System
-
-- `core/decision/learning/dataset.py`
-- `core/decision/learning/reward_model.py`
-- `core/decision/learning/online_updater.py`
-- `core/decision/learning/trainer.py`
-- `core/decision/learning/persistence.py`
-
-### MCP V2 Interface
-
-- `interfaces/mcp/server.py`
-- `interfaces/mcp/tool_registry.py`
-- `interfaces/mcp/handlers/*`
-- `scripts/abrain_mcp.py`
-- `docs/architecture/MCP_V2_INTERFACE.md`
-- `docs/guides/MCP_USAGE.md`
-
-Der aktive MCP-Pfad ist in diesem Branch eine strikt statische v2-Schicht ueber `services/core.py`. Sie exponiert nur capability-orientierte Entry Points fuer `run_task`, `run_plan`, Approval und Trace-Zugriff. Adapter, Registry und Tool-Logik werden nicht direkt exponiert.
-
-### Historische MCP V1 Schicht
-
-- `interfaces/mcp_v1/server.py`
-- `docs/mcp/*`
-
-Die v1-Schicht bleibt fuer Rueckwaertskompatibilitaet und historische lokale Setups im Repository, ist aber nicht mehr der kanonische MCP-Einstieg.
-
-### Weitere Bereiche
-
-- `server/main.py` und `api/` für REST-/Bridge-Einstiege
-- `sdk/` für CLI und SDK
-- `frontend/agent-ui` als kanonische Control Plane / React-Oberfläche
-- `monitoring/` für Monitoring-Assets und historische bzw. ergänzende Dashboard-Bausteine
-
-## Quick Start
-
-### Minimaler Prüfpfad für den gehärteten Stand
+### Minimaler Prüfpfad für den gehärteten Core (Tests)
 
 ```bash
 cd <repo-root>
+
 python3 -m venv .venv
 . .venv/bin/activate
+
 pip install --upgrade pip
-pip install pydantic pytest
+pip install pydantic pytest httpx
 
 python -m pytest -o python_files='test_*.py' \
-  tests/adapters/test_adminbot_client.py \
-  tests/adapters/test_adminbot_tools.py \
-  tests/core/test_execution_dispatcher.py \
-  tests/core/test_tool_registry.py \
-  tests/services/test_core.py
-```
+  tests/decision \
+  tests/execution \
+  tests/adapters \
+  tests/core \
+  tests/services \
+  tests/integration/test_node_export.py
 
-### Breitere lokale Entwicklungsumgebung
+Einmal „alles“ für lokales Arbeiten (pip)
 
-```bash
+bash
+
 cd <repo-root>
 python3 -m venv .venv
 . .venv/bin/activate
+
 pip install --upgrade pip
 pip install -r requirements.txt
-```
 
-Optional mit Poetry:
+Frontend lokal starten (falls benötigt)
 
-```bash
-poetry install --no-root
-```
+bash
 
-### Frontend lokal starten
-
-```bash
 cd <repo-root>/frontend/agent-ui
 npm install
 npm run dev
-```
 
-Das Frontend spricht in Phase M standardmaessig mit dem API Gateway unter `http://localhost:8080` und nutzt dort die duennen `/control-plane/*`-Routen ueber dem kanonischen Core.
+    ⚠️ Frontend/API-Basis-URL ist deploymentabhängig (siehe .env.example, VITE_API_URL).
 
-## Test- und Verifikationskommandos
+Installation
+Lokale Installation
 
-Gezielte Kern- und Adapter-Tests:
+Voraussetzungen (empfohlen):
 
-```bash
-.venv/bin/python -m pytest -o python_files='test_*.py' \
-  tests/adapters/test_adminbot_client.py \
-  tests/adapters/test_adminbot_tools.py \
-  tests/core/test_execution_dispatcher.py \
-  tests/core/test_tool_registry.py \
-  tests/services/test_core.py
-```
+    Python 3.10+
+    optional: Poetry
+    optional: Node.js 18+ (für frontend/agent-ui)
 
-Syntaxprüfung der gehärteten Module:
+Install (pip):
 
-```bash
-.venv/bin/python -m py_compile \
-  api/endpoints.py \
-  server/main.py \
-  services/core.py \
-  services/__init__.py \
-  sdk/cli/commands/agent.py \
-  core/__init__.py \
-  core/tools/__init__.py \
-  core/agents/runtime.py \
-  core/execution/dispatcher.py \
-  core/models/adminbot.py \
-  core/models/errors.py \
-  core/models/identity.py \
-  core/models/tooling.py \
-  core/tools/registry.py \
-  core/tools/handlers.py \
-  adapters/adminbot/client.py \
-  adapters/adminbot/service.py
-```
+bash
 
-## Sicherheitshinweise
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
 
-- ABrain führt AdminBot nicht generisch fern.
-- Der AdminBot-v2-Adapter bietet nur feste, typisierte read-only Tools.
-- AdminBot bleibt die Sicherheitsgrenze.
-- Der gehärtete Core darf nicht durch direkte Legacy-Aufrufe umgangen werden.
-- MCP v2 bleibt nur eine externe Protokollschicht vor dem kanonischen Core-Pfad.
+Install (Poetry, optional):
 
-## Entwicklungsstatus
+bash
 
-Für neue sicherheitsrelevante Integrationen gilt der gehärtete Core als Referenzpfad. Ältere Bereiche und historische Dokumente bleiben im Repository nur dort erhalten, wo sie für Betrieb, Migration oder Rückverfolgbarkeit noch relevant sind; sie sind nicht gleichrangig mit dem Core-/AdminBot-Pfad.
+poetry install --no-root
 
-Der aktuelle Release-Scope auf `main` umfasst den Foundations-Stack plus Multi-Agent-Orchestrierung, HITL-/Approval-Layer und Governance-Layer. Dieser Branch erweitert den Stack zusaetzlich um den Audit-/Explainability-/Trace-Layer und eine duenne MCP-v2-Interface-Schicht. Breite MCP-Expansion, Streaming, externe Observability-Backends und weiter vertiefte Spezialadapter sind weiterhin nicht Teil dieses Schritts.
+Docker & Compose
 
-## Wichtige Dokumente
+ABrain liefert ein docker-compose.yml mit mehreren Services (API Gateway, Dispatcher, Registry, Session Manager, Vector Store, LLM Gateway, Routing Agent, …).
 
-- [Projektüberblick](docs/architecture/PROJECT_OVERVIEW.md)
-- [Canonical Runtime Stack](docs/architecture/CANONICAL_RUNTIME_STACK.md)
-- [Agent Model And Flowise Interop](docs/architecture/AGENT_MODEL_AND_FLOWISE_INTEROP.md)
-- [Decision Layer And Neural Policy](docs/architecture/DECISION_LAYER_AND_NEURAL_POLICY.md)
-- [Execution Layer And Agent Creation](docs/architecture/EXECUTION_LAYER_AND_AGENT_CREATION.md)
-- [Native Dev Agent Adapters](docs/architecture/NATIVE_DEV_AGENT_ADAPTERS.md)
-- [Workflow Adapter Layer](docs/architecture/WORKFLOW_ADAPTER_LAYER.md)
-- [Multi-Agent Orchestration](docs/architecture/MULTI_AGENT_ORCHESTRATION.md)
-- [HITL And Approval Layer](docs/architecture/HITL_AND_APPROVAL_LAYER.md)
-- [Governance Layer](docs/architecture/GOVERNANCE_LAYER.md)
-- [Audit And Explainability Layer](docs/architecture/AUDIT_AND_EXPLAINABILITY_LAYER.md)
-- [MCP V2 Interface](docs/architecture/MCP_V2_INTERFACE.md)
-- [MCP Usage](docs/guides/MCP_USAGE.md)
-- [Foundations Release Scope](docs/releases/FOUNDATIONS_RELEASE_SCOPE.md)
-- [Foundations Release Notes](docs/releases/RELEASE_NOTES_FOUNDATIONS.md)
-- [Historical MCP V1 Architecture](docs/architecture/MCP_V1_SERVER.md)
-- [Historical MCP V1 Usage](docs/mcp/MCP_SERVER_USAGE.md)
-- [Core Refactor](docs/architecture/CORE_REFACTOR.md)
-- [Development Setup](docs/setup/DEVELOPMENT_SETUP.md)
-- [AdminBot Integration Plan](docs/integrations/adminbot/AGENT_NN_ADMINBOT_INTEGRATION_PLAN.md)
-- [AdminBot Security Invariants](docs/integrations/adminbot/SECURITY_INVARIANTS.md)
-- [Rename Plan](docs/reviews/abrain_rename_plan.md)
-- [Rename And Release Audit](docs/reviews/repo_rename_and_release_audit.md)
+Setup:
+
+bash
+
+cd <repo-root>
+cp .env.example .env
+# Editiere .env und setze mindestens OPENAI_API_KEY (oder konfiguriere LLM_BACKEND)
+docker compose up --build
+
+Ports (Default aus Compose / Images):
+
+    API Gateway: http://localhost:8000
+    Frontend (nginx): http://localhost:3000
+    Redis: localhost:6379
+    Postgres: localhost:5434
+    Prometheus: http://localhost:9090
+
+    Hinweis: docker-compose.yml überschreibt die Dockerfile-Default-CMD pro Service.
+    Maintainer-Check: Das Dockerfile referenziert als Default uvicorn api.server:app; verifizieren, ob dieses Entry-Module in der aktuellen Branch-Struktur existiert und/oder ob Compose die primäre Startform ist.
+
+Konfiguration
+
+ABrain nutzt sowohl .env (Compose/Services/UI) als auch SDK-spezifische RC/Env-Konfiguration.
+.env (Compose/Runtime)
+
+Startpunkt ist .env.example → .env.
+
+Minimal (Beispiel):
+
+dotenv
+
+OPENAI_API_KEY=...              # falls LLM_BACKEND=openai
+DATABASE_URL=postgresql://postgres:postgres@db:5432/agent_nn
+
+API_AUTH_ENABLED=false
+CORS_ALLOW_ORIGINS=*
+
+# UI
+VITE_API_URL=http://localhost:8000
+
+SDK/CLI-Konfiguration (~/.agentnnrc + Env)
+
+Das SDK liest ~/.agentnnrc und Environment:
+
+json
+
+{
+  "host": "http://localhost:8000",
+  "api_token": "CHANGE_ME"
+}
+
+Alternativ per Environment:
+
+bash
+
+export AGENTNN_HOST="http://localhost:8000"
+export AGENTNN_API_TOKEN="CHANGE_ME"
+
+Wichtige Environment Variablen (Auswahl)
+Kategorie	Variable	Beispiel	Zweck
+Core Trace	ABRAIN_TRACE_DB_PATH	runtime/abrain_traces.sqlite3	Pfad zur Trace/Explainability DB
+Core Governance	ABRAIN_POLICY_PATH	policies/policy.toml	Policy Registry Pfad
+Gateway Auth	API_AUTH_ENABLED	true/false	Aktiviert Scope-Checks
+Gateway Auth	API_GATEWAY_KEY	changeme	X-API-Key für einfache Gate-Auth
+JWT	JWT_SECRET	secret	Signaturkey
+Routing	ROUTING_URL	http://routing_agent:8111	Routing Service
+LLM	OPENAI_API_KEY	...	API-Key für OpenAI
+Frontend	VITE_API_URL	http://localhost:8000	UI → REST Base
+
+    Vollständige Liste: siehe .env.example.
+
+Nutzung
+Kontrolle über die Control Plane (HTTP)
+
+Das API Gateway stellt Control-Plane-Endpunkte bereit (Beispiele):
+
+    GET /control-plane/overview – Systemübersicht
+    GET /control-plane/agents – Agent-Katalog (projektiert)
+    POST /control-plane/tasks/run – Single Task via kanonischem Core
+    POST /control-plane/plans/run – Plan-Ausführung
+    Approval: POST /control-plane/approvals/{approval_id}/approve|reject
+    Traces: GET /control-plane/traces, GET /control-plane/traces/{trace_id}, .../explainability
+
+Beispiel: Single Task starten
+
+bash
+
+curl -sS -X POST "http://localhost:8000/control-plane/tasks/run" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "task_type": "system_status",
+    "description": "Read current status",
+    "input_data": {},
+    "options": {}
+  }' | jq
+
+CLI (Typer)
+
+Die CLI wird als agentnn bereitgestellt (Altname, bleibt vorerst als technischer Slug).
+
+bash
+
+# Version / globale Flags
+agentnn --version
+agentnn --verbose --debug
+
+# Quick dispatch
+agentnn ask "Check system health" --task-type dev
+
+# Queue status
+agentnn queue status
+
+# Governance helpers
+agentnn governance contract view <agent-id>
+agentnn governance trust score <agent-id>
+
+MCP v2 (stdio JSON-RPC)
+
+ABrain bietet einen MCP v2 Server als stdio-JSON-RPC.
+
+Start:
+
+bash
+
+# via console script (empfohlen)
+abrain-mcp
+
+# oder modulbasiert
+python -m interfaces.mcp.server
+
+Tool Discovery:
+
+    tools/list liefert u. a.:
+    abrain.run_task, abrain.run_plan, abrain.approve, abrain.reject, abrain.list_pending_approvals, abrain.get_trace, abrain.explain
+
+Beispiel: tools/call für abrain.run_task
+
+json
+
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "abrain.run_task",
+    "arguments": {
+      "task_type": "system_status",
+      "description": "Read current status",
+      "input_data": {},
+      "preferences": {}
+    }
+  }
+}
+
+Architektur
+Kanonischer Überblick (Mermaid)
+
+mermaid
+
+flowchart TB
+  UI[Control Plane UI<br/>frontend/agent-ui] --> GW[API Gateway<br/>api_gateway/main.py]
+
+  subgraph CanonicalCore["Canonical Core (Foundations)"]
+    CORE[services/core.py<br/>run_task / run_task_plan] --> PLANNER[Planner]
+    PLANNER --> FILTER[CandidateFilter<br/>(deterministisch)]
+    FILTER --> NN[NeuralPolicyModel<br/>(Ranking)]
+    NN --> GOV[Governance/Policy Engine]
+    GOV -->|allow| EXEC[ExecutionEngine<br/>core/execution/*]
+    GOV -->|require approval| HITL[Approval Store/Policy<br/>core/approval/*]
+    HITL -->|approve/reject| EXEC
+    EXEC --> ADAPTERS[Static ExecutionAdapters<br/>AdminBot/OpenHands/Codex/Claude/n8n/Flowise]
+    EXEC --> FEEDBACK[Feedback Loop + Learning<br/>core/decision/learning/*]
+    CORE --> TRACE[Trace/Audit/Explainability<br/>core/audit/*]
+  end
+
+  GW -->|/control-plane/*| CORE
+  GW -->|/chat, /agents, /embed ...| SVC[Service Mesh (compose)]
+  subgraph ServiceMesh["Services (docker-compose.yml)"]
+    DISP[Task Dispatcher :8001] --> ROUTE[Routing Agent :8111]
+    REG[Agent Registry :8002]
+    SESS[Session Manager :8005]
+    VEC[Vector Store :8004]
+    LLM[LLM Gateway :8003]
+  end
+
+  ADAPTERS -->|UDS IPC| ADMINBOT[(AdminBot v2 Daemon<br/>/run/adminbot/adminbot.sock)]
+
+Komponentenvergleich
+Komponente	Pfad(e)	Rolle	Stabilität	Security-Notiz
+Hardened Tool Execution	core/tools/*, core/execution/dispatcher.py	Statische Tool Registry + Validation	hoch	keine dynamischen Tools
+Canonical Core	services/core.py	Kanonischer Run-Pfad	hoch	Policy/Approval vor Execution
+Decision Layer	core/decision/*	Planner/Filter/NN/Routing	mittel	NN rankt nur gefilterte Kandidaten
+Governance Layer	core/governance/*	deterministische Policy Checks	mittel	kann allow/deny/approval
+Approval/HITL	core/approval/*	Pause/Approve/Reject/Resume	mittel	zusätzlicher Kontrollpunkt
+Audit/Trace	core/audit/*	Trace+Explainability	mittel	best-effort, nicht Security-Grenze
+MCP v2 Interface	interfaces/mcp/*	Thin stdio Tool Surface	mittel	kein Bypass des Core
+AdminBot Adapter	adapters/adminbot/*	read-only Bridge zu AdminBot	hoch	keine generischen Actions
+API Gateway	api_gateway/main.py	HTTP Entry, Control Plane	mittel	optional scopes+keys
+Services (compose)	services/*/main.py	Dispatcher/Registry/…	mittel	auth middleware vorhanden
+Empfohlenes Development Setup
+
+    Python venv + requirements.txt
+    optional Poetry (wenn das Team Poetry bevorzugt)
+    Node 18+ für die UI
+    Lint/Quality: ruff, black, mypy (Konfiguration im pyproject.toml)
+
+Beispiel:
+
+bash
+
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
+pip install ruff black mypy pytest pytest-cov
+
+Testing und CI
+Lokal
+
+bash
+
+# schnell: Foundations-Tests
+python -m pytest -o python_files='test_*.py' \
+  tests/decision tests/execution tests/adapters tests/core tests/services
+
+# typchecks/lint (wenn installiert)
+ruff check .
+black --check .
+mypy .
+
+CI (Vorschlag, falls noch nicht vorhanden)
+
+Empfohlen ist eine GitHub Actions Pipeline, die:
+
+    pip install -r requirements.txt
+    pytest + Coverage
+    ruff + black --check
+    optional: docker build und docker compose config Validierung
+
+    Maintainer TODO: Workflow-Datei unter .github/workflows/ci.yml ergänzen und Badge aktivieren.
+
+Contribution Guide
+
+Beiträge sind willkommen. Bitte beachte:
+
+    Erstelle Issues für größere Änderungen/Architekturentscheidungen.
+    Nutze Feature-Branches und Pull Requests.
+    Vor PR: Tests + Lint lokal ausführen.
+    Sicherheitsrelevante Änderungen müssen die AdminBot- und Core-Invarianten respektieren.
+
+Empfohlene Community-Health-Dateien (falls nicht vorhanden):
+
+    CONTRIBUTING.md
+    CODE_OF_CONDUCT.md
+    SECURITY.md
+    CITATION.cff
+
+Lizenz
+
+Lizenz laut pyproject.toml: MIT.
+
+    Maintainer TODO: LICENSE Datei im Repo-Root hinzufügen, damit GitHub die Lizenz zuverlässig erkennt.
+
+Changelog Template
+
+Dieses Projekt sollte ein CHANGELOG.md nach „Keep a Changelog“ führen und SemVer verwenden.
+
+markdown
+
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on Keep a Changelog,
+and this project adheres to Semantic Versioning.
+
+## [Unreleased]
+
+### Added
+- ...
+
+### Changed
+- ...
+
+### Fixed
+- ...
+
+### Security
+- ...
+
+FAQ
+
+Warum taucht „Agent-NN“ noch auf?
+Weil technische Slugs (agentnn, agent-nn) absichtlich vorerst erhalten bleiben, um keine Import-/Publish-/Deploy-Regressions auszulösen.
+
+Ist AdminBot Teil der ABrain-Architektur?
+AdminBot ist eine externe Sicherheitsgrenze. ABrain nutzt nur einen strikt read-only Adapter im Default-Scope.
+
+Wie funktioniert Approval/HITL?
+Wenn Governance „Approval Required“ entscheidet, pausiert der Core den Plan und liefert approval_id. Danach approve/reject und deterministisches Resume.
+
+Wo sehe ich Traces/Explainability?
+Über Control-Plane-Endpunkte (/control-plane/traces/...) oder MCP (abrain.get_trace, abrain.explain).
+
+Welche Plattform wird unterstützt?
+Python ist grundsätzlich plattformübergreifend; AdminBot v2 ist als Linux-Daemon ausgelegt. Für produktive AdminBot-Integration ist Linux empfohlen.
+Referenzen und zentrale Dateien im Repo
+
+    Core: services/core.py, core/execution/dispatcher.py, core/tools/*
+    MCP v2: interfaces/mcp/*, docs/guides/MCP_USAGE.md
+    AdminBot Adapter: adapters/adminbot/*, docs/integrations/adminbot/*
+    Compose: docker-compose.yml, .env.example, Dockerfile
+    API Gateway: api_gateway/main.py
+    Dev/Arch Doku: docs/architecture/*, docs/setup/DEVELOPMENT_SETUP.md
+
+Chat-Protokolle
+
+    TODO: Bitte die zwei Chat-URLs eintragen, die im Projektkontext referenziert werden sollen.
+
+    Chat 1: <CHAT_URL_1>
+    Chat 2: <CHAT_URL_2>
+
+Maintainer Checklist
+
+    LICENSE im Repo-Root ergänzen (MIT laut pyproject)
+    CI Workflow hinzufügen (.github/workflows/ci.yml) und Badge aktivieren
+    CHANGELOG.md nach Keep a Changelog pflegen und Releases taggen
+    Security-Invarianten (AdminBot Adapter + Core Dispatcher/Registry) bei Changes re-validieren
+    .dockerignore ergänzen (Build-Kontext klein halten)
+    Das Dockerfile Default-CMD (uvicorn api.server:app) gegen aktuellen Stand verifizieren
+
