@@ -75,11 +75,11 @@ export default function TracesPage() {
     }
   }
 
+  // loadTraces is defined inline without useCallback; adding it as a dep would
+  // cause an infinite fetch loop. This effect intentionally runs only on mount.
   useEffect(() => {
     loadTraces()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // loadTraces is defined inline without useCallback; adding it as a dependency
-    // would cause an infinite fetch loop. It only runs once on mount intentionally.
   }, [])
 
   return (
