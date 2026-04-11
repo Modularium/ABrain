@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-architecture/CONTROL_PLANE_CURRENT_STATE" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.8.1">
+<title data-rh="true">Control Plane Current State | ABrain Documentation</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://ecospheretwork.github.io/Agent-NN/architecture/CONTROL_PLANE_CURRENT_STATE"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Control Plane Current State | ABrain Documentation"><meta data-rh="true" name="description" content="Selected Base"><meta data-rh="true" property="og:description" content="Selected Base"><link data-rh="true" rel="icon" href="/Agent-NN/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://ecospheretwork.github.io/Agent-NN/architecture/CONTROL_PLANE_CURRENT_STATE"><link data-rh="true" rel="alternate" href="https://ecospheretwork.github.io/Agent-NN/architecture/CONTROL_PLANE_CURRENT_STATE" hreflang="en"><link data-rh="true" rel="alternate" href="https://ecospheretwork.github.io/Agent-NN/architecture/CONTROL_PLANE_CURRENT_STATE" hreflang="x-default"><link rel="stylesheet" href="/Agent-NN/assets/css/styles.49a6e941.css">
+<script src="/Agent-NN/assets/js/runtime~main.5c5eedd6.js" defer="defer"></script>
+<script src="/Agent-NN/assets/js/main.dbc98757.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t="light";var e=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",e||t),document.documentElement.setAttribute("data-theme-choice",e||t)}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><a class="navbar__brand" href="/Agent-NN/"></a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><main class="docMainContainer_TBSr docMainContainerEnhanced_lQrH"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>Control Plane Current State</h1></header>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="selected-base">Selected Base<a href="#selected-base" class="hash-link" aria-label="Direct link to Selected Base" title="Direct link to Selected Base">​</a></h2>
+<p>The control plane builds on <code>frontend/agent-ui</code>.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="entry-points">Entry Points<a href="#entry-points" class="hash-link" aria-label="Direct link to Entry Points" title="Direct link to Entry Points">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="frontend">Frontend<a href="#frontend" class="hash-link" aria-label="Direct link to Frontend" title="Direct link to Frontend">​</a></h3>
+<ul>
+<li><code>frontend/agent-ui/src/main.tsx</code></li>
+<li><code>frontend/agent-ui/src/App.tsx</code></li>
+</ul>
+<p>The frontend is a BrowserRouter-based SPA with a persistent sidebar/header shell.</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="backend-attachment">Backend Attachment<a href="#backend-attachment" class="hash-link" aria-label="Direct link to Backend Attachment" title="Direct link to Backend Attachment">​</a></h3>
+<ul>
+<li><code>api_gateway/main.py</code></li>
+</ul>
+<p>Phase M attaches the operator UI to the API gateway instead of introducing a separate dashboard runtime.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="route-structure">Route Structure<a href="#route-structure" class="hash-link" aria-label="Direct link to Route Structure" title="Direct link to Route Structure">​</a></h2>
+<p>The Phase M control plane now exposes a focused route set:</p>
+<ul>
+<li><code>/</code>
+<ul>
+<li>system overview</li>
+</ul>
+</li>
+<li><code>/traces</code>
+<ul>
+<li>recent traces, trace detail, explainability</li>
+</ul>
+</li>
+<li><code>/approvals</code>
+<ul>
+<li>pending approvals, approve, reject</li>
+</ul>
+</li>
+<li><code>/plans</code>
+<ul>
+<li>plan launch, recent plan runs, paused-step state</li>
+</ul>
+</li>
+<li><code>/agents</code>
+<ul>
+<li>agent capability and execution metadata view</li>
+</ul>
+</li>
+<li><code>/settings</code>
+<ul>
+<li>local UI/API endpoint settings</li>
+</ul>
+</li>
+</ul>
+<p>Older demo-oriented routes were removed from the main navigation so the control plane has a single visible truth.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="data-flow">Data Flow<a href="#data-flow" class="hash-link" aria-label="Direct link to Data Flow" title="Direct link to Data Flow">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="frontend-flow">Frontend flow<a href="#frontend-flow" class="hash-link" aria-label="Direct link to Frontend flow" title="Direct link to Frontend flow">​</a></h3>
+<ul>
+<li>Pages call <code>frontend/agent-ui/src/services/controlPlane.ts</code>.</li>
+<li>That client reads the shared UI API base URL from <code>useAppStore</code>.</li>
+<li>Requests go to <code>/control-plane/*</code> on the API gateway.</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="backend-flow">Backend flow<a href="#backend-flow" class="hash-link" aria-label="Direct link to Backend flow" title="Direct link to Backend flow">​</a></h3>
+<ul>
+<li><code>api_gateway/main.py</code> exposes thin HTTP routes under <code>/control-plane/*</code>.</li>
+<li>These routes call canonical <code>services/core.py</code> helpers.</li>
+<li><code>services/core.py</code> continues to own:<!-- -->
+<ul>
+<li>task execution entry</li>
+<li>plan execution entry</li>
+<li>approval pause/resume</li>
+<li>trace and explainability reads</li>
+<li>governance-derived read models</li>
+</ul>
+</li>
+</ul>
+<p>The UI does not call adapters, registries, or orchestration internals directly.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="current-screens">Current Screens<a href="#current-screens" class="hash-link" aria-label="Direct link to Current Screens" title="Direct link to Current Screens">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="overview">Overview<a href="#overview" class="hash-link" aria-label="Direct link to Overview" title="Direct link to Overview">​</a></h3>
+<ul>
+<li>Shows summary counts</li>
+<li>Shows active runtime layers</li>
+<li>Shows recent traces</li>
+<li>Shows pending approvals</li>
+<li>Shows recent governance decisions</li>
+<li>Allows controlled <code>run_task</code> submission through the canonical core</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="traces">Traces<a href="#traces" class="hash-link" aria-label="Direct link to Traces" title="Direct link to Traces">​</a></h3>
+<ul>
+<li>Lists recent traces</li>
+<li>Loads a full trace snapshot</li>
+<li>Displays spans and explainability records from the audit layer</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="approvals">Approvals<a href="#approvals" class="hash-link" aria-label="Direct link to Approvals" title="Direct link to Approvals">​</a></h3>
+<ul>
+<li>Lists pending approval requests</li>
+<li>Executes approve/reject through the existing core pause/resume path</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="plans">Plans<a href="#plans" class="hash-link" aria-label="Direct link to Plans" title="Direct link to Plans">​</a></h3>
+<ul>
+<li>Launches plans via <code>services.core.run_task_plan</code></li>
+<li>Shows recent plan traces</li>
+<li>Surfaces paused step state from approval metadata where available</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="agents">Agents<a href="#agents" class="hash-link" aria-label="Direct link to Agents" title="Direct link to Agents">​</a></h3>
+<ul>
+<li>Shows projected capability metadata from the current agent listing path</li>
+<li>Displays <code>source_type</code> and <code>execution_kind</code> when the registry exposes them</li>
+<li>Clearly keeps incomplete projections honest</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="historical-mismatch-identified-during-analysis">Historical Mismatch Identified During Analysis<a href="#historical-mismatch-identified-during-analysis" class="hash-link" aria-label="Direct link to Historical Mismatch Identified During Analysis" title="Direct link to Historical Mismatch Identified During Analysis">​</a></h2>
+<p>Before Phase M, the <code>frontend/agent-ui</code> shell was already the correct frontend basis, but several pages were still built around mock/demo entities rather than around the current ABrain core. That mismatch has now been reduced by moving the main control-plane views to canonical gateway/core-backed data.</p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="build-and-start-mechanism">Build And Start Mechanism<a href="#build-and-start-mechanism" class="hash-link" aria-label="Direct link to Build And Start Mechanism" title="Direct link to Build And Start Mechanism">​</a></h2>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="frontend-1">Frontend<a href="#frontend-1" class="hash-link" aria-label="Direct link to Frontend" title="Direct link to Frontend">​</a></h3>
+<ul>
+<li><code>cd frontend/agent-ui</code></li>
+<li><code>npm install</code></li>
+<li><code>npm run dev</code></li>
+<li><code>npm run build</code></li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="backend-contract">Backend contract<a href="#backend-contract" class="hash-link" aria-label="Direct link to Backend contract" title="Direct link to Backend contract">​</a></h3>
+<ul>
+<li>The frontend expects <code>VITE_API_URL</code> or the persisted UI setting to point to the API gateway.</li>
+<li>Default local target for Phase M is <code>http://localhost:8080</code>.</li>
+</ul>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="current-boundaries">Current Boundaries<a href="#current-boundaries" class="hash-link" aria-label="Direct link to Current Boundaries" title="Direct link to Current Boundaries">​</a></h2>
+<ul>
+<li>The control plane visualizes traces, approvals, governance, orchestration state, and agent metadata.</li>
+<li>It does not implement its own policy engine.</li>
+<li>It does not simulate approvals.</li>
+<li>It does not create a second runtime.</li>
+<li>It does not expose adapter internals directly.</li>
+</ul></div></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#selected-base" class="table-of-contents__link toc-highlight">Selected Base</a></li><li><a href="#entry-points" class="table-of-contents__link toc-highlight">Entry Points</a><ul><li><a href="#frontend" class="table-of-contents__link toc-highlight">Frontend</a></li><li><a href="#backend-attachment" class="table-of-contents__link toc-highlight">Backend Attachment</a></li></ul></li><li><a href="#route-structure" class="table-of-contents__link toc-highlight">Route Structure</a></li><li><a href="#data-flow" class="table-of-contents__link toc-highlight">Data Flow</a><ul><li><a href="#frontend-flow" class="table-of-contents__link toc-highlight">Frontend flow</a></li><li><a href="#backend-flow" class="table-of-contents__link toc-highlight">Backend flow</a></li></ul></li><li><a href="#current-screens" class="table-of-contents__link toc-highlight">Current Screens</a><ul><li><a href="#overview" class="table-of-contents__link toc-highlight">Overview</a></li><li><a href="#traces" class="table-of-contents__link toc-highlight">Traces</a></li><li><a href="#approvals" class="table-of-contents__link toc-highlight">Approvals</a></li><li><a href="#plans" class="table-of-contents__link toc-highlight">Plans</a></li><li><a href="#agents" class="table-of-contents__link toc-highlight">Agents</a></li></ul></li><li><a href="#historical-mismatch-identified-during-analysis" class="table-of-contents__link toc-highlight">Historical Mismatch Identified During Analysis</a></li><li><a href="#build-and-start-mechanism" class="table-of-contents__link toc-highlight">Build And Start Mechanism</a><ul><li><a href="#frontend-1" class="table-of-contents__link toc-highlight">Frontend</a></li><li><a href="#backend-contract" class="table-of-contents__link toc-highlight">Backend contract</a></li></ul></li><li><a href="#current-boundaries" class="table-of-contents__link toc-highlight">Current Boundaries</a></li></ul></div></div></div></div></main></div></div></div></div>
+</body>
+</html>

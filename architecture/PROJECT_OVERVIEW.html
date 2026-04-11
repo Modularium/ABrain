@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="generator" content="Docusaurus v3.8.1">
 <title data-rh="true">ABrain Project Overview | ABrain Documentation</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:url" content="https://ecospheretwork.github.io/Agent-NN/architecture/PROJECT_OVERVIEW"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="ABrain Project Overview | ABrain Documentation"><meta data-rh="true" name="description" content="Kurzbeschreibung"><meta data-rh="true" property="og:description" content="Kurzbeschreibung"><link data-rh="true" rel="icon" href="/Agent-NN/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://ecospheretwork.github.io/Agent-NN/architecture/PROJECT_OVERVIEW"><link data-rh="true" rel="alternate" href="https://ecospheretwork.github.io/Agent-NN/architecture/PROJECT_OVERVIEW" hreflang="en"><link data-rh="true" rel="alternate" href="https://ecospheretwork.github.io/Agent-NN/architecture/PROJECT_OVERVIEW" hreflang="x-default"><link rel="stylesheet" href="/Agent-NN/assets/css/styles.49a6e941.css">
-<script src="/Agent-NN/assets/js/runtime~main.7d6a8811.js" defer="defer"></script>
-<script src="/Agent-NN/assets/js/main.0a76e12e.js" defer="defer"></script>
+<script src="/Agent-NN/assets/js/runtime~main.5c5eedd6.js" defer="defer"></script>
+<script src="/Agent-NN/assets/js/main.dbc98757.js" defer="defer"></script>
 </head>
 <body class="navigation-with-keyboard">
 <svg xmlns="http://www.w3.org/2000/svg" style="display: none;"><defs>
@@ -124,7 +124,7 @@
 <li><code>frontend/agent-ui</code></li>
 <li><code>monitoring/</code></li>
 </ul>
-<p>Diese Bereiche bleiben Teil des Repositories, sind aber nicht der maßgebliche Referenzpfad für sicherheitsrelevante Integrationen. Führend bleiben die gehärtete Core-Schicht und die explizit dokumentierten AdminBot-Pfade.</p>
+<p><code>frontend/agent-ui</code> ist die kanonische operator-facing Control Plane. <code>monitoring/</code> bleibt fuer Observability-Artefakte, Beispiel-Dashboards und historische Zusatzpfade im Repository, ist aber nicht die primaere UI-Wahrheit. Fuehrend bleiben die gehaertete Core-Schicht und die dokumentierten Gateway-/Core-Einstiege.</p>
 <h2 class="anchor anchorWithStickyNavbar_LWe7" id="path-labeling">Path Labeling<a href="#path-labeling" class="hash-link" aria-label="Direct link to Path Labeling" title="Direct link to Path Labeling">​</a></h2>
 <p>Fuer spaetere Reviews gilt dieses kurze Schema:</p>
 <ul>
