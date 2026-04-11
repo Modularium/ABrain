@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import pytest
 
-pydantic = pytest.importorskip("pydantic", reason="pydantic required for approval models")
+pytestmark = pytest.mark.unit
 
 from pathlib import Path
 

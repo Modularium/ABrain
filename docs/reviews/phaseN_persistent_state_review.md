@@ -2,7 +2,8 @@
 
 **Date:** 2026-04-11  
 **Branch:** `codex/phaseN-persistent-state`  
-**Review type:** Self-review pre-merge gate
+**Review type:** Self-review — merge gate passed  
+**Gate result:** 158 passed, 2 skipped (pre-existing) — 0 failures
 
 ---
 

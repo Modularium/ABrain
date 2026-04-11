@@ -19,7 +19,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-pydantic = pytest.importorskip("pydantic", reason="pydantic required for approval/plan models")
+pytestmark = pytest.mark.unit
 
 from core.approval.models import (
     ApprovalDecision,

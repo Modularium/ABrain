@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-pydantic = pytest.importorskip("pydantic", reason="pydantic required for plan models")
+pytestmark = pytest.mark.unit
 
 from pathlib import Path
 

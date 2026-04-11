@@ -18,7 +18,7 @@ from unittest.mock import patch
 
 import pytest
 
-pydantic = pytest.importorskip("pydantic", reason="pydantic required for core models")
+pytestmark = pytest.mark.unit
 
 
 def _reset_service_state() -> None:
