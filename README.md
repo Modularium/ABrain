@@ -53,6 +53,7 @@ python -m pytest -o python_files='test_*.py' \
   tests/core \
   tests/services \
   tests/integration/test_node_export.py
+```
 
 Einmal „alles“ für lokales Arbeiten (pip)
 
