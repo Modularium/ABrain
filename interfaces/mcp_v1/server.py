@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import os
+
+if os.getenv("ABRAIN_ENABLE_MCP_V1", "false").lower() != "true":
+    raise RuntimeError("MCP v1 is disabled. Use MCP v2 instead.")
+
 import json
 import logging
 import sys

@@ -28,8 +28,10 @@ jobs:
         run: |
           python -m pytest -o python_files='test_*.py' \
             tests/mcp \
-            tests/decision \
+            tests/approval \
+            tests/orchestration \
             tests/execution \
+            tests/decision \
             tests/adapters \
             tests/core \
             tests/services \

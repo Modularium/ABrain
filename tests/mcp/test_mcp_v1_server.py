@@ -1,10 +1,14 @@
 import ast
 import io
 import json
+import os
 from pathlib import Path
 import tomllib
 
 import pytest
+
+if os.getenv("ABRAIN_ENABLE_MCP_V1", "false").lower() != "true":
+    pytest.skip("MCP v1 disabled", allow_module_level=True)
 
 from interfaces.mcp_v1.server import MCPV1Server, run_stdio_server
 from scripts import abrain_mcp
@@ -195,6 +199,6 @@ def test_pyproject_exposes_stable_mcp_console_entry():
     pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
 
     assert pyproject["project"]["scripts"]["abrain-mcp"] == "interfaces.mcp.server:main"
-    assert pyproject["project"]["scripts"]["abrain-mcp-v1"] == "interfaces.mcp_v1.server:main"
+    assert "abrain-mcp-v1" not in pyproject["project"]["scripts"]
     assert pyproject["tool"]["poetry"]["scripts"]["abrain-mcp"] == "interfaces.mcp.server:main"
-    assert pyproject["tool"]["poetry"]["scripts"]["abrain-mcp-v1"] == "interfaces.mcp_v1.server:main"
+    assert "abrain-mcp-v1" not in pyproject["tool"]["poetry"]["scripts"]

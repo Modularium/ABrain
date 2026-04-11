@@ -102,7 +102,7 @@ Der neue MCP-Pfad ist nur eine strikt statische Thin-Interface-Schicht ueber dem
 - `interfaces/mcp/`
 - `interfaces/mcp_v1/`
 
-Das Repo enthält mehrere API-basierte Einstiegspunkte und Bridges. Produktiv maßgeblich bleiben die gehärtete Core-Schicht und die `services/*`-Runtime. Der aktive MCP-Einstieg dieses Branches liegt in `interfaces/mcp/` und bleibt eine duenne Protokollschicht vor dem gehärteten Core. `interfaces/mcp_v1/`, historische MCP-Bridges und Smolitux-Pfade bleiben `legacy (disabled)` oder rueckwaertskompatible Altpfade, aber keine gleichrangigen Runtime-Pfade.
+Das Repo enthält mehrere API-basierte Einstiegspunkte und Bridges. Produktiv maßgeblich bleiben die gehärtete Core-Schicht und die `services/*`-Runtime. Der aktive MCP-Einstieg dieses Branches liegt in `interfaces/mcp/` und bleibt eine duenne Protokollschicht vor dem gehärteten Core. MCP v1 unter `interfaces/mcp_v1/` ist deprecated und standardmaessig deaktiviert; MCP v2 ist die einzige unterstuetzte Runtime-Schnittstelle. Historische MCP-Bridges und Smolitux-Pfade bleiben `legacy (disabled)` oder rueckwaertskompatible Altpfade, aber keine gleichrangigen Runtime-Pfade.
 
 ### Workflow Interop und historische Integrationen
 
