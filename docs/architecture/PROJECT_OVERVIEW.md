@@ -131,7 +131,7 @@ Das SDK und die CLI existieren weiter und nutzen für gehärtete Listen-/Dispatc
 - `frontend/agent-ui`
 - `monitoring/`
 
-Diese Bereiche bleiben Teil des Repositories, sind aber nicht der maßgebliche Referenzpfad für sicherheitsrelevante Integrationen. Führend bleiben die gehärtete Core-Schicht und die explizit dokumentierten AdminBot-Pfade.
+`frontend/agent-ui` ist die kanonische operator-facing Control Plane. `monitoring/` bleibt fuer Observability-Artefakte, Beispiel-Dashboards und historische Zusatzpfade im Repository, ist aber nicht die primaere UI-Wahrheit. Fuehrend bleiben die gehaertete Core-Schicht und die dokumentierten Gateway-/Core-Einstiege.
 
 ## Path Labeling
 

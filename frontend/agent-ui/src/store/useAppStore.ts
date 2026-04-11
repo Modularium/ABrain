@@ -137,7 +137,7 @@ const defaultSettings: AppSettings = {
     animations: true
   },
   api: {
-    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:8080',
     timeout: 30000,
     retries: 3
   }

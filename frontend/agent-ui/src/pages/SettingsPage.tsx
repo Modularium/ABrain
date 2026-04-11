@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useAppStore } from '@/store/useAppStore'
 
 interface Settings {
   general: {
@@ -53,7 +54,7 @@ const defaultSettings: Settings = {
   api: {
     openaiKey: '',
     anthropicKey: '',
-    localEndpoint: 'http://localhost:8000',
+    localEndpoint: 'http://localhost:8080',
     defaultModel: 'gpt-3.5-turbo',
     maxTokens: 2048,
     temperature: 0.7,
@@ -93,6 +94,8 @@ const tabItems = [
 ]
 
 export default function ModernSettingsPage() {
+  const appSettings = useAppStore((state) => state.settings)
+  const updateAppSettings = useAppStore((state) => state.updateSettings)
   const [settings, setSettings] = useState<Settings>(defaultSettings)
   const [activeTab, setActiveTab] = useState('general')
   const [hasChanges, setHasChanges] = useState(false)
@@ -105,12 +108,27 @@ export default function ModernSettingsPage() {
     const savedSettings = localStorage.getItem('agent-nn-settings')
     if (savedSettings) {
       try {
-        setSettings(JSON.parse(savedSettings))
+        const parsed = JSON.parse(savedSettings)
+        setSettings({
+          ...parsed,
+          api: {
+            ...parsed.api,
+            localEndpoint: appSettings.api.baseUrl,
+          },
+        })
       } catch (error) {
         console.error('Failed to load settings:', error)
       }
+    } else {
+      setSettings((current) => ({
+        ...current,
+        api: {
+          ...current.api,
+          localEndpoint: appSettings.api.baseUrl,
+        },
+      }))
     }
-  }, [])
+  }, [appSettings.api.baseUrl])
 
   // Track changes
   useEffect(() => {
@@ -133,6 +151,12 @@ export default function ModernSettingsPage() {
     setSaving(true)
     try {
       localStorage.setItem('agent-nn-settings', JSON.stringify(settings))
+      updateAppSettings({
+        api: {
+          ...appSettings.api,
+          baseUrl: settings.api.localEndpoint,
+        },
+      })
       await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
       setHasChanges(false)
     } catch (error) {
@@ -417,7 +441,7 @@ export default function ModernSettingsPage() {
                 label="Local Endpoint"
                 value={settings.api.localEndpoint}
                 onChange={(value) => updateSetting('api', 'localEndpoint', value)}
-                placeholder="http://localhost:8000"
+                placeholder="http://localhost:8080"
                 description="URL for local AI model endpoint"
               />
               

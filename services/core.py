@@ -20,8 +20,12 @@ __all__ = [
     "evaluate_agent",
     "execute_tool",
     "get_explainability",
+    "get_governance_state",
     "get_trace",
+    "list_agent_catalog",
     "list_pending_approvals",
+    "list_recent_governance_decisions",
+    "list_recent_plans",
     "list_recent_traces",
     "list_agents",
     "load_model",
@@ -714,6 +718,145 @@ def get_explainability(trace_id: str, *, trace_store: Any | None = None) -> Dict
     }
 
 
+def list_recent_plans(
+    limit: int = 10,
+    *,
+    trace_store: Any | None = None,
+    approval_store: Any | None = None,
+) -> Dict[str, Any]:
+    """Return recent plan executions derived from canonical traces and approvals."""
+    trace_state = _get_trace_state()
+    trace_store = trace_store if trace_store is not None else trace_state["store"]
+    approval_state = _get_approval_state()
+    approval_store = approval_store or approval_state["store"]
+    if trace_store is None:
+        return {"plans": []}
+
+    approvals_by_trace_id: dict[str, dict[str, Any]] = {}
+    for request in approval_store.list_pending():
+        trace_id = str(request.metadata.get("trace_id") or "").strip()
+        if trace_id:
+            approvals_by_trace_id[trace_id] = request.model_dump(mode="json")
+
+    plans: list[dict[str, Any]] = []
+    traces = trace_store.list_recent_traces(limit=max(limit * 5, limit))
+    for record in traces:
+        if record.workflow_name != "run_task_plan":
+            continue
+        approval = approvals_by_trace_id.get(record.trace_id)
+        plan = approval.get("metadata", {}).get("plan") if approval else None
+        state = approval.get("metadata", {}).get("plan_state") if approval else None
+        pending_approval_id = (
+            record.metadata.get("pending_approval_id")
+            or (approval or {}).get("approval_id")
+        )
+        plans.append(
+            {
+                "trace_id": record.trace_id,
+                "plan_id": str(record.metadata.get("plan_id") or record.task_id or record.trace_id),
+                "workflow_name": record.workflow_name,
+                "task_id": record.task_id,
+                "status": record.status,
+                "started_at": record.started_at.isoformat(),
+                "ended_at": record.ended_at.isoformat() if record.ended_at else None,
+                "pending_approval_id": pending_approval_id,
+                "policy_effect": record.metadata.get("policy_effect"),
+                "plan": plan,
+                "state": state,
+            }
+        )
+        if len(plans) >= limit:
+            break
+    return {"plans": plans}
+
+
+def list_recent_governance_decisions(
+    limit: int = 10,
+    *,
+    trace_store: Any | None = None,
+) -> Dict[str, Any]:
+    """Return recent governance decisions inferred from canonical trace data."""
+    trace_state = _get_trace_state()
+    trace_store = trace_store if trace_store is not None else trace_state["store"]
+    if trace_store is None:
+        return {"governance": []}
+
+    decisions: list[dict[str, Any]] = []
+    traces = trace_store.list_recent_traces(limit=max(limit * 5, limit))
+    for record in traces:
+        explainability = [
+            item.model_dump(mode="json") for item in trace_store.get_explainability(record.trace_id)
+        ]
+        effect = _derive_governance_effect(record.model_dump(mode="json"), explainability)
+        if effect is None:
+            continue
+        first = explainability[0] if explainability else {}
+        decisions.append(
+            {
+                "trace_id": record.trace_id,
+                "workflow_name": record.workflow_name,
+                "task_id": record.task_id,
+                "status": record.status,
+                "effect": effect,
+                "selected_agent_id": first.get("selected_agent_id"),
+                "matched_policy_ids": list(first.get("matched_policy_ids") or []),
+                "winning_policy_rule": first.get("metadata", {}).get("winning_policy_rule"),
+                "approval_required": bool(first.get("approval_required")),
+                "started_at": record.started_at.isoformat(),
+                "ended_at": record.ended_at.isoformat() if record.ended_at else None,
+            }
+        )
+        if len(decisions) >= limit:
+            break
+    return {"governance": decisions}
+
+
+def list_agent_catalog() -> Dict[str, Any]:
+    """Project currently listed agents into a control-plane-friendly catalog."""
+    raw_agents = list_agents().get("agents", [])
+    catalog: list[dict[str, Any]] = []
+    for item in raw_agents:
+        if not isinstance(item, dict):
+            continue
+        traits = item.get("traits") if isinstance(item.get("traits"), dict) else {}
+        catalog.append(
+            {
+                "agent_id": item.get("id") or item.get("agent_id") or item.get("name") or "unknown-agent",
+                "display_name": item.get("name") or item.get("display_name") or item.get("id") or "unknown-agent",
+                "capabilities": list(item.get("capabilities") or []),
+                "source_type": item.get("source_type"),
+                "execution_kind": item.get("execution_kind"),
+                "availability": traits.get("availability") or item.get("status"),
+                "trust_level": traits.get("trust_level"),
+                "metadata": {
+                    "domain": item.get("domain"),
+                    "role": item.get("role"),
+                    "version": item.get("version"),
+                    "skills": list(item.get("skills") or []),
+                    "estimated_cost_per_token": item.get("estimated_cost_per_token"),
+                    "avg_response_time": item.get("avg_response_time"),
+                    "load_factor": item.get("load_factor"),
+                    "projection_source": "services.core.list_agents",
+                    "descriptor_projection_complete": bool(
+                        item.get("source_type") and item.get("execution_kind")
+                    ),
+                },
+            }
+        )
+    return {"agents": catalog}
+
+
+def get_governance_state() -> Dict[str, Any]:
+    """Return lightweight governance configuration metadata for inspection."""
+    state = _get_governance_state()
+    registry = state["registry"]
+    return {
+        "policy_path": getattr(registry, "path", None),
+        "engine": state["engine"].__class__.__name__,
+        "registry": registry.__class__.__name__,
+    }
+
+
 def _get_learning_state() -> dict[str, Any]:
     """Return process-local training state for online updates."""
     if not hasattr(_get_learning_state, "_state"):
@@ -1008,6 +1151,23 @@ def _build_routing_reason_summary(decision: Any) -> str:
         f"selected {selected} with score {score}; "
         f"{candidate_count} ranked candidates; {rejected_count} rejected by CandidateFilter"
     )
+
+
+def _derive_governance_effect(
+    trace_record: Dict[str, Any],
+    explainability: list[dict[str, Any]],
+) -> str | None:
+    metadata = trace_record.get("metadata") if isinstance(trace_record.get("metadata"), dict) else {}
+    explicit_effect = metadata.get("policy_effect")
+    if isinstance(explicit_effect, str) and explicit_effect.strip():
+        return explicit_effect.strip()
+    if any(bool(item.get("approval_required")) for item in explainability):
+        return "require_approval"
+    if trace_record.get("status") == "denied":
+        return "deny"
+    if explainability:
+        return "allow"
+    return None
 
 
 def _store_trace_explainability(

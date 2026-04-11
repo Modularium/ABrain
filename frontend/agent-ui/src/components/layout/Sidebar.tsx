@@ -9,17 +9,12 @@ interface SidebarProps {
 }
 
 const navigationItems = [
-  { path: '/', name: 'Dashboard', icon: '📊', end: true },
-  { path: '/chat', name: 'Chat', icon: '💬' },
-  { path: '/agents', name: 'Agents', icon: '🤖' },
-  { path: '/tasks', name: 'Tasks', icon: '📋' },
-  { path: '/routing', name: 'Routing', icon: '🔄' },
-  { path: '/feedback', name: 'Feedback', icon: '💭' },
-  { path: '/monitoring', name: 'Monitoring', icon: '📊' },
-  { path: '/metrics', name: 'Metrics', icon: '📈' },
+  { path: '/', name: 'Overview', icon: 'O', end: true },
+  { path: '/traces', name: 'Traces', icon: 'T' },
+  { path: '/approvals', name: 'Approvals', icon: 'A' },
+  { path: '/plans', name: 'Plans', icon: 'P' },
+  { path: '/agents', name: 'Agents', icon: 'G' },
   { path: '/settings', name: 'Settings', icon: '⚙️' },
-  { path: '/admin', name: 'Admin', icon: '👤' },
-  { path: '/debug', name: 'Debug', icon: '🔧' },
 ]
 
 export default function Sidebar({ open, setOpen, collapsed, onToggleCollapse }: SidebarProps) {
@@ -141,7 +136,9 @@ export default function Sidebar({ open, setOpen, collapsed, onToggleCollapse }: 
                     className={linkClass(isActive)}
                     title={collapsed ? item.name : undefined}
                   >
-                    <span className="text-xl flex-shrink-0">{item.icon}</span>
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-black/5 text-sm font-semibold dark:bg-white/10">
+                      {item.icon}
+                    </span>
                     {!collapsed && (
                       <>
                         <span className="font-medium truncate">{item.name}</span>

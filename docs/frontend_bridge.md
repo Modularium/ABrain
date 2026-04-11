@@ -12,6 +12,8 @@ npm run dev
 
 The development server expects an environment variable `VITE_API_URL` defined in `.env.local` pointing to the API gateway (e.g. `http://localhost:8080`).
 
+Phase M uses the API gateway as the browser-facing control-plane boundary. The main UI reads and writes through thin `/control-plane/*` routes that delegate to `services/core.py`.
+
 ## Build & Deployment
 
 To create a production build run:

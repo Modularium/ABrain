@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 interface User {
   name: string
@@ -15,17 +15,12 @@ interface Props {
 }
 
 const pageNames: { [key: string]: string } = {
-  '/': 'Dashboard',
-  '/chat': 'Chat Interface',
-  '/agents': 'Agent Management',
-  '/tasks': 'Task Management',
-  '/routing': 'Request Routing',
-  '/monitoring': 'System Monitoring',
-  '/metrics': 'Performance Metrics',
-  '/feedback': 'User Feedback',
+  '/': 'System Overview',
+  '/traces': 'Trace Explorer',
+  '/approvals': 'Approvals',
+  '/plans': 'Plans and Orchestration',
+  '/agents': 'Agents and Capabilities',
   '/settings': 'Settings',
-  '/admin': 'Administration',
-  '/debug': 'Debug Console'
 }
 
 export default function Header({ user, theme, onToggleTheme, onAddNotification }: Props) {
@@ -34,6 +29,7 @@ export default function Header({ user, theme, onToggleTheme, onAddNotification }
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [searchOpen, setSearchOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
   const dropdownRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLDivElement>(null)
 
@@ -58,10 +54,12 @@ export default function Header({ user, theme, onToggleTheme, onAddNotification }
   const handleSearch = (query: string) => {
     setSearchQuery(query)
     if (query.length > 2) {
-      // Simulate search results
+      // Lightweight route search for the control plane surface
       const mockResults = [
-        { type: 'agent', name: 'DockerMaster Agent', path: '/agents' },
-        { type: 'task', name: 'Container Deployment', path: '/tasks' },
+        { type: 'view', name: 'Trace Explorer', path: '/traces' },
+        { type: 'view', name: 'Pending Approvals', path: '/approvals' },
+        { type: 'view', name: 'Plans and Orchestration', path: '/plans' },
+        { type: 'view', name: 'Agents and Capabilities', path: '/agents' },
         { type: 'setting', name: 'API Configuration', path: '/settings' },
       ].filter(item => 
         item.name.toLowerCase().includes(query.toLowerCase())
@@ -116,7 +114,7 @@ export default function Header({ user, theme, onToggleTheme, onAddNotification }
             <input
               type="text"
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:outline-none focus:shadow-focus focus:border-transparent transition-colors"
-              placeholder="Search agents, tasks, settings..."
+              placeholder="Search views and settings..."
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               onFocus={() => searchQuery.length > 2 && setSearchOpen(true)}
@@ -133,15 +131,14 @@ export default function Header({ user, theme, onToggleTheme, onAddNotification }
                       onClick={() => {
                         setSearchOpen(false)
                         setSearchQuery('')
-                        onAddNotification('info', `Navigating to ${result.name}`)
+                        navigate(result.path)
                       }}
                     >
                       <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-medium ${
-                        result.type === 'agent' ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400' :
-                        result.type === 'task' ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400' :
+                        result.type === 'view' ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400' :
                         'bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400'
                       }`}>
-                        {result.type === 'agent' ? '🤖' : result.type === 'task' ? '📋' : '⚙️'}
+                        {result.type === 'view' ? 'V' : 'S'}
                       </div>
                       <div className="min-w-0">
                         <div className="font-medium truncate">{result.name}</div>

@@ -2,17 +2,12 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Sidebar from './components/layout/Sidebar'
 import Header from './components/layout/Header'
-import ChatPage from './pages/ChatPage'
-import RoutingPage from './pages/RoutingPage'
-import FeedbackPage from './pages/FeedbackPage'
-import MonitoringPage from './pages/MonitoringPage'
 import AgentsPage from './pages/AgentsPage'
-import TasksPage from './pages/TasksPage'
+import ApprovalsPage from './pages/ApprovalsPage'
+import PlansPage from './pages/PlansPage'
 import SettingsPage from './pages/SettingsPage'
-import MetricsPage from './pages/MetricsPage'
-import AdminPage from './pages/AdminPage'
-import DebugPage from './pages/DebugPage'
 import DashboardPage from './pages/Dashboard'
+import TracesPage from './pages/TracesPage'
 import { LoadingSpinner } from './components/ui/LoadingSpinner'
 import Toast from './components/ui/Toast'
 
@@ -39,8 +34,8 @@ export default function App() {
     theme: 'light',
     sidebarCollapsed: false,
     user: {
-      name: 'Admin User',
-      role: 'Administrator'
+      name: 'Control Plane',
+      role: 'Operator'
     },
     notifications: []
   })
@@ -180,16 +175,11 @@ export default function App() {
           <main className="flex-1 overflow-y-auto">
             <Routes>
               <Route path="/" element={<DashboardPage />} />
-              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/traces" element={<TracesPage />} />
+              <Route path="/approvals" element={<ApprovalsPage />} />
+              <Route path="/plans" element={<PlansPage />} />
               <Route path="/agents" element={<AgentsPage />} />
-              <Route path="/tasks" element={<TasksPage />} />
-              <Route path="/routing" element={<RoutingPage />} />
-              <Route path="/feedback" element={<FeedbackPage />} />
-              <Route path="/monitoring" element={<MonitoringPage />} />
-              <Route path="/metrics" element={<MetricsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/debug" element={<DebugPage />} />
             </Routes>
           </main>
         </div>

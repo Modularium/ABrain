@@ -148,8 +148,8 @@ Die v1-Schicht bleibt fuer Rueckwaertskompatibilitaet und historische lokale Set
 
 - `server/main.py` und `api/` für REST-/Bridge-Einstiege
 - `sdk/` für CLI und SDK
-- `frontend/agent-ui` für die React-Oberfläche
-- `monitoring/` für Monitoring-Assets und Zusatz-UI
+- `frontend/agent-ui` als kanonische Control Plane / React-Oberfläche
+- `monitoring/` für Monitoring-Assets und historische bzw. ergänzende Dashboard-Bausteine
 
 ## Quick Start
 
@@ -193,6 +193,8 @@ cd <repo-root>/frontend/agent-ui
 npm install
 npm run dev
 ```
+
+Das Frontend spricht in Phase M standardmaessig mit dem API Gateway unter `http://localhost:8080` und nutzt dort die duennen `/control-plane/*`-Routen ueber dem kanonischen Core.
 
 ## Test- und Verifikationskommandos
 
