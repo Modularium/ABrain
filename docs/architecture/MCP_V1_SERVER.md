@@ -1,4 +1,7 @@
-# ABrain MCP V1 Server Architecture
+# Historical ABrain MCP V1 Server Architecture
+
+Hinweis: Der kanonische MCP-Pfad dieses Branches liegt unter `interfaces/mcp/*`.
+Die aktuelle Referenz steht in [MCP_V2_INTERFACE.md](./MCP_V2_INTERFACE.md).
 
 ## Rolle im System
 

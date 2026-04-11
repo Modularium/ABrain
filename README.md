@@ -20,9 +20,10 @@ Der Arbeitsbaum und einige interne Paket-, Deploy- und Repo-Slugs heißen derzei
 - Multi-Agent-Orchestrierung mit PlanBuilder, Step-Level-Routing und strukturierter Aggregation
 - HITL-/Approval-Layer mit Pause, Approve, Reject und Resume fuer sensible PlanSteps
 - verpflichtender Governance-Layer mit deterministischem Policy-Check vor jeder Execution
-- Branch-Vorschau fuer einen Audit-/Explainability-/Trace-Layer mit internen Traces, Spans und Explainability-Records
+- Audit-/Explainability-/Trace-Layer mit internen Traces, Spans und Explainability-Records
+- MCP-v2-Interface-Schicht in `interfaces/mcp/*` als capability-, policy-, approval- und trace-aware Thin Layer ueber dem kanonischen Core
 - sicherer, read-only AdminBot-v2-Adapter in `adapters/adminbot/*`
-- MCP-v1-Interface-Schicht in `interfaces/mcp_v1/*`
+- historische MCP-v1-Interface-Schicht in `interfaces/mcp_v1/*`
 - Flowise-Interop-Layer in `adapters/flowise/*`
 
 Der historische `mcp/*`-Stack, `agentnn/mcp/*`-Bridges und die Smolitux-Altpfade sind nicht mehr produktiv. Sie bleiben nur als `legacy (disabled)` im Repository.
@@ -115,7 +116,7 @@ Der Governance-Layer erzwingt auf `main` deterministische Runtime-Policies nach 
 - `core/audit/*`
 - `docs/architecture/AUDIT_AND_EXPLAINABILITY_LAYER.md`
 
-Der Audit-/Trace-Layer liegt in diesem Branch als naechste kleine Kernschicht oberhalb des bestehenden Stacks. Er fuehrt interne Traces, Spans und Explainability-Records fuer Routing, Governance, Approval, Execution und Learning ein. Er ist bewusst best-effort, ersetzt keine Sicherheitsgrenzen und fuegt keine zweite Runtime hinzu.
+Der Audit-/Trace-Layer fuehrt interne Traces, Spans und Explainability-Records fuer Routing, Governance, Approval, Execution und Learning ein. Er ist bewusst best-effort, ersetzt keine Sicherheitsgrenzen und fuegt keine zweite Runtime hinzu.
 
 ### Learning System
 
@@ -125,11 +126,23 @@ Der Audit-/Trace-Layer liegt in diesem Branch als naechste kleine Kernschicht ob
 - `core/decision/learning/trainer.py`
 - `core/decision/learning/persistence.py`
 
-### MCP V1 Interface
+### MCP V2 Interface
+
+- `interfaces/mcp/server.py`
+- `interfaces/mcp/tool_registry.py`
+- `interfaces/mcp/handlers/*`
+- `scripts/abrain_mcp.py`
+- `docs/architecture/MCP_V2_INTERFACE.md`
+- `docs/guides/MCP_USAGE.md`
+
+Der aktive MCP-Pfad ist in diesem Branch eine strikt statische v2-Schicht ueber `services/core.py`. Sie exponiert nur capability-orientierte Entry Points fuer `run_task`, `run_plan`, Approval und Trace-Zugriff. Adapter, Registry und Tool-Logik werden nicht direkt exponiert.
+
+### Historische MCP V1 Schicht
 
 - `interfaces/mcp_v1/server.py`
-- `scripts/abrain_mcp.py`
 - `docs/mcp/*`
+
+Die v1-Schicht bleibt fuer Rueckwaertskompatibilitaet und historische lokale Setups im Repository, ist aber nicht mehr der kanonische MCP-Einstieg.
 
 ### Weitere Bereiche
 
@@ -223,13 +236,13 @@ Syntaxprüfung der gehärteten Module:
 - Der AdminBot-v2-Adapter bietet nur feste, typisierte read-only Tools.
 - AdminBot bleibt die Sicherheitsgrenze.
 - Der gehärtete Core darf nicht durch direkte Legacy-Aufrufe umgangen werden.
-- MCP v1 bleibt nur eine externe Protokollschicht vor dem kanonischen Core-Pfad.
+- MCP v2 bleibt nur eine externe Protokollschicht vor dem kanonischen Core-Pfad.
 
 ## Entwicklungsstatus
 
 Für neue sicherheitsrelevante Integrationen gilt der gehärtete Core als Referenzpfad. Ältere Bereiche und historische Dokumente bleiben im Repository nur dort erhalten, wo sie für Betrieb, Migration oder Rückverfolgbarkeit noch relevant sind; sie sind nicht gleichrangig mit dem Core-/AdminBot-Pfad.
 
-Der aktuelle Release-Scope auf `main` umfasst den Foundations-Stack plus Multi-Agent-Orchestrierung, HITL-/Approval-Layer und Governance-Layer. Der Audit-/Explainability-/Trace-Layer liegt in diesem Branch als Review-/Merge-Kandidat vor und ist noch nicht Teil von `main` oder des Releases `v1.1.0`. Breite MCP-Expansion, externe Observability-Backends und weiter vertiefte Spezialadapter sind ebenfalls noch nicht Teil dieses Releases.
+Der aktuelle Release-Scope auf `main` umfasst den Foundations-Stack plus Multi-Agent-Orchestrierung, HITL-/Approval-Layer und Governance-Layer. Dieser Branch erweitert den Stack zusaetzlich um den Audit-/Explainability-/Trace-Layer und eine duenne MCP-v2-Interface-Schicht. Breite MCP-Expansion, Streaming, externe Observability-Backends und weiter vertiefte Spezialadapter sind weiterhin nicht Teil dieses Schritts.
 
 ## Wichtige Dokumente
 
@@ -244,10 +257,12 @@ Der aktuelle Release-Scope auf `main` umfasst den Foundations-Stack plus Multi-A
 - [HITL And Approval Layer](docs/architecture/HITL_AND_APPROVAL_LAYER.md)
 - [Governance Layer](docs/architecture/GOVERNANCE_LAYER.md)
 - [Audit And Explainability Layer](docs/architecture/AUDIT_AND_EXPLAINABILITY_LAYER.md)
+- [MCP V2 Interface](docs/architecture/MCP_V2_INTERFACE.md)
+- [MCP Usage](docs/guides/MCP_USAGE.md)
 - [Foundations Release Scope](docs/releases/FOUNDATIONS_RELEASE_SCOPE.md)
 - [Foundations Release Notes](docs/releases/RELEASE_NOTES_FOUNDATIONS.md)
-- [MCP Architektur](docs/architecture/MCP_V1_SERVER.md)
-- [MCP Usage](docs/mcp/MCP_SERVER_USAGE.md)
+- [Historical MCP V1 Architecture](docs/architecture/MCP_V1_SERVER.md)
+- [Historical MCP V1 Usage](docs/mcp/MCP_SERVER_USAGE.md)
 - [Core Refactor](docs/architecture/CORE_REFACTOR.md)
 - [Development Setup](docs/setup/DEVELOPMENT_SETUP.md)
 - [AdminBot Integration Plan](docs/integrations/adminbot/AGENT_NN_ADMINBOT_INTEGRATION_PLAN.md)

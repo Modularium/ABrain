@@ -32,10 +32,6 @@ sys.modules.setdefault(
     "agentnn.mcp.mcp_ws",
     types.SimpleNamespace(ws_server=types.SimpleNamespace(broadcast=lambda *a, **k: None)),
 )
-sys.modules.setdefault(
-    "agentnn.mcp.mcp_server",
-    types.SimpleNamespace(create_app=lambda: None),
-)
 import sdk.nn_models as _nn  # noqa: E402
 sys.modules.setdefault("sdk.cli.nn_models", _nn)
 sys.modules.setdefault(

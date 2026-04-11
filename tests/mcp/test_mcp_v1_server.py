@@ -194,5 +194,7 @@ def test_cli_wrapper_calls_stdio_server(monkeypatch):
 def test_pyproject_exposes_stable_mcp_console_entry():
     pyproject = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
 
-    assert pyproject["project"]["scripts"]["abrain-mcp"] == "interfaces.mcp_v1.server:main"
-    assert pyproject["tool"]["poetry"]["scripts"]["abrain-mcp"] == "interfaces.mcp_v1.server:main"
+    assert pyproject["project"]["scripts"]["abrain-mcp"] == "interfaces.mcp.server:main"
+    assert pyproject["project"]["scripts"]["abrain-mcp-v1"] == "interfaces.mcp_v1.server:main"
+    assert pyproject["tool"]["poetry"]["scripts"]["abrain-mcp"] == "interfaces.mcp.server:main"
+    assert pyproject["tool"]["poetry"]["scripts"]["abrain-mcp-v1"] == "interfaces.mcp_v1.server:main"

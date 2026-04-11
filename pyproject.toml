@@ -85,12 +85,14 @@ black = "*"
 sdk = []
 
 [project.scripts]
-abrain-mcp = "interfaces.mcp_v1.server:main"
+abrain-mcp = "interfaces.mcp.server:main"
+abrain-mcp-v1 = "interfaces.mcp_v1.server:main"
 
 [tool.poetry.scripts]
 agentnn = "sdk.cli.main:app"
 mcp_cli = "mcp.cli:app"
-abrain-mcp = "interfaces.mcp_v1.server:main"
+abrain-mcp = "interfaces.mcp.server:main"
+abrain-mcp-v1 = "interfaces.mcp_v1.server:main"
 
 [build-system]
 requires = ["poetry-core>=1.7.0"]

@@ -1,4 +1,4 @@
-from fastapi.testclient import TestClient
+import httpx
 import pytest
 import sys
 import types
@@ -23,30 +23,21 @@ sys.modules.setdefault(
     ),
 )
 
-from agentnn.mcp import mcp_server  # noqa: E402
 from agentnn.mcp.mcp_client import MCPClient  # noqa: E402
 from core.model_context import ModelContext, TaskContext  # noqa: E402
-
-
-class DummyConnector:
-    def __init__(self, *a, **k):
-        pass
-
-    async def get(self, *a, **k):
-        return {}
-
-    async def post(self, *a, **k):
-        return {}
-
-
 @pytest.mark.unit
-def test_client_exec(monkeypatch):
-    monkeypatch.setattr(mcp_server, "ServiceConnector", DummyConnector)
-    app = mcp_server.create_app()
-    client = TestClient(app)
+def test_client_exec_rejects_disabled_legacy_runtime():
     mcp = MCPClient("http://testserver")
-    mcp._client = client  # type: ignore
+    request = httpx.Request("POST", "http://testserver/v1/mcp/execute")
+    response = httpx.Response(410, request=request)
+
+    class DisabledLegacyClient:
+        def post(self, path: str, json: dict):
+            assert path == "/v1/mcp/execute"
+            return response
+
+    mcp._client = DisabledLegacyClient()  # type: ignore[assignment]
 
     ctx = ModelContext(task_context=TaskContext(task_type="chat", description="hi"))
-    result = mcp.execute(ctx)
-    assert isinstance(result, ModelContext)
+    with pytest.raises(httpx.HTTPStatusError):
+        mcp.execute(ctx)

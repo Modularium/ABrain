@@ -1,8 +1,8 @@
-"""CLI wrapper for the ABrain MCP v1 stdio server."""
+"""CLI wrapper for the ABrain MCP v2 stdio server."""
 
 from __future__ import annotations
 
-from interfaces.mcp_v1.server import run_stdio_server
+from interfaces.mcp.server import run_stdio_server
 
 
 def main() -> None:

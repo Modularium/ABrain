@@ -1,19 +1,22 @@
 # MCP in ABrain
 
-ABrain stellt einen neuen MCP-v1-Server unter `interfaces/mcp_v1/*` bereit. Diese Schicht ist nur ein externer Interface-Layer vor dem kanonischen Core-Pfad.
+Der kanonische MCP-Pfad dieses Branches liegt unter `interfaces/mcp/*`. Diese Schicht ist nur ein externer Interface-Layer vor dem kanonischen Core-Pfad.
 
 ## Aktueller Status
 
-- aktiv: lokaler stdio-basierter MCP-v1-Server
+- aktiv: lokaler stdio-basierter MCP-v2-Server
+- legacy: lokaler stdio-basierter MCP-v1-Server unter `interfaces/mcp_v1/*`
 - deaktiviert: historische HTTP-Pfade unter `agentnn/mcp/*`
 - deaktiviert: historische Proxy-Pfade unter `mcp/plugin_agent_service/*`
 
 ## Canonical Path
 
-`interfaces/mcp_v1/server.py` -> `services/core.py` -> `core/execution/dispatcher.py` -> `core/tools/registry.py` -> `core/tools/handlers.py`
+`interfaces/mcp/server.py` -> `services/core.py` -> `decision -> governance -> approval -> execution -> learning -> audit`
 
 ## Wichtige Dokumente
 
-- [MCP V1 Architektur](MCP_V1_SERVER.md)
-- [MCP Server Usage](MCP_SERVER_USAGE.md)
+- [MCP V2 Architektur](../architecture/MCP_V2_INTERFACE.md)
+- [MCP Usage](../guides/MCP_USAGE.md)
+- [Historische MCP V1 Architektur](MCP_V1_SERVER.md)
+- [Historische MCP V1 Usage](MCP_SERVER_USAGE.md)
 - [VS Code MCP Beispielkonfiguration](vscode_mcp_config.json)

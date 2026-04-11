@@ -8,7 +8,8 @@ ABrain now exposes a stabilized foundations stack around a hardened execution co
 - **core/execution/** – dispatcher plus execution engine and static adapters
 - **adapters/adminbot/** – verified AdminBot-v2 adapter
 - **adapters/flowise/** – Flowise import/export interoperability layer
-- **interfaces/mcp_v1/** – thin MCP interface layer
+- **interfaces/mcp/** – thin MCP v2 interface layer over the canonical core
+- **interfaces/mcp_v1/** – historical MCP v1 interface layer
 - **services/** – canonical runtime and service wrappers
 - **api/** and **server/** – API-facing entry points and bridges
 - **sdk/** – CLI and SDK utilities with historical technical names where needed

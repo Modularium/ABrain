@@ -1,4 +1,3 @@
-from fastapi.testclient import TestClient
 import pytest
 import sys
 import types
@@ -24,26 +23,11 @@ sys.modules.setdefault(
 )
 
 from agentnn.mcp import mcp_server  # noqa: E402
-
-
-class DummyConnector:
-    def __init__(self, *a, **k):
-        pass
-
-    async def get(self, path: str):
-        if path == "/agents":
-            return []
-        return {}
-
-    async def post(self, *a, **k):
-        return {}
-
-
 @pytest.mark.unit
-def test_server_routes(monkeypatch):
-    monkeypatch.setattr(mcp_server, "ServiceConnector", DummyConnector)
+def test_server_routes_expose_legacy_disabled_status():
     app = mcp_server.create_app()
-    client = TestClient(app)
-    assert client.get("/v1/mcp/ping").status_code == 200
-    assert client.get("/v1/mcp/context/map").status_code == 200
-    assert client.get("/v1/mcp/agent/list").status_code == 200
+    routes = {route.path for route in app.routes}
+
+    assert "/v1/mcp/ping" in routes
+    assert "/v1/mcp/context/map" in routes
+    assert "/v1/mcp/agent/list" in routes

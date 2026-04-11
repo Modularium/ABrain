@@ -83,16 +83,26 @@ Der Governance-Layer fuehrt eine verpflichtende, deterministische Policy-Pruefun
 - `services/core.py`
 - `core/orchestration/orchestrator.py`
 
-Der Audit-/Trace-Layer fuehrt in diesem Branch einen internen, best-effort Instrumentierungspfad fuer den vorhandenen Kern ein. Traces, Spans und Explainability-Records machen Routing, Policy, Approval, Execution und Learning nachvollziehbar, ohne CandidateFilter, Governance oder Approval zu ersetzen. Solange der Branch nicht gemerged ist, bleibt diese Schicht ein Review-/Merge-Kandidat und noch nicht Teil von `main` oder des Releases `v1.1.0`. Details stehen in [AUDIT_AND_EXPLAINABILITY_LAYER.md](./AUDIT_AND_EXPLAINABILITY_LAYER.md).
+Der Audit-/Trace-Layer fuehrt einen internen, best-effort Instrumentierungspfad fuer den vorhandenen Kern ein. Traces, Spans und Explainability-Records machen Routing, Policy, Approval, Execution und Learning nachvollziehbar, ohne CandidateFilter, Governance oder Approval zu ersetzen. In diesem Branch wird er zusaetzlich durch einen duennen MCP-v2-Zugriffspfad nutzbar gemacht. Details stehen in [AUDIT_AND_EXPLAINABILITY_LAYER.md](./AUDIT_AND_EXPLAINABILITY_LAYER.md).
+
+### MCP V2 Interface
+
+- `interfaces/mcp/*`
+- `services/core.py`
+- `docs/architecture/MCP_V2_INTERFACE.md`
+- `docs/guides/MCP_USAGE.md`
+
+Der neue MCP-Pfad ist nur eine strikt statische Thin-Interface-Schicht ueber dem bestehenden Core. Sie exponiert capability-orientierte Entry Points fuer `run_task`, `run_task_plan`, Approval und Trace-Abfragen, ohne eigene Routing-, Policy-, Approval-, Execution- oder Adapterlogik einzufuehren. Historische v1-Interfaces bleiben davon getrennt.
 
 ### API / FastAPI
 
 - `server/main.py`
 - `api/`
 - `agentnn/mcp/`
+- `interfaces/mcp/`
 - `interfaces/mcp_v1/`
 
-Das Repo enthält mehrere API-basierte Einstiegspunkte und Bridges. Produktiv maßgeblich bleiben die gehärtete Core-Schicht und die `services/*`-Runtime. Der aktive MCP-Einstieg liegt in `interfaces/mcp_v1/` und bleibt eine dünne Protokollschicht vor dem gehärteten Core. Historische MCP- und Smolitux-Bridges sind `legacy (disabled)` und keine gleichrangigen Runtime-Pfade.
+Das Repo enthält mehrere API-basierte Einstiegspunkte und Bridges. Produktiv maßgeblich bleiben die gehärtete Core-Schicht und die `services/*`-Runtime. Der aktive MCP-Einstieg dieses Branches liegt in `interfaces/mcp/` und bleibt eine duenne Protokollschicht vor dem gehärteten Core. `interfaces/mcp_v1/`, historische MCP-Bridges und Smolitux-Pfade bleiben `legacy (disabled)` oder rueckwaertskompatible Altpfade, aber keine gleichrangigen Runtime-Pfade.
 
 ### Workflow Interop und historische Integrationen
 
@@ -145,8 +155,9 @@ Stabil und gezielt abgesichert sind aktuell vor allem:
 
 Noch nicht das Ziel dieses Schritts:
 
-- Audit-/Explainability-/Trace-Layer auf `main`
 - breite MCP-Tool-Expansion
+- vollstaendige MCP-Spezifikationsabdeckung
+- Streaming oder SSE fuer MCP
 - externe Observability-Backends oder Dashboards
 - voll ausgereifte native Spezialadapter
 - fortgeschrittenes kontinuierliches Training oder RL

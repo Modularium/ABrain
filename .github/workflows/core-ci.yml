@@ -22,11 +22,12 @@ jobs:
       - name: Install foundations test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pydantic pytest httpx
+          python -m pip install pydantic pytest httpx fastapi typer
 
       - name: Run foundations test suite
         run: |
           python -m pytest -o python_files='test_*.py' \
+            tests/mcp \
             tests/decision \
             tests/execution \
             tests/adapters \
@@ -53,6 +54,8 @@ jobs:
             core/decision/feedback_loop.py \
             core/decision/neural_policy.py \
             core/decision/performance_history.py \
+            core/decision/plan_builder.py \
+            core/decision/plan_models.py \
             core/decision/planner.py \
             core/decision/routing_engine.py \
             core/decision/scoring_models.py \
@@ -62,6 +65,17 @@ jobs:
             core/decision/learning/persistence.py \
             core/decision/learning/reward_model.py \
             core/decision/learning/trainer.py \
+            core/approval/models.py \
+            core/approval/policy.py \
+            core/approval/store.py \
+            core/governance/policy_models.py \
+            core/governance/policy_registry.py \
+            core/governance/policy_engine.py \
+            core/governance/enforcement.py \
+            core/governance/legacy_contracts.py \
+            core/audit/trace_models.py \
+            core/audit/trace_store.py \
+            core/audit/context.py \
             core/execution/__init__.py \
             core/execution/dispatcher.py \
             core/execution/execution_engine.py \
@@ -72,8 +86,22 @@ jobs:
             core/execution/adapters/openhands_adapter.py \
             core/execution/adapters/claude_code_adapter.py \
             core/execution/adapters/codex_adapter.py \
+            core/execution/adapters/n8n_adapter.py \
+            core/execution/adapters/flowise_adapter.py \
+            core/orchestration/orchestrator.py \
+            core/orchestration/resume.py \
+            core/orchestration/result_aggregation.py \
             core/tools/registry.py \
             core/tools/handlers.py \
+            interfaces/mcp/server.py \
+            interfaces/mcp/tool_registry.py \
+            interfaces/mcp/handlers/__init__.py \
+            interfaces/mcp/handlers/run_task.py \
+            interfaces/mcp/handlers/run_plan.py \
+            interfaces/mcp/handlers/approval.py \
+            interfaces/mcp/handlers/trace.py \
+            interfaces/mcp_v1/server.py \
+            scripts/abrain_mcp.py \
             adapters/flowise/__init__.py \
             adapters/flowise/models.py \
             adapters/flowise/importer.py \
