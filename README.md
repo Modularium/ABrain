@@ -63,7 +63,7 @@ Every action:
 git clone https://github.com/Modularium/ABrain
 cd ABrain
 
-./scripts/abrain setup all
+./scripts/abrain setup
 
 .venv/bin/python -m pytest -o python_files='test_*.py' \
   tests/state \
@@ -156,8 +156,9 @@ ABrain exposes a **Model Context Protocol (MCP) server**:
 .venv/bin/python -m interfaces.mcp.server
 ```
 
-`./scripts/abrain setup cli` refreshes the editable installation and regenerates
-the console entry `abrain-mcp`, which points to the same v2 server.
+`./scripts/abrain setup` refreshes the editable installation and regenerates
+the local runtime; `./scripts/abrain setup cli` is the narrow targeted rerun for
+the MCP console entry only.
 
 Available tools:
 
@@ -186,7 +187,7 @@ npm run build
 ```bash
 ./scripts/abrain --version
 ./scripts/abrain help
-./scripts/abrain setup all
+./scripts/abrain setup
 ./scripts/abrain status
 ```
 
@@ -216,7 +217,7 @@ ABrain is built on one principle:
 ## 🧪 Designed for engineers
 
 * FastAPI-based services
-* Docker-first setup
+* One-line local bootstrap
 * Clean architecture
 * Strong invariants
 * Extensible adapters

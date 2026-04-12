@@ -7,6 +7,12 @@ Der ABrain MCP-v2-Server stellt eine kleine, statische Tool-Oberflaeche ueber de
 Der bevorzugte Bootstrap fuer den lokalen MCP-Pfad ist:
 
 ```bash
+./scripts/abrain setup
+```
+
+Wenn nur der MCP-/Entry-Point gezielt aufgefrischt werden soll, reicht auch:
+
+```bash
 ./scripts/abrain setup cli
 ```
 

@@ -11,7 +11,7 @@ Der kanonische MCP-Pfad dieses Branches liegt unter `interfaces/mcp/*`. Diese Sc
 
 MCP v2 ist der einzige unterstuetzte Runtime-Entry fuer MCP.
 
-Der bevorzugte lokale Bootstrap fuer diesen Pfad ist `./scripts/abrain setup cli`.
+Der bevorzugte lokale Bootstrap fuer diesen Pfad ist `./scripts/abrain setup`.
 
 ## Canonical Path
 
@@ -20,6 +20,7 @@ Der bevorzugte lokale Bootstrap fuer diesen Pfad ist `./scripts/abrain setup cli
 ## Wichtige Dokumente
 
 - [MCP V2 Architektur](../architecture/MCP_V2_INTERFACE.md)
+- [Setup One-Liner Flow](../architecture/SETUP_ONE_LINER_FLOW.md)
 - [Setup And Bootstrap Flow](../architecture/SETUP_AND_BOOTSTRAP_FLOW.md)
 - [MCP Usage](../guides/MCP_USAGE.md)
 - [Historische MCP V1 Usage](MCP_SERVER_USAGE.md)

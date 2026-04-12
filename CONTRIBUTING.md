@@ -7,7 +7,7 @@ Vielen Dank für dein Interesse an ABrain. Dieses Projekt verwendet GitHub Flow.
 1. Forke das Repository und klone deine Kopie.
 2. Fuehre den kanonischen Bootstrap fuer den aktuellen Repo-Stand aus:
    ```bash
-   ./scripts/abrain setup all
+   ./scripts/abrain setup
    ```
 3. Wenn du nur den Python-/MCP-Pfad vorbereiten willst, sind diese Schritte die
    schlanke Alternative:
@@ -51,6 +51,7 @@ cd frontend/agent-ui && npm run type-check && npm run build && npm run lint
 
 Weitere Details findest du unter
 [docs/architecture/CANONICAL_REPO_STRUCTURE.md](docs/architecture/CANONICAL_REPO_STRUCTURE.md),
+[docs/architecture/SETUP_ONE_LINER_FLOW.md](docs/architecture/SETUP_ONE_LINER_FLOW.md),
 [docs/architecture/SETUP_AND_BOOTSTRAP_FLOW.md](docs/architecture/SETUP_AND_BOOTSTRAP_FLOW.md),
 [docs/architecture/CANONICAL_RUNTIME_STACK.md](docs/architecture/CANONICAL_RUNTIME_STACK.md)
 und [docs/guides/MCP_USAGE.md](docs/guides/MCP_USAGE.md).

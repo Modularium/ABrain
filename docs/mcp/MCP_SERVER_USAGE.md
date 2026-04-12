@@ -2,7 +2,7 @@
 
 Hinweis: Der kanonische MCP-Pfad dieses Branches liegt unter `interfaces/mcp/*`.
 Die aktuelle Referenz steht in [../guides/MCP_USAGE.md](../guides/MCP_USAGE.md).
-Der heutige Bootstrap fuer den aktuellen Branch ist `./scripts/abrain setup cli`.
+Der heutige kanonische Bootstrap fuer den aktuellen Branch ist `./scripts/abrain setup`.
 
 Wichtig: Diese Datei ist nur noch Archivdokumentation. Der Codepfad
 `interfaces/mcp_v1/*` und der historische Entry `abrain-mcp-v1` sind auf dem

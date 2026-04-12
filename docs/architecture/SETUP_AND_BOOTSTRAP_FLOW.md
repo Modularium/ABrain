@@ -7,7 +7,7 @@
 Der bevorzugte Einstieg ist:
 
 ```bash
-./scripts/abrain setup all
+./scripts/abrain setup
 ```
 
 `./scripts/abrain` bleibt die kanonische Bash-CLI. `./scripts/agentnn` bleibt nur ein duenner Legacy-Wrapper.
@@ -40,7 +40,7 @@ Wichtig:
 
 - `scripts/abrain` selbst wird weiterhin direkt aus dem Repository aufgerufen
 - `abrain-mcp` ist nur der Python-Console-Entry fuer den MCP-v2-Server
-- stale Entry-Points werden durch erneutes `setup cli` bzw. `setup all` bereinigt
+- stale Entry-Points werden durch erneutes `setup cli` bzw. den vollen Lauf `setup` bereinigt
 
 ### 4. `api`
 
@@ -95,7 +95,7 @@ npm run dev
 ### Voller Online-Bootstrap
 
 ```bash
-./scripts/abrain setup all
+./scripts/abrain setup
 ```
 
 ### Nur Python- und MCP-Pfad

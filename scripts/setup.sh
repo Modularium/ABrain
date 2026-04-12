@@ -9,6 +9,10 @@ VENV_DIR="${ABRAIN_VENV_DIR:-$REPO_ROOT/.venv}"
 VENV_PYTHON="$VENV_DIR/bin/python"
 UI_DIR="$REPO_ROOT/frontend/agent-ui"
 VENV_WAS_CREATED=false
+CLI_READY=false
+MCP_READY=false
+API_READY=false
+UI_READY=false
 
 COLOR_RED='\033[0;31m'
 COLOR_GREEN='\033[0;32m'
@@ -55,6 +59,15 @@ require_command() {
     local command_name="$1"
     local hint="$2"
     has_command "$command_name" || die "$command_name wird benötigt. $hint"
+}
+
+check_system() {
+    require_file "$REPO_ROOT/requirements-light.txt" "Python-Abhängigkeitsliste"
+    require_file "$REPO_ROOT/pyproject.toml" "Projektmetadaten"
+    require_file "$UI_DIR/package.json" "Frontend package.json"
+    require_command python3 "Installiere Python 3.10 oder neuer."
+    require_command npm "Installiere Node.js 18+ und npm."
+    log_ok "Systemvoraussetzungen vorhanden"
 }
 
 copy_env_template_if_missing() {
@@ -120,7 +133,14 @@ install_cli_entrypoint() {
     log_ok "Editable Installation und abrain-mcp-Entry-Point sind aktuell"
 }
 
-smoke_api_gateway() {
+verify_cli_ready() {
+    require_file "$SCRIPT_DIR/abrain" "Kanonische CLI"
+    "$SCRIPT_DIR/abrain" --version >/dev/null || die "CLI-Smoke fehlgeschlagen"
+    CLI_READY=true
+    log_ok "CLI bereit"
+}
+
+verify_api_gateway() {
     ensure_venv
 
     log_info "Prüfe API-Gateway-Import"
@@ -134,11 +154,26 @@ if missing:
     raise SystemExit(f"Missing API routes: {', '.join(missing)}")
 print(app.title)
 PY
-    log_ok "API-Gateway importierbar"
+    API_READY=true
+    log_ok "API bereit"
     printf 'Startpfad: %s\n' "$VENV_PYTHON -m uvicorn api_gateway.main:app --reload"
 }
 
-smoke_mcp_v2() {
+verify_mcp_entrypoint() {
+    "$VENV_PYTHON" - <<'PY' || die "abrain-mcp-Entry-Point zeigt nicht auf MCP v2"
+from importlib import metadata
+
+console_scripts = {
+    entry_point.name: entry_point.value
+    for entry_point in metadata.entry_points(group="console_scripts")
+}
+value = console_scripts.get("abrain-mcp")
+if value != "interfaces.mcp.server:main":
+    raise SystemExit(f"Unexpected abrain-mcp entry point: {value!r}")
+PY
+}
+
+verify_mcp_ready() {
     ensure_venv
 
     log_info "Prüfe MCP-v2-Serverlogik"
@@ -167,14 +202,16 @@ tools = tools_response["result"]["tools"]
 assert tools, "No MCP tools exposed"
 print(len(tools))
 PY
-    log_ok "MCP v2 antwortet auf initialize und tools/list"
+    verify_mcp_entrypoint
+    MCP_READY=true
+    log_ok "MCP bereit"
     printf 'Startpfad: %s\n' "$VENV_PYTHON -m interfaces.mcp.server"
     if [[ -x "$VENV_DIR/bin/abrain-mcp" ]]; then
         printf 'Console-Entry: %s\n' "$VENV_DIR/bin/abrain-mcp"
     fi
 }
 
-build_ui() {
+setup_frontend() {
     require_command npm "Installiere Node.js 18+ und npm."
     require_file "$UI_DIR/package.json" "Frontend package.json"
 
@@ -185,30 +222,50 @@ build_ui() {
         run_checked npm run type-check
         run_checked npm run build
     )
-    log_ok "Frontend installiert und gebaut"
+    UI_READY=true
+    log_ok "UI gebaut"
     printf 'Dev-Start: %s\n' "(cd $UI_DIR && npm run dev)"
 }
 
-show_next_steps() {
+final_status() {
+    local cli_status="[FAIL]"
+    local mcp_status="[FAIL]"
+    local api_status="[FAIL]"
+    local ui_status="[FAIL]"
+
+    [[ "$CLI_READY" == "true" ]] && cli_status="[OK]"
+    [[ "$MCP_READY" == "true" ]] && mcp_status="[OK]"
+    [[ "$API_READY" == "true" ]] && api_status="[OK]"
+    [[ "$UI_READY" == "true" ]] && ui_status="[OK]"
+
     cat <<EOF
 
 ABrain Setup abgeschlossen.
+
+Ready State:
+  ${cli_status} CLI bereit
+  ${mcp_status} MCP bereit
+  ${api_status} API bereit
+  ${ui_status} UI gebaut
 
 Kanonische Startpfade:
   API Gateway: $VENV_PYTHON -m uvicorn api_gateway.main:app --reload
   MCP v2:      $VENV_PYTHON -m interfaces.mcp.server
   MCP Entry:   $VENV_DIR/bin/abrain-mcp
   UI Dev:      (cd $UI_DIR && npm run dev)
-  CLI Help:    $REPO_ROOT/scripts/abrain help
+  CLI:         $REPO_ROOT/scripts/abrain help
 EOF
 }
 
 usage() {
     cat <<EOF
-ABrain setup bootstrap
+ABrain one-liner setup bootstrap
 
 Usage:
+  $(basename "$0")
   $(basename "$0") [env|deps|cli|api|mcp|ui|all|help]
+
+Ohne Argument wird der komplette kanonische Bootstrap ausgefuehrt.
 
 Schritte:
   env    .venv anlegen/verwenden, pip-Tooling aktualisieren, .env aus Vorlage erzeugen
@@ -221,10 +278,10 @@ Schritte:
   help   diese Hilfe anzeigen
 
 Beispiele:
-  ./scripts/setup.sh all
+  ./scripts/setup.sh
+  ./scripts/abrain setup
   ./scripts/setup.sh deps
-  ./scripts/setup.sh cli
-  ./scripts/abrain setup all
+  ./scripts/abrain setup cli
 EOF
 }
 
@@ -241,26 +298,28 @@ run_deps() {
 run_cli() {
     run_deps
     install_cli_entrypoint
+    verify_cli_ready
 }
 
 run_api() {
-    smoke_api_gateway
+    verify_api_gateway
 }
 
 run_mcp() {
-    smoke_mcp_v2
+    verify_mcp_ready
 }
 
 run_ui() {
-    build_ui
+    setup_frontend
 }
 
 run_all() {
+    check_system
     run_cli
     run_api
     run_mcp
     run_ui
-    show_next_steps
+    final_status
 }
 
 main() {

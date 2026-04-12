@@ -194,7 +194,7 @@ usage() {
 Usage: ${CLI_NAME} <command> [options] [arguments]
 
 SETUP & CONFIG:
-  setup [step]           ABrain-Bootstrap fuer .venv, MCP, API und UI ausfuehren
+  setup [step]           Vollstaendigen ABrain-Bootstrap ausfuehren; ohne Schritt = One-Liner-Setup
   config <action>        Konfiguration anzeigen, bearbeiten oder validieren
 
 OPERATIONS:
@@ -229,6 +229,7 @@ GLOBAL OPTIONS:
 
 BEISPIELE:
   ${CLI_NAME} help
+  ${CLI_NAME} setup
   ${CLI_NAME} status --watch
   ${CLI_NAME} config show
   ${CLI_NAME} test unit
@@ -254,7 +255,12 @@ show_command_help() {
             cat << EOF
 ${CYAN}${CLI_NAME} setup${NC} - ABrain-Umgebung einrichten
 
-Usage: ${CLI_NAME} setup [step]
+Usage: ${CLI_NAME} setup
+       ${CLI_NAME} setup [step]
+
+STANDARDVERHALTEN:
+  Ohne Schritt wird der komplette kanonische Bootstrap ausgefuehrt:
+  .venv, Python-Dependencies, editable Install, MCP-v2/API-Smokes und UI-Build.
 
 SCHRITTE:
   env                   .venv anlegen/verwenden, pip-Tooling aktualisieren, .env erzeugen
@@ -270,7 +276,7 @@ HINWEIS:
   Parallel-CLI und keine Abhängigkeit mehr auf historische Helper-Verzeichnisse.
 
 BEISPIELE:
-  ${CLI_NAME} setup all
+  ${CLI_NAME} setup
   ${CLI_NAME} setup deps
   ${CLI_NAME} setup cli
 EOF

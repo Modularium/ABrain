@@ -114,7 +114,7 @@ No other UI is active. `monitoring/` and `archive/ui_legacy/` are deleted.
 | `scripts/abrain` | Canonical Bash CLI |
 | `scripts/agentnn` | Thin legacy wrapper around `scripts/abrain` |
 | `scripts/abrain_mcp.py` | MCP v2 stdio entrypoint |
-| `scripts/setup.sh` | Canonical bootstrap for `.venv`, deps, editable install, API/MCP smokes and UI build |
+| `scripts/setup.sh` | Canonical one-liner bootstrap for `.venv`, deps, editable install, API/MCP smokes and UI build |
 | `scripts/__init__.py` | Makes scripts importable |
 
 ---
@@ -163,6 +163,7 @@ Tests in `tests/mcp/` that are canonical:
 | `AGENTS.md` | AI tool instructions |
 | `CHANGELOG.md` | Release history |
 | `CONTRIBUTING.md` | Contributor guide |
+| `docs/architecture/SETUP_ONE_LINER_FLOW.md` | Canonical one-liner setup flow |
 | `docs/architecture/SETUP_AND_BOOTSTRAP_FLOW.md` | Canonical bootstrap flow |
 | `docs/architecture/CANONICAL_RUNTIME_STACK.md` | Canonical layer overview |
 | `docs/architecture/CANONICAL_REPO_STRUCTURE.md` | **This file** |

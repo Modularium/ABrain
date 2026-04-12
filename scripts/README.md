@@ -8,7 +8,10 @@ Dieses Verzeichnis enthaelt nur noch wenige kanonische Einstiegspunkte:
 - `setup.sh`: kanonischer Bootstrap fuer `.venv`, Python-Abhaengigkeiten,
   editable Installation, API-/MCP-Smokes und den UI-Build
 
+Der kanonische Einstieg ist `./scripts/abrain setup`.
+
 `./scripts/abrain setup ...` delegiert direkt an `setup.sh`. Verfuegbare
-Schritte sind `env`, `deps`, `cli`, `api`, `mcp`, `ui` und `all`.
+gezielte Schritte fuer Wiederholung oder Diagnose sind `env`, `deps`, `cli`,
+`api`, `mcp`, `ui` und `all`.
 
 Alles andere aus frueheren Shell-Setups wurde im bereinigten Main entfernt.
