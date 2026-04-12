@@ -1,6 +1,6 @@
 #!/bin/bash
 # -*- coding: utf-8 -*-
-# Agent-NN Setup Script - Vollständige Installation und Konfiguration
+# ABrain Setup Script - Vollständige Installation und Konfiguration
 # Verbesserte Version fuer den canonical services/*-Stack
 
 set -euo pipefail
@@ -9,28 +9,43 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 
-source "$SCRIPT_DIR/lib/log_utils.sh"
-source "$SCRIPT_DIR/lib/spinner_utils.sh"
-source "$SCRIPT_DIR/helpers/common.sh"
-source "$SCRIPT_DIR/helpers/env.sh"
-source "$SCRIPT_DIR/helpers/docker.sh"
-source "$SCRIPT_DIR/helpers/frontend.sh"
+require_source() {
+    local file="$1"
+    local label="${2:-Hilfsdatei}"
 
-source "$SCRIPT_DIR/lib/env_check.sh"
-source "$SCRIPT_DIR/lib/docker_utils.sh"
-source "$SCRIPT_DIR/lib/frontend_build.sh"
-source "$SCRIPT_DIR/lib/install_utils.sh"
-source "$SCRIPT_DIR/lib/menu_utils.sh"
-source "$SCRIPT_DIR/lib/args_parser.sh"
-source "$SCRIPT_DIR/lib/config_utils.sh"
-source "$SCRIPT_DIR/lib/preset_utils.sh"
+    if [[ ! -f "$file" ]]; then
+        printf 'ABrain setup error: fehlende %s: %s\n' "$label" "$file" >&2
+        printf 'Das Setup benoetigt die historischen Verzeichnisse scripts/lib und scripts/helpers in vollstaendiger Form.\n' >&2
+        printf 'Die ABrain-CLI selbst bleibt nutzbar, aber "abrain setup" kann in diesem Repository-Checkout nicht starten.\n' >&2
+        exit 1
+    fi
+
+    # shellcheck disable=SC1090
+    source "$file"
+}
+
+require_source "$SCRIPT_DIR/lib/log_utils.sh" "Logging-Hilfsdatei"
+require_source "$SCRIPT_DIR/lib/spinner_utils.sh" "Spinner-Hilfsdatei"
+require_source "$SCRIPT_DIR/helpers/common.sh" "Common-Hilfsdatei"
+require_source "$SCRIPT_DIR/helpers/env.sh" "Environment-Hilfsdatei"
+require_source "$SCRIPT_DIR/helpers/docker.sh" "Docker-Hilfsdatei"
+require_source "$SCRIPT_DIR/helpers/frontend.sh" "Frontend-Hilfsdatei"
+
+require_source "$SCRIPT_DIR/lib/env_check.sh" "Environment-Check-Hilfsdatei"
+require_source "$SCRIPT_DIR/lib/docker_utils.sh" "Docker-Utils-Hilfsdatei"
+require_source "$SCRIPT_DIR/lib/frontend_build.sh" "Frontend-Build-Hilfsdatei"
+require_source "$SCRIPT_DIR/lib/install_utils.sh" "Installations-Hilfsdatei"
+require_source "$SCRIPT_DIR/lib/menu_utils.sh" "Menue-Hilfsdatei"
+require_source "$SCRIPT_DIR/lib/args_parser.sh" "Argument-Parser-Hilfsdatei"
+require_source "$SCRIPT_DIR/lib/config_utils.sh" "Konfigurations-Hilfsdatei"
+require_source "$SCRIPT_DIR/lib/preset_utils.sh" "Preset-Hilfsdatei"
 # Utility functions
 return_to_main_menu() {
     local delay="${1:-0}"
     if [[ $delay -gt 0 ]]; then
         echo
         echo "Drücke Enter oder warte ${delay}s..."
-        read -t "$delay" -s || true
+        read -r -t "$delay" -s || true
     fi
     clear
 }
@@ -81,8 +96,13 @@ clean_environment() {
     fi
     
     # Entferne temporäre Konfigurationsdateien
+    if [[ -f "$REPO_ROOT/.abrain_config" ]]; then
+        log_info "Entferne temporäre ABrain-Konfiguration..."
+        rm -f "$REPO_ROOT/.abrain_config"
+    fi
+
     if [[ -f "$REPO_ROOT/.agentnn_config" ]]; then
-        log_info "Entferne temporäre Konfiguration..."
+        log_info "Entferne Legacy-Konfiguration..."
         rm -f "$REPO_ROOT/.agentnn_config"
     fi
     
@@ -101,7 +121,7 @@ show_current_config() {
     echo "   Auto-Modus: ${AUTO_MODE:-false}"
     echo "   Frontend bauen: ${BUILD_FRONTEND:-true}"
     echo "   Docker starten: ${START_DOCKER:-true}"
-    echo "   Legacy MCP aktiv: ${START_MCP:-false}"
+    echo "   Historische MCP-Laufzeit aktiv: ${START_MCP:-false}"
     echo "   Preset: ${PRESET:-keines}"
     echo
     
@@ -144,7 +164,7 @@ show_current_config() {
 # Poetry-Method initialisieren
 POETRY_METHOD="${POETRY_METHOD:-venv}"
 export POETRY_METHOD
-source "$SCRIPT_DIR/lib/status_utils.sh"
+require_source "$SCRIPT_DIR/lib/status_utils.sh" "Status-Hilfsdatei"
 
 # Globale Variablen
 SCRIPT_NAME="$(basename "$0")"
@@ -168,7 +188,7 @@ usage() {
     cat << EOF
 Usage: $SCRIPT_NAME [OPTIONS]
 
-Agent-NN Setup Script - Vollständige Installation und Konfiguration
+ABrain Setup Script - Vollständige Installation und Konfiguration
 
 OPTIONS:
     -h, --help              Diese Hilfe anzeigen
@@ -230,7 +250,7 @@ interactive_menu() {
     
     while [[ $attempts -lt $max_attempts ]]; do
         echo "╔══════════════════════════════════════════════════════════════════════════════╗"
-        echo "║                              Agent-NN Setup                                 ║"
+        echo "║                               ABrain Setup                                  ║"
         echo "╠══════════════════════════════════════════════════════════════════════════════╣"
         echo "║  Wähle eine Aktion:                                                         ║"
         echo "╠══════════════════════════════════════════════════════════════════════════════╣"
@@ -249,7 +269,7 @@ interactive_menu() {
                 menu_items+=("$((i + 1))" "${options[$i]}")
             done
             
-            if choice=$(whiptail --title "Agent-NN Setup" --menu "Aktion wählen:" 20 78 12 "${menu_items[@]}" 3>&1 1>&2 2>&3); then
+            if choice=$(whiptail --title "ABrain Setup" --menu "Aktion wählen:" 20 78 12 "${menu_items[@]}" 3>&1 1>&2 2>&3); then
                 case $choice in
                     1) RUN_MODE="full" ;;
                     2) RUN_MODE="system" ;;
@@ -344,9 +364,9 @@ install_poetry_fixed() {
                 pip install poetry >/dev/null 2>&1
 
                 # Füge zu .bashrc hinzu falls nicht vorhanden
-                if ! grep -q "agentnn_repo_venv" "$HOME/.bashrc" 2>/dev/null; then
-                    echo "# Agent-NN venv" >> "$HOME/.bashrc"
-                    echo "source $REPO_ROOT/.venv/bin/activate # agentnn_repo_venv" >> "$HOME/.bashrc"
+                if ! grep -Eq "abrain_repo_venv|agentnn_repo_venv" "$HOME/.bashrc" 2>/dev/null; then
+                    echo "# ABrain venv" >> "$HOME/.bashrc"
+                    echo "source $REPO_ROOT/.venv/bin/activate # abrain_repo_venv" >> "$HOME/.bashrc"
                 fi
             else
                 return 1
@@ -669,7 +689,7 @@ execute_setup_mode() {
             run_step "Verifizierung" verify_installation || log_warn "Verifizierung mit Problemen abgeschlossen"
 
             run_step "Tests" run_project_tests || true
-            update_status "last_setup" "$(date -u +%FT%TZ)" "$REPO_ROOT/.agentnn/status.json"
+            update_status "last_setup" "$(date -u +%FT%TZ)" "$REPO_ROOT/.abrain/status.json"
             print_next_steps
             ;;
         *)
@@ -698,7 +718,7 @@ main() {
         # Banner anzeigen
         print_banner
 
-        STATUS_FILE="$REPO_ROOT/.agentnn/status.json"
+        STATUS_FILE="$REPO_ROOT/.abrain/status.json"
         ensure_status_file "$STATUS_FILE"
         if [[ -n "$PRESET" ]]; then
             log_preset "$PRESET" "$STATUS_FILE"
