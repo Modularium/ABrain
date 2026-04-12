@@ -1,83 +1,63 @@
 # 🧠 ABrain
 
-> Deterministic Multi-Agent Core with Governance, Approval & Audit — built for control, security and explainability.
+> Stop prompting AI. Start controlling it.
 
-[![Repo](https://img.shields.io/badge/GitHub-Modularium%2FABrain-blue)](https://github.com/Modularium/ABrain)
-[![Python](https://img.shields.io/badge/python-%3E%3D3.10-informational)](#)
-[![Docker](https://img.shields.io/badge/docker-ready-informational)](#docker--compose)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](#license)
+**ABrain is a deterministic, governance-first AI agent system.**  
+It doesn’t just *generate answers* — it **plans, controls and executes actions safely**.
 
 ---
 
-## 🚀 What is ABrain?
+## ⚡ Why ABrain exists
 
-**ABrain is a hardened multi-agent execution system** with a strict, verifiable control flow:
+Most AI agent frameworks today:
+
+- ❌ Execute tools without real control  
+- ❌ Hide decisions behind LLM reasoning  
+- ❌ Have no real security boundary  
+- ❌ Are unpredictable in production  
+
+**ABrain fixes this.**
+
+---
+
+## 🚀 What makes ABrain different?
+
+| Feature | ABrain | Typical Agent Frameworks |
+|--------|--------|------------------------|
+| Deterministic execution | ✅ | ❌ |
+| Governance before execution | ✅ | ❌ |
+| Human approval (HITL) | ✅ | ⚠️ optional |
+| Static tool registry | ✅ | ❌ dynamic |
+| Full traceability | ✅ | ❌ |
+| Security boundaries | ✅ | ❌ |
+
+---
+
+## 🧠 The Core Idea
 
 ```
 
-Decision → Governance → Approval → Execution → Feedback → Audit
+AI should never execute blindly.
+
+```
+
+ABrain enforces a strict execution pipeline:
+
+```
+
+Decision → Governance → Approval → Execution → Audit
 
 ````
 
-Unlike typical AI-agent frameworks, ABrain focuses on:
-
-- ✅ **Determinism over randomness**
-- ✅ **Security boundaries (AdminBot isolation)**
-- ✅ **Explicit governance & approval**
-- ✅ **Full traceability (Audit + Explainability)**
-
----
-
-## ⚡ TL;DR
-
-| Feature | Description |
-|--------|------------|
-| 🧠 Multi-Agent Core | Structured planning & execution |
-| 🔐 Governance Layer | Deterministic policy enforcement |
-| 👤 Approval (HITL) | Human-in-the-loop control |
-| ⚙️ Static Tooling | No dynamic tool injection |
-| 📜 Audit & Trace | Full execution transparency |
-| 🔌 MCP v2 Interface | Standardized tool API |
+Every action:
+- is **planned**
+- is **validated**
+- can be **approved**
+- is **fully traceable**
 
 ---
 
-## 🧩 Core Philosophy
-
-ABrain is built around **control, not autonomy**.
-
-> "AI should execute — but never decide unchecked."
-
-Key principles:
-
-- No uncontrolled tool execution  
-- No hidden decisions  
-- No silent failures  
-- No bypass of governance  
-
----
-
-## 🏗️ Architecture Overview
-
-```mermaid
-flowchart TB
-  UI --> GW[API Gateway]
-
-  subgraph Core
-    DECISION --> POLICY
-    POLICY -->|allow| EXECUTION
-    POLICY -->|approval| APPROVAL
-    APPROVAL --> EXECUTION
-    EXECUTION --> FEEDBACK
-    EXECUTION --> AUDIT
-  end
-
-  EXECUTION --> ADAPTERS
-  ADAPTERS --> ADMINBOT
-````
-
----
-
-## ⚡ Quickstart (Minimal)
+## ⚡ See it in action (30 sec)
 
 ```bash
 git clone https://github.com/Modularium/ABrain
@@ -89,30 +69,9 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 pytest
-```
+````
 
----
-
-## 🐳 Docker Setup
-
-```bash
-cp .env.example .env
-# set API keys if needed
-
-docker compose up --build
-```
-
-### Default Services
-
-| Service     | URL                                            |
-| ----------- | ---------------------------------------------- |
-| API Gateway | [http://localhost:8000](http://localhost:8000) |
-| Frontend    | [http://localhost:3000](http://localhost:3000) |
-| Prometheus  | [http://localhost:9090](http://localhost:9090) |
-
----
-
-## 🧪 Run a Task
+Run a task:
 
 ```bash
 curl -X POST http://localhost:8000/control-plane/tasks/run \
@@ -125,38 +84,58 @@ curl -X POST http://localhost:8000/control-plane/tasks/run \
 
 ---
 
-## 🧠 Core Components
+## 🧩 What ABrain actually does
 
-| Layer      | Responsibility                 |
-| ---------- | ------------------------------ |
-| Decision   | Planning & task decomposition  |
-| Governance | Policy enforcement             |
-| Approval   | Human control (HITL)           |
-| Execution  | Deterministic execution engine |
-| Adapters   | External system bridges        |
-| Audit      | Trace + explainability         |
+ABrain turns this:
 
----
+> “Check system health and fix issues”
 
-## 🔐 Security Model
+into:
 
-ABrain enforces **strict execution boundaries**:
-
-### 🚫 What is NOT allowed
-
-* Dynamic tool injection
-* Direct system access
-* Bypassing governance
-
-### ✅ What IS allowed
-
-* Predefined tools only
-* Policy-checked execution
-* Approval-controlled actions
+1. Structured plan
+2. Policy validation
+3. Optional human approval
+4. Controlled execution
+5. Full audit trail
 
 ---
 
-## 🔌 MCP v2 Interface
+## 🏗️ Architecture (simplified)
+
+```mermaid
+flowchart LR
+  USER --> CORE
+  CORE --> GOVERNANCE
+  GOVERNANCE --> APPROVAL
+  APPROVAL --> EXECUTION
+  EXECUTION --> AUDIT
+```
+
+---
+
+## 🔐 Built for real-world usage
+
+ABrain is not a demo framework.
+
+It is built for:
+
+* 🏢 Infrastructure automation
+* 🔐 Security-sensitive systems
+* 🤖 Controlled AI agents
+* 🧠 Multi-agent orchestration
+
+---
+
+## 🚫 What ABrain will NOT do
+
+* Run arbitrary tools
+* Execute unchecked actions
+* Bypass governance
+* Hide decisions
+
+---
+
+## 🔌 MCP-compatible (AI-native)
 
 ABrain exposes a **Model Context Protocol (MCP) server**:
 
@@ -164,7 +143,7 @@ ABrain exposes a **Model Context Protocol (MCP) server**:
 abrain-mcp
 ```
 
-### Available tools
+Available tools:
 
 * `abrain.run_task`
 * `abrain.run_plan`
@@ -175,156 +154,105 @@ abrain-mcp
 
 ---
 
-## 🧰 CLI Usage
+## ⚙️ Docker (fast setup)
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+---
+
+## 🧰 CLI
 
 ```bash
 agentnn ask "Check system health"
-agentnn queue status
-agentnn governance trust score <agent-id>
 ```
 
-> ⚠️ `agentnn` is a legacy name (kept for compatibility)
+> Yes, `agentnn` is legacy — kept for compatibility.
 
 ---
 
-## ⚙️ Configuration
+## 🧠 Philosophy
 
-### `.env`
+ABrain is built on one principle:
 
-```env
-OPENAI_API_KEY=...
-DATABASE_URL=postgresql://...
-
-API_AUTH_ENABLED=false
-VITE_API_URL=http://localhost:8000
-```
+> **Control > Autonomy**
 
 ---
 
-## 📂 Project Structure
+## 🔥 Why developers like ABrain
+
+* No magic black box
+* Predictable execution
+* Easy to debug
+* Safe to run in production
+* Works with existing tools
+
+---
+
+## 🧪 Designed for engineers
+
+* FastAPI-based services
+* Docker-first setup
+* Clean architecture
+* Strong invariants
+* Extensible adapters
+
+---
+
+## 📂 Project structure
 
 ```
-core/
-  decision/
-  governance/
-  execution/
-  approval/
-  audit/
-
-adapters/
-  adminbot/
-  flowise/
-  codex/
-
-services/
-  api_gateway/
-  registry/
-  dispatcher/
-
-interfaces/
-  mcp/
-
-frontend/
+core/        # canonical execution path
+adapters/    # external integrations
+services/    # runtime services
+interfaces/  # MCP + API
+frontend/    # control plane UI
 ```
 
 ---
 
-## 🧪 Development
+## 🧨 The difference in one sentence
 
-```bash
-pip install ruff black mypy pytest
+Other frameworks:
 
-ruff check .
-black .
-mypy .
-pytest
-```
+> “Let the AI decide”
 
----
+ABrain:
 
-## 🧠 Design Invariants (VERY IMPORTANT)
-
-These rules must NEVER be broken:
-
-1. ❗ Core execution is deterministic
-2. ❗ Governance always runs before execution
-3. ❗ No tool execution without registry
-4. ❗ AdminBot remains isolated (read-only)
-5. ❗ All actions must be traceable
+> “Make the AI explain and prove every step”
 
 ---
 
 ## 🤝 Contributing
 
-1. Create an issue first
-2. Use feature branches
-3. Run tests before PR
-4. Respect core invariants
+We welcome contributions — but:
+
+> ❗ Core invariants must never be broken
+
+---
+
+## 🛣 Roadmap
+
+* [ ] Persistent execution state
+* [ ] Distributed agents
+* [ ] Advanced governance engine
+* [ ] UI for approvals & traces
+* [ ] Plugin system (controlled)
 
 ---
 
 ## 📜 License
 
-MIT License
+MIT
 
 ---
 
-## ❓ FAQ
+## 🧠 Final thought
 
-### Why "Agent-NN" still exists?
+ABrain is not trying to make AI more powerful.
 
-Legacy naming for compatibility — will be removed gradually.
+It’s trying to make AI
+**safe enough to trust.**
 
----
-
-### Is ABrain autonomous?
-
-No. It is **controlled execution**, not autonomous AI.
-
----
-
-### Can it run locally?
-
-Yes — fully self-hostable.
-
----
-
-### Does it support real-world execution?
-
-Yes — but always through controlled adapters.
-
----
-
-## 🧭 Roadmap
-
-* [ ] Persistent orchestration state
-* [ ] Advanced policy engine
-* [ ] Distributed agent execution
-* [ ] UI for governance & approvals
-* [ ] Plugin system (controlled)
-
----
-
-## 🧾 References
-
-* Core: `services/core.py`
-* MCP: `interfaces/mcp/`
-* AdminBot: `adapters/adminbot/`
-* Docs: `docs/architecture/`
-
----
-
-## 🛠 Maintainer Notes
-
-* Add CI workflow
-* Add LICENSE file
-* Maintain CHANGELOG
-* Validate security invariants on every PR
-
----
-
-## 🔥 Final Thought
-
-ABrain is not about making AI more powerful.
-
-It is about making AI **safe, controllable, and understandable**.
