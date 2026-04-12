@@ -15,7 +15,15 @@ try:
     sys.path.pop(0)
 except Exception:  # fallback to local pydantic
     from pydantic import BaseModel, Field, field_validator
-from .privacy import AccessLevel
+from enum import Enum
+
+
+class AccessLevel(str, Enum):
+    """Access classification for text fields."""
+
+    PUBLIC = "public"
+    PRIVATE = "private"
+    RESTRICTED = "restricted"
 
 
 class AccessText(BaseModel):

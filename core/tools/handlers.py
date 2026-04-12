@@ -46,10 +46,16 @@ def _build_context(task: str, session_id: str | None = None):
 
 
 def _default_client_factory():
-    """Import the SDK client lazily to keep the core layer lightweight."""
-    from sdk.client import AgentClient
+    """Canonical stub — dispatch_task and list_agents tools require an injected client_factory.
 
-    return AgentClient()
+    In the canonical runtime, use ``services.core.run_task()`` for task dispatch and
+    ``services.core.list_agents()`` for agent listing instead of these tool wrappers.
+    """
+    raise RuntimeError(
+        "No AgentClient injected. "
+        "Inject a client_factory when constructing the tool registry, "
+        "or use services.core.run_task() / services.core.list_agents() directly."
+    )
 
 
 def dispatch_task_tool(

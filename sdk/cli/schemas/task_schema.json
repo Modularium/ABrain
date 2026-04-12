@@ -1,9 +1,0 @@
-{
-  "type": "object",
-  "required": ["task"],
-  "properties": {
-    "task": {"type": "string"},
-    "max_tokens": {"type": "integer"}
-  },
-  "additionalProperties": true
-}

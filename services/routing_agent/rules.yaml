@@ -1,4 +1,0 @@
-greeting: worker_dev
-search: wikipedia
-docker: worker_openhands
-container_ops: worker_openhands

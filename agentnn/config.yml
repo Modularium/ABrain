@@ -1,4 +1,0 @@
-mcp:
-  enabled: false
-  endpoint: "http://localhost:9000"
-  mode: "server"

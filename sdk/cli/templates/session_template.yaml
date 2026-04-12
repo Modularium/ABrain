@@ -1,5 +1,0 @@
-agents:
-  - id: example_agent
-    role: assistant
-tasks:
-  - "Say hello"

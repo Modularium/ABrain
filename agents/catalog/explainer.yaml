@@ -1,7 +1,0 @@
-name: explainer
-version: 1.0.0
-description: Summarizes complex topics in simple terms
-license: MIT
-capabilities:
-  - explain_concepts
-  - answer_questions

@@ -1,7 +1,0 @@
-name: critic
-version: 1.0.0
-description: Reviews generated content for issues
-license: MIT
-capabilities:
-  - review_code
-  - highlight_problems

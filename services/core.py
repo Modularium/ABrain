@@ -2,7 +2,6 @@ from __future__ import annotations
 
 """Shared service helpers for CLI and API."""
 
-import asyncio
 import json
 import logging
 import os
@@ -15,9 +14,6 @@ from core.tools import build_default_registry
 
 __all__ = [
     "approve_plan_step",
-    "create_agent",
-    "dispatch_task",
-    "evaluate_agent",
     "execute_tool",
     "get_explainability",
     "get_governance_state",
@@ -28,11 +24,9 @@ __all__ = [
     "list_recent_plans",
     "list_recent_traces",
     "list_agents",
-    "load_model",
     "reject_plan_step",
     "run_task",
     "run_task_plan",
-    "train_model",
 ]
 
 DEFAULT_REQUESTER = RequesterIdentity(
@@ -45,9 +39,7 @@ logger = logging.getLogger(__name__)
 
 def _build_dispatcher() -> ExecutionDispatcher:
     """Create the fixed execution dispatcher used by service helpers."""
-    from sdk.client import AgentClient
-
-    return ExecutionDispatcher(build_default_registry(client_factory=AgentClient))
+    return ExecutionDispatcher(build_default_registry())
 
 
 def execute_tool(
@@ -70,67 +62,12 @@ def execute_tool(
     return result.output
 
 
-def create_agent(
-    config: Dict[str, Any], endpoint: str = "http://localhost:8090"
-) -> Dict[str, Any]:
-    """Register ``config`` with the MCP agent registry."""
-    from agentnn.deployment.agent_registry import AgentRegistry
-
-    registry = AgentRegistry(endpoint)
-    return registry.deploy(config)
-
-
-def dispatch_task(ctx: ModelContext) -> Dict[str, Any]:
-    """Dispatch ``ctx`` through the fixed tool execution layer."""
-    description = None
-    if ctx.task_context is not None:
-        description = getattr(ctx.task_context.description, "text", ctx.task_context.description)
-    payload = {
-        "task": description or getattr(ctx, "task", "") or "",
-        "task_type": getattr(ctx.task_context, "task_type", None)
-        if ctx.task_context
-        else None,
-        "session_id": getattr(ctx, "session_id", None),
-        "task_value": getattr(ctx, "task_value", None),
-        "max_tokens": getattr(ctx, "max_tokens", None),
-        "priority": getattr(ctx, "priority", None),
-        "deadline": getattr(ctx, "deadline", None),
-    }
-    return execute_tool("dispatch_task", payload)
-
-
 def list_agents() -> Dict[str, Any]:
-    """List agents through the fixed tool execution layer."""
-    return execute_tool("list_agents", {})
+    """List agents from the canonical decision-layer registry."""
+    from core.decision.agent_registry import AgentRegistry
 
-
-def evaluate_agent(agent_id: str) -> Dict[str, Any]:
-    """Return evaluation metrics for ``agent_id``."""
-    from managers.agent_optimizer import AgentOptimizer
-
-    optimizer = AgentOptimizer()
-    return asyncio.run(optimizer.evaluate_agent(agent_id))
-
-
-def load_model(
-    name: str,
-    type: str,
-    source: str,
-    config: Dict[str, Any],
-    version: str | None = None,
-) -> Dict[str, Any]:
-    """Load a model using :class:`ModelManager`."""
-    from managers.model_manager import ModelManager
-
-    manager = ModelManager()
-    return asyncio.run(manager.load_model(name, type, source, config, version))
-
-
-def train_model(args: Any) -> Any:
-    """Run the training routine with ``args``."""
-    from training.train import train
-
-    return train(args)
+    registry = AgentRegistry()
+    return {"agents": [a.model_dump(mode="json") for a in registry.list_descriptors()]}
 
 
 def run_task(

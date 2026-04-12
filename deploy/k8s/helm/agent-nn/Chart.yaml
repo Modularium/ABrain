@@ -1,4 +1,0 @@
-apiVersion: v2
-name: agent-nn
-version: 0.1.0
-description: Deployment of Agent-NN MCP services

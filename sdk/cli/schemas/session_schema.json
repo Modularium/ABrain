@@ -1,9 +1,0 @@
-{
-  "type": "object",
-  "required": ["agents", "tasks"],
-  "properties": {
-    "agents": {"type": "array", "items": {"type": "object"}},
-    "tasks": {"type": "array", "items": {"type": "string"}}
-  },
-  "additionalProperties": true
-}

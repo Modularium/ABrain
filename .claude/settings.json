@@ -1,0 +1,53 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Read(//tmp/abrain-phaseM-control-plane-evolution/**)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(python -m pytest tests/ -x -q --tb=short)",
+      "Bash(pip install:*)",
+      "Bash(pytest tests/ -x -q --tb=short)",
+      "Bash(npm ci:*)",
+      "Bash(pytest tests/core/ tests/services/ -v --tb=short)",
+      "Bash(/home/dev/.local/bin/pytest tests/core/test_control_plane_gateway.py tests/services/test_control_plane_views.py -v --tb=short)",
+      "Bash(/home/dev/.local/bin/pytest tests/core/test_control_plane_gateway.py -v --tb=short)",
+      "Read(//home/dev/**)",
+      "Bash(pipenv run:*)",
+      "Bash(poetry run:*)",
+      "Bash(/home/dev/.local/bin/pytest tests/test_sanity.py -v --tb=short)",
+      "Bash(grep -n \"controlPlane\\\\|controlPlaneApi\" frontend/agent-ui/src/pages/*.tsx)",
+      "Bash(git pull:*)",
+      "Bash(git worktree:*)",
+      "Read(//tmp/abrain-phaseN-persistent-state/core/**)",
+      "Read(//tmp/abrain-phaseN-persistent-state/core/approval/**)",
+      "Read(//tmp/abrain-phaseN-persistent-state/services/**)",
+      "Bash(mkdir -p /tmp/abrain-phaseN-persistent-state/tests/state)",
+      "Bash(touch /tmp/abrain-phaseN-persistent-state/tests/state/__init__.py)",
+      "Read(//tmp/abrain-phaseN-persistent-state/**)",
+      "Bash(/home/dev/.local/bin/pytest tests/state/test_approval_store_persistence.py tests/state/test_plan_state_persistence.py tests/state/test_resume_after_restart.py tests/state/test_trace_plan_linkage.py tests/services/test_durable_runtime_flow.py -v --tb=short)",
+      "Bash(/home/dev/Agent-NN/.venv/bin/python -c \"import pydantic; print\\('pydantic', pydantic.__version__\\)\")",
+      "Bash(/home/dev/Agent-NN/.venv/bin/python -c \"import pytest; print\\('pytest', pytest.__version__\\)\")",
+      "Bash(/home/dev/Agent-NN/.venv/bin/python -m pytest tests/state/ tests/services/test_durable_runtime_flow.py -v --tb=short)",
+      "Bash(/home/dev/Agent-NN/.venv/bin/python -m pytest tests/state/test_approval_store_persistence.py -v --tb=long -rs)",
+      "Bash(/home/dev/Agent-NN/.venv/bin/python -m pytest -o \"python_files=test_*.py\" tests/state tests/services/test_durable_runtime_flow.py -v --tb=short)",
+      "Bash(/home/dev/Agent-NN/.venv/bin/python -m pytest -o \"python_files=test_*.py\" tests/state tests/approval tests/orchestration tests/execution tests/decision tests/adapters tests/core tests/services tests/integration/test_node_export.py -v --tb=short -q)",
+      "Bash(ls *.sh *.md *.toml *.cfg *.ini *.json *.py)",
+      "Bash(git fetch:*)",
+      "Bash(git reset:*)",
+      "Bash(find tests/integration/ -name \"*.py\" ! -name \"test_node_export.py\" -delete)",
+      "Bash(find tests/integration/ -name \"*.py\" ! -name \"test_node_export.py\" -not -name \"__init__.py\" -delete)",
+      "Bash(/home/dev/Agent-NN/.venv/bin/python -m pytest -o \"python_files=test_*.py\" tests/state tests/approval tests/orchestration tests/execution tests/decision tests/adapters tests/core tests/services tests/mcp tests/integration/test_node_export.py -v --tb=short -q)",
+      "Bash(.venv/bin/python -m pytest -o \"python_files=test_*.py\" tests/state tests/approval tests/orchestration tests/execution tests/decision tests/adapters tests/core tests/services tests/mcp tests/integration/test_node_export.py -q --tb=short)"
+    ],
+    "additionalDirectories": [
+      "/tmp/abrain-phaseM-control-plane-evolution/frontend/agent-ui/src/pages",
+      "/tmp/abrain-phaseN-persistent-state/docs/reviews",
+      "/tmp/abrain-phaseN-persistent-state/docs/architecture",
+      "/tmp/abrain-phaseN-persistent-state/core/orchestration",
+      "/tmp/abrain-phaseN-persistent-state/services",
+      "/tmp/abrain-phaseN-persistent-state/tests/state",
+      "/tmp/abrain-phaseN-persistent-state/tests/services"
+    ]
+  }
+}

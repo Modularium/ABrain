@@ -2,31 +2,14 @@
 line-length = 120
 ignore = ["E402"]
 extend-exclude = [
-  "archive",
-  "agents",
-  "api",
-  "cli",
-  "openhands_api",
-  "llm_models",
-  "nn_models",
-  "managers",
-  "plugins",
-  "training",
-  "datastores",
-  "monitoring",
-  "evaluation",
-  "security",
-  "rag",
-  "mlflow_integration",
   "tests",
   "scripts",
-  "benchmarks",
   "frontend",
   "docs",
 ]
 
 [tool.poetry]
-name = "agentnn"
+name = "abrain"
 version = "1.1.0"
 description = "ABrain modular agent execution and neural orchestration framework"
 authors = ["OpenHands <openhands@all-hands.dev>"]
@@ -34,13 +17,10 @@ license = "MIT"
 readme = "README.md"
 packages = [
   { include = "adapters" },
-  { include = "agentnn" },
   { include = "core" },
-  { include = "managers" },
-  { include = "sdk" },
-  { include = "mcp" },
   { include = "services" },
   { include = "interfaces" },
+  { include = "api_gateway" },
   { include = "scripts" }
 ]
 
@@ -48,29 +28,14 @@ packages = [
 python = ">=3.10,<4.0"
 fastapi = "*"
 httpx = "*"
-typer = "*"
 pydantic-settings = "*"
 pydantic = "*"
 PyYAML = "*"
-tqdm = "*"
 uvicorn = "*"
-sqlalchemy = "*"
 slowapi = "*"
-aiofiles = "*"
 prometheus-client = "*"
-loguru = "*"
-python-json-logger = "*"
-aiohttp = "*"
 structlog = "*"
-cryptography = "*"
-mlflow = "*"
-openai = "*"
-langchain = "*"
-langchain-openai = "*"
-langchain-community = "*"
-langchain-huggingface = "*"
-transformers = "*"
-torch = "*"
+python-json-logger = "*"
 scikit-learn = "*"
 
 [tool.poetry.group.dev.dependencies]
@@ -81,18 +46,11 @@ mypy = "*"
 ruff = "*"
 black = "*"
 
-[tool.poetry.extras]
-sdk = []
-
 [project.scripts]
 abrain-mcp = "interfaces.mcp.server:main"
-# Legacy MCP v1 (disabled, kept for reference)
 
 [tool.poetry.scripts]
-agentnn = "sdk.cli.main:app"
-mcp_cli = "mcp.cli:app"
 abrain-mcp = "interfaces.mcp.server:main"
-# Legacy MCP v1 (disabled, kept for reference)
 
 [build-system]
 requires = ["poetry-core>=1.7.0"]

@@ -32,11 +32,6 @@ from .models import (
 )
 from .tools import ToolDefinition, ToolRegistry, build_default_registry
 
-try:  # pragma: no cover - optional heavy legacy deps
-    from .agents import AgentRuntime
-except Exception:  # pragma: no cover - optional heavy legacy deps
-    AgentRuntime = None
-
 __all__ = [
     "AdminBotAction",
     "AdminBotErrorPayload",
@@ -46,7 +41,6 @@ __all__ = [
     "AdminBotSuccessPayload",
     "AdminBotSystemHealthInput",
     "AdminBotSystemStatusInput",
-    "AgentRuntime",
     "AuditLog",
     "AuditEntry",
     "CoreErrorCode",

@@ -1,9 +1,0 @@
-{
-  "dispatcher": "Handles task orchestration and selects worker services",
-  "agent_registry": "Stores metadata about available agents and their endpoints",
-  "session_manager": "Persists conversation context",
-  "vector_store": "Provides semantic search over documents",
-  "llm_gateway": "Unified API for large language models",
-  "worker_services": ["dev", "openhands", "loh"],
-  "api_gateway": "Optional entry point routing external requests"
-}

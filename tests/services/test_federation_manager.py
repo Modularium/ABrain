@@ -1,6 +1,9 @@
+import pytest
 from unittest.mock import patch
 
 from services.federation_manager.service import FederationManagerService
+
+pytestmark = pytest.mark.unit
 from core.model_context import ModelContext
 
 
@@ -20,8 +23,8 @@ def test_round_robin_dispatch(monkeypatch):
     svc.register_node("n1", "http://node1")
     svc.register_node("n2", "http://node2")
 
-    def fake_post(url, payload, timeout):
-        return DummyResp(payload)
+    def fake_post(url, json=None, timeout=None):
+        return DummyResp(json)
 
     with patch("httpx.Client.post", side_effect=fake_post):
         ctx = ModelContext(task="t")

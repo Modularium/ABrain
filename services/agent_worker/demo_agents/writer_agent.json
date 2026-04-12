@@ -1,7 +1,0 @@
-{
-  "name": "writer_agent",
-  "url": "http://localhost:8102",
-  "capabilities": ["demo"],
-  "role": "writer",
-  "version": "0.1"
-}
