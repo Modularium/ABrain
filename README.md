@@ -63,16 +63,9 @@ Every action:
 git clone https://github.com/Modularium/ABrain
 cd ABrain
 
-python3 -m venv .venv
-source .venv/bin/activate
+./scripts/abrain setup all
 
-python -m pip install --upgrade pip
-python -m pip install -r requirements-light.txt
-
-# optional, but needed if you want console scripts like `abrain-mcp`
-python -m pip install -e .
-
-python -m pytest -o python_files='test_*.py' \
+.venv/bin/python -m pytest -o python_files='test_*.py' \
   tests/state \
   tests/mcp \
   tests/approval \
@@ -88,7 +81,7 @@ python -m pytest -o python_files='test_*.py' \
 Start the API gateway:
 
 ```bash
-python -m uvicorn api_gateway.main:app --reload
+.venv/bin/python -m uvicorn api_gateway.main:app --reload
 ```
 
 Run a control-plane task:
@@ -160,11 +153,11 @@ It is built for:
 ABrain exposes a **Model Context Protocol (MCP) server**:
 
 ```bash
-python -m interfaces.mcp.server
+.venv/bin/python -m interfaces.mcp.server
 ```
 
-If you installed the package editable, the console entry `abrain-mcp` points to
-the same v2 server.
+`./scripts/abrain setup cli` refreshes the editable installation and regenerates
+the console entry `abrain-mcp`, which points to the same v2 server.
 
 Available tools:
 
@@ -193,6 +186,7 @@ npm run build
 ```bash
 ./scripts/abrain --version
 ./scripts/abrain help
+./scripts/abrain setup all
 ./scripts/abrain status
 ```
 

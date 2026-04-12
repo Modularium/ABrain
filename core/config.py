@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from pydantic import ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Application configuration loaded from ``.env``."""
 
-    model_config = ConfigDict(extra="allow")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+        extra="allow",
+    )
 
     DATA_DIR: str = "data"
     SESSIONS_DIR: str = "data/sessions"
@@ -41,11 +44,6 @@ class Settings(BaseSettings):
     AUTH_ENABLED: bool = False
     API_AUTH_ENABLED: bool = False
     RATE_LIMITS_ENABLED: bool = True
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
-
 
 settings = Settings()
 

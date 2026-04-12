@@ -5,17 +5,15 @@ Vielen Dank für dein Interesse an ABrain. Dieses Projekt verwendet GitHub Flow.
 ## Setup
 
 1. Forke das Repository und klone deine Kopie.
-2. Erstelle eine virtuelle Umgebung und installiere die Python-Abhängigkeiten:
+2. Fuehre den kanonischen Bootstrap fuer den aktuellen Repo-Stand aus:
    ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   python -m pip install --upgrade pip
-   python -m pip install -r requirements-light.txt
+   ./scripts/abrain setup all
    ```
-3. Wenn du den Console-Entry `abrain-mcp` lokal erzeugen willst, installiere das
-   Paket zusätzlich editable:
+3. Wenn du nur den Python-/MCP-Pfad vorbereiten willst, sind diese Schritte die
+   schlanke Alternative:
    ```bash
-   python -m pip install -e .
+   ./scripts/abrain setup deps
+   ./scripts/abrain setup cli
    ```
 4. Für das Frontend:
    ```bash
@@ -53,5 +51,6 @@ cd frontend/agent-ui && npm run type-check && npm run build && npm run lint
 
 Weitere Details findest du unter
 [docs/architecture/CANONICAL_REPO_STRUCTURE.md](docs/architecture/CANONICAL_REPO_STRUCTURE.md),
+[docs/architecture/SETUP_AND_BOOTSTRAP_FLOW.md](docs/architecture/SETUP_AND_BOOTSTRAP_FLOW.md),
 [docs/architecture/CANONICAL_RUNTIME_STACK.md](docs/architecture/CANONICAL_RUNTIME_STACK.md)
 und [docs/guides/MCP_USAGE.md](docs/guides/MCP_USAGE.md).

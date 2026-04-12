@@ -1,39 +1,16 @@
-langchain
-openai
-mlflow
-numpy
-pandas
-transformers
-chromadb
+# Canonical lightweight Python dependencies for the current ABrain runtime.
+# This file intentionally tracks the active repo paths used by scripts/setup.sh,
+# api_gateway/main.py, interfaces/mcp/server.py and the canonical pytest suite.
 
 pydantic
 pydantic-settings
 python-dotenv
 fastapi
-celery
-psycopg2-binary
-pymongo
-sqlalchemy
-alembic
-instructor
-pgvector
-langfuse
-dspy-ai
-pymupdf
-pypdf2
-docling
-jinja2
 uvicorn
-redis
+httpx
 pyyaml
 slowapi
-prometheus_fastapi_instrumentator
-
-httpx
-# mcp  # Removed - likely internal/local package
+prometheus-client
 structlog>=23.0.0
-aiofiles
-tqdm
-typer
-cryptography
-jsonschema
+python-jose[cryptography]
+pytest

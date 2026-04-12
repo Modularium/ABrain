@@ -11,6 +11,8 @@ Der kanonische MCP-Pfad dieses Branches liegt unter `interfaces/mcp/*`. Diese Sc
 
 MCP v2 ist der einzige unterstuetzte Runtime-Entry fuer MCP.
 
+Der bevorzugte lokale Bootstrap fuer diesen Pfad ist `./scripts/abrain setup cli`.
+
 ## Canonical Path
 
 `interfaces/mcp/server.py` -> `services/core.py` -> `decision -> governance -> approval -> execution -> learning -> audit`
@@ -18,6 +20,7 @@ MCP v2 ist der einzige unterstuetzte Runtime-Entry fuer MCP.
 ## Wichtige Dokumente
 
 - [MCP V2 Architektur](../architecture/MCP_V2_INTERFACE.md)
+- [Setup And Bootstrap Flow](../architecture/SETUP_AND_BOOTSTRAP_FLOW.md)
 - [MCP Usage](../guides/MCP_USAGE.md)
 - [Historische MCP V1 Usage](MCP_SERVER_USAGE.md)
 - [VS Code MCP Beispielkonfiguration](vscode_mcp_config.json)

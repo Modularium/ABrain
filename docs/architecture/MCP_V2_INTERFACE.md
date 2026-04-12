@@ -41,6 +41,10 @@ Diese Tool-Liste ist statisch in `interfaces/mcp/tool_registry.py` hinterlegt.
 - Input-Validierung: Pydantic-Modelle mit `extra="forbid"`
 - Fehlerform: strukturierte JSON-RPC-Fehler statt Prozessabbruch
 
+Der kanonische lokale Bootstrap fuer diesen Einstieg ist `./scripts/abrain setup cli`.
+Damit wird die editable Installation aufgefrischt und der Console-Entry
+`abrain-mcp` fuer denselben v2-Server neu erzeugt.
+
 ## Sicherheitsgrenzen
 
 - kein Plugin-Loading

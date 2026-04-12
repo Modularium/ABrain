@@ -35,6 +35,7 @@ uvicorn = "*"
 slowapi = "*"
 prometheus-client = "*"
 structlog = "*"
+python-jose = {version = "*", extras = ["cryptography"]}
 python-json-logger = "*"
 scikit-learn = "*"
 
@@ -45,6 +46,13 @@ pytest-asyncio = "*"
 mypy = "*"
 ruff = "*"
 black = "*"
+
+[project]
+name = "abrain"
+version = "1.1.0"
+description = "ABrain modular agent execution and neural orchestration framework"
+readme = "README.md"
+requires-python = ">=3.10,<4.0"
 
 [project.scripts]
 abrain-mcp = "interfaces.mcp.server:main"

@@ -4,6 +4,12 @@
 
 Der ABrain MCP-v2-Server stellt eine kleine, statische Tool-Oberflaeche ueber dem kanonischen Core bereit. Er ist capability-, policy-, approval- und trace-aware und fuehrt keine eigene Runtime-Logik aus.
 
+Der bevorzugte Bootstrap fuer den lokalen MCP-Pfad ist:
+
+```bash
+./scripts/abrain setup cli
+```
+
 ## Server starten
 
 Direkt aus dem Repo-Checkout:
@@ -19,6 +25,10 @@ Alternativ ueber den Console-Entry nach einem frischen Paket-Install:
 ```
 
 Der Wrapper `scripts/abrain_mcp.py` zeigt ebenfalls auf denselben v2-Server.
+
+Wenn `abrain-mcp` auf einem alten Checkout oder einer alten editable Installation
+noch auf einen veralteten Codepfad zeigt, regeneriert `./scripts/abrain setup cli`
+den Entry-Point fuer den aktuellen Branchstand neu.
 
 ## Exponierte Tools
 

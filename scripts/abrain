@@ -165,18 +165,9 @@ find_compose_file() {
     return 1
 }
 
-setup_runtime_ready() {
-    [[ -d "$SCRIPT_DIR/lib" && -d "$SCRIPT_DIR/helpers" ]]
-}
-
 run_setup_script() {
     if [[ ! -f "$SCRIPT_DIR/setup.sh" ]]; then
         log_err "Setup-Skript nicht gefunden: $SCRIPT_DIR/setup.sh"
-        exit 1
-    fi
-
-    if ! setup_runtime_ready; then
-        log_err "Setup-Runtime ist in diesem Checkout nicht vollständig vorhanden (erwartet: scripts/lib und scripts/helpers)."
         exit 1
     fi
 
@@ -203,7 +194,7 @@ usage() {
 Usage: ${CLI_NAME} <command> [options] [arguments]
 
 SETUP & CONFIG:
-  setup [preset]         ABrain-Umgebung einrichten
+  setup [step]           ABrain-Bootstrap fuer .venv, MCP, API und UI ausfuehren
   config <action>        Konfiguration anzeigen, bearbeiten oder validieren
 
 OPERATIONS:
@@ -263,21 +254,25 @@ show_command_help() {
             cat << EOF
 ${CYAN}${CLI_NAME} setup${NC} - ABrain-Umgebung einrichten
 
-Usage: ${CLI_NAME} setup [preset] [options]
+Usage: ${CLI_NAME} setup [step]
 
-PRESETS:
-  dev                   Entwicklungsumgebung
-  ci                    CI-orientiertes Setup
-  minimal               Minimales Python-Setup
+SCHRITTE:
+  env                   .venv anlegen/verwenden, pip-Tooling aktualisieren, .env erzeugen
+  deps                  Python-Abhängigkeiten installieren
+  cli                   Editable-Install und abrain-mcp-Entry-Point aktualisieren
+  api                   API-Gateway import-smoke und Startpfad anzeigen
+  mcp                   MCP-v2 initialize/tools/list smoke ausführen
+  ui                    frontend/agent-ui per npm ci, type-check und build vorbereiten
+  all                   kompletter Online-Bootstrap
 
 HINWEIS:
-  Das Kommando delegiert an scripts/setup.sh. In diesem Repository werden dafür
-  die historischen Helper-Verzeichnisse scripts/lib und scripts/helpers erwartet.
+  Das Kommando delegiert direkt an scripts/setup.sh. Es gibt keine separate
+  Parallel-CLI und keine Abhängigkeit mehr auf historische Helper-Verzeichnisse.
 
 BEISPIELE:
-  ${CLI_NAME} setup
-  ${CLI_NAME} setup dev --auto-install
-  ${CLI_NAME} setup --recover
+  ${CLI_NAME} setup all
+  ${CLI_NAME} setup deps
+  ${CLI_NAME} setup cli
 EOF
             ;;
         start)
