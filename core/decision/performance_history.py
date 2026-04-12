@@ -18,6 +18,7 @@ class AgentPerformanceHistory(BaseModel):
     success_rate: float = Field(default=0.5, ge=0.0, le=1.0)
     avg_latency: float = Field(default=1.0, ge=0.0)
     avg_cost: float = Field(default=0.0, ge=0.0)
+    avg_token_count: float = Field(default=0.0, ge=0.0)
     recent_failures: int = Field(default=0, ge=0)
     execution_count: int = Field(default=0, ge=0)
     load_factor: float = Field(default=0.0, ge=0.0, le=1.0)
@@ -59,6 +60,7 @@ class PerformanceHistoryStore:
         success: bool,
         latency: float | None = None,
         cost: float | None = None,
+        token_count: int | None = None,
     ) -> AgentPerformanceHistory:
         current = self.get(agent_id)
         execution_count = current.execution_count + 1
@@ -69,6 +71,11 @@ class PerformanceHistoryStore:
             success_rate=success_count / execution_count,
             avg_latency=self._rolling_average(current.avg_latency, latency, execution_count),
             avg_cost=self._rolling_average(current.avg_cost, cost, execution_count),
+            avg_token_count=self._rolling_average(
+                current.avg_token_count,
+                float(token_count) if token_count is not None else None,
+                execution_count,
+            ),
             recent_failures=recent_failures,
             execution_count=execution_count,
             load_factor=current.load_factor,

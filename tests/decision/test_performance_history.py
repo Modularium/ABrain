@@ -48,3 +48,28 @@ def test_performance_history_records_and_persists_results(tmp_path: Path):
     assert second.execution_count == 2
     assert second.success_rate == pytest.approx(0.5)
     assert loaded.get("agent-1").recent_failures == 1
+
+
+def test_performance_history_records_token_count():
+    store = PerformanceHistoryStore()
+
+    first = store.record_result("agent-1", success=True, latency=1.0, cost=0.002, token_count=500)
+    second = store.record_result("agent-1", success=True, latency=2.0, cost=0.004, token_count=700)
+
+    assert first.avg_token_count == pytest.approx(500.0)
+    assert second.avg_token_count == pytest.approx(600.0)  # rolling average of 500 and 700
+
+
+def test_performance_history_token_count_none_does_not_reset_average():
+    store = PerformanceHistoryStore()
+
+    store.record_result("agent-1", success=True, token_count=400)
+    second = store.record_result("agent-1", success=True, token_count=None)
+
+    # When token_count is None the rolling average must be preserved unchanged
+    assert second.avg_token_count == pytest.approx(400.0)
+
+
+def test_performance_history_default_avg_token_count():
+    history = PerformanceHistoryStore().get("nonexistent")
+    assert history.avg_token_count == pytest.approx(0.0)

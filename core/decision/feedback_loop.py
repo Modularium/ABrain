@@ -30,6 +30,7 @@ class FeedbackUpdate(BaseModel):
     performance: AgentPerformanceHistory
     score_delta: int
     reward: float | None = None
+    token_count: int | None = None
     dataset_size: int | None = None
     training_metrics: TrainingMetrics | None = None
     warnings: list[str] = Field(default_factory=list)
@@ -71,6 +72,7 @@ class FeedbackLoop:
             success=result.success,
             latency=(result.duration_ms / 1000.0) if result.duration_ms is not None else None,
             cost=result.cost,
+            token_count=result.token_count,
         )
         reward = None
         dataset_size = None
@@ -109,6 +111,7 @@ class FeedbackLoop:
             performance=updated,
             score_delta=1 if result.success else -1,
             reward=reward,
+            token_count=result.token_count,
             dataset_size=dataset_size,
             training_metrics=training_metrics,
             warnings=warnings,

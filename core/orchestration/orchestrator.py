@@ -645,6 +645,7 @@ class PlanExecutionOrchestrator:
                 "success": execution.success,
                 "duration_ms": execution.duration_ms,
                 "cost": execution.cost,
+                "token_count": execution.token_count,
                 "warning_count": len(execution.warnings),
                 "adapter_name": execution.metadata.get("adapter_name"),
             },
@@ -673,6 +674,7 @@ class PlanExecutionOrchestrator:
                     status="completed",
                     attributes={
                         "reward": feedback.reward,
+                        "token_count": feedback.token_count,
                         "dataset_size": feedback.dataset_size,
                         "training_triggered": feedback.training_metrics is not None,
                         "warning_count": len(feedback.warnings),

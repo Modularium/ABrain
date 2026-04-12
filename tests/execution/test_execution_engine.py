@@ -55,3 +55,22 @@ def test_execution_engine_returns_error_when_no_agent_selected():
     assert result.success is False
     assert result.error is not None
     assert result.error.error_code == "missing_selected_agent"
+
+
+def test_execution_result_token_count_defaults_none(monkeypatch):
+    monkeypatch.setattr(
+        "services.core.execute_tool",
+        lambda tool_name, payload=None, **kwargs: {"status": "ok", "tool_name": tool_name},
+    )
+    registry = AgentRegistry([build_descriptor()])
+    decision = RoutingDecision(
+        task_type="system_status",
+        required_capabilities=["system.read", "system.status"],
+        selected_agent_id="adminbot-agent",
+        selected_score=0.9,
+    )
+
+    result = ExecutionEngine().execute({"task_type": "system_status"}, decision, registry)
+
+    # adminbot adapter does not supply token counts — field must default to None
+    assert result.token_count is None

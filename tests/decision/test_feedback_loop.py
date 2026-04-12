@@ -44,3 +44,35 @@ def test_feedback_loop_updates_failure_history():
     assert update.score_delta == -1
     assert update.performance.execution_count == 1
     assert update.performance.recent_failures == 1
+
+
+def test_feedback_loop_propagates_token_count():
+    store = PerformanceHistoryStore()
+    loop = FeedbackLoop(performance_history=store)
+
+    update = loop.update_performance(
+        "agent-3",
+        ExecutionResult(
+            agent_id="agent-3",
+            success=True,
+            output={"ok": True},
+            duration_ms=600,
+            cost=0.005,
+            token_count=1024,
+        ),
+    )
+
+    assert update.token_count == 1024
+    assert update.performance.avg_token_count == pytest.approx(1024.0)
+
+
+def test_feedback_loop_token_count_none_when_absent():
+    store = PerformanceHistoryStore()
+    loop = FeedbackLoop(performance_history=store)
+
+    update = loop.update_performance(
+        "agent-4",
+        ExecutionResult(agent_id="agent-4", success=True),
+    )
+
+    assert update.token_count is None

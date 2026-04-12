@@ -26,6 +26,7 @@ class ExecutionResult(BaseModel):
     error: StructuredError | None = None
     duration_ms: int | None = None
     cost: float | None = None
+    token_count: int | None = None
 
 
 class BaseExecutionAdapter:
