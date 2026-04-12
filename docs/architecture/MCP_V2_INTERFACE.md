@@ -80,4 +80,6 @@ Dadurch bleibt Audit-/Trace-Logik zentral im Kern und wird nicht in der Interfac
 
 ## Historische Abgrenzung
 
-`interfaces/mcp_v1/*` bleibt im Repository als historischer bzw. rueckwaertskompatibler lokaler Pfad. Der kanonische neue MCP-Einstieg liegt in diesem Branch unter `interfaces/mcp/*`.
+`interfaces/mcp_v1/*` wurde aus dem bereinigten Main entfernt. Historische
+Kontextdokumente liegen nur noch unter `docs/mcp/`. Der kanonische MCP-Einstieg
+liegt unter `interfaces/mcp/*`.

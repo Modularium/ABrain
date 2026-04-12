@@ -3,6 +3,11 @@
 Hinweis: Der kanonische MCP-Pfad dieses Branches liegt unter `interfaces/mcp/*`.
 Die aktuelle Referenz steht in [../guides/MCP_USAGE.md](../guides/MCP_USAGE.md).
 
+Wichtig: Diese Datei ist nur noch Archivdokumentation. Der Codepfad
+`interfaces/mcp_v1/*` und der historische Entry `abrain-mcp-v1` sind auf dem
+bereinigten Main nicht mehr vorhanden und die unten stehenden Befehle sind
+nicht mehr direkt auf dem aktuellen Branch ausfuehrbar.
+
 ## Zweck
 
 Der ABrain MCP v1 Server exponiert genau vier feste Tools für lokale MCP-Clients. Er ist nur eine Protokollschicht vor `services/core.execute_tool(...)`.

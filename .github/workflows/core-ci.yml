@@ -74,7 +74,6 @@ jobs:
             core/governance/policy_registry.py \
             core/governance/policy_engine.py \
             core/governance/enforcement.py \
-            core/governance/legacy_contracts.py \
             core/audit/trace_models.py \
             core/audit/trace_store.py \
             core/audit/context.py \
@@ -102,7 +101,6 @@ jobs:
             interfaces/mcp/handlers/run_plan.py \
             interfaces/mcp/handlers/approval.py \
             interfaces/mcp/handlers/trace.py \
-            interfaces/mcp_v1/server.py \
             scripts/abrain_mcp.py \
             adapters/flowise/__init__.py \
             adapters/flowise/models.py \

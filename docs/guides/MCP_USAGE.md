@@ -6,16 +6,16 @@ Der ABrain MCP-v2-Server stellt eine kleine, statische Tool-Oberflaeche ueber de
 
 ## Server starten
 
-Empfohlen ueber den Console-Entry:
-
-```bash
-/home/dev/Agent-NN/.venv/bin/abrain-mcp
-```
-
-Alternative:
+Direkt aus dem Repo-Checkout:
 
 ```bash
 /home/dev/Agent-NN/.venv/bin/python -m interfaces.mcp.server
+```
+
+Alternativ ueber den Console-Entry nach einem frischen Paket-Install:
+
+```bash
+/home/dev/Agent-NN/.venv/bin/abrain-mcp
 ```
 
 Der Wrapper `scripts/abrain_mcp.py` zeigt ebenfalls auf denselben v2-Server.
@@ -125,4 +125,6 @@ Damit koennen MCP-Clients nachtraeglich Routing-, Policy-, Approval- und Executi
 
 ## Historischer Hinweis
 
-Die fruehere v1-Schicht unter `interfaces/mcp_v1/*` bleibt fuer Rueckverfolgbarkeit und lokale Alt-Setups erhalten. Der kanonische neue MCP-Einstieg in diesem Branch ist `interfaces/mcp/*`.
+Der fruehere v1-Codepfad `interfaces/mcp_v1/*` ist auf dem bereinigten Main
+nicht mehr vorhanden. Historische Hinweise liegen nur noch als Dokumentation
+unter `docs/mcp/`.

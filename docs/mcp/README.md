@@ -5,11 +5,11 @@ Der kanonische MCP-Pfad dieses Branches liegt unter `interfaces/mcp/*`. Diese Sc
 ## Aktueller Status
 
 - aktiv: lokaler stdio-basierter MCP-v2-Server
-- deaktiviert standardmaessig: MCP v1 unter `interfaces/mcp_v1/*`
+- entfernt aus dem Codebestand: MCP v1 unter `interfaces/mcp_v1/*`
 - deaktiviert: historische HTTP-Pfade unter `agentnn/mcp/*`
 - deaktiviert: historische Proxy-Pfade unter `mcp/plugin_agent_service/*`
 
-MCP v1 ist deprecated und standardmaessig deaktiviert. MCP v2 ist der einzige unterstuetzte Runtime-Entry fuer MCP.
+MCP v2 ist der einzige unterstuetzte Runtime-Entry fuer MCP.
 
 ## Canonical Path
 
@@ -19,6 +19,5 @@ MCP v1 ist deprecated und standardmaessig deaktiviert. MCP v2 ist der einzige un
 
 - [MCP V2 Architektur](../architecture/MCP_V2_INTERFACE.md)
 - [MCP Usage](../guides/MCP_USAGE.md)
-- [Historische MCP V1 Architektur](MCP_V1_SERVER.md)
 - [Historische MCP V1 Usage](MCP_SERVER_USAGE.md)
 - [VS Code MCP Beispielkonfiguration](vscode_mcp_config.json)

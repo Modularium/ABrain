@@ -67,17 +67,21 @@ Multi-node federation dispatch.
 
 ### REST Control Plane API — `api_gateway/main.py`
 The single active REST API. Exposes:
-- `POST /run` — run a task via canonical service layer
-- `POST /plan` — run a multi-step plan
-- `POST /plan/{plan_id}/approve` — approve a paused plan step
-- `POST /plan/{plan_id}/reject` — reject a paused plan step
+- `POST /control-plane/tasks/run` — run a task via canonical service layer
+- `POST /control-plane/plans/run` — run a multi-step plan
+- `POST /control-plane/approvals/{approval_id}/approve` — approve a paused plan step
+- `POST /control-plane/approvals/{approval_id}/reject` — reject a paused plan step
 - `GET /control-plane/overview` — system overview
 - `GET /control-plane/traces` — recent traces
-- `GET /control-plane/trace/{trace_id}` — trace detail
-- `GET /control-plane/approvals/pending` — pending approvals
-- `GET /control-plane/governance/decisions` — recent governance decisions
+- `GET /control-plane/traces/{trace_id}` — trace detail
+- `GET /control-plane/traces/{trace_id}/explainability` — explainability detail
+- `GET /control-plane/approvals` — pending approvals
+- `GET /control-plane/governance` — recent governance decisions
 - `GET /control-plane/plans` — recent plans
+- `POST /chat`, `GET /chat/history/{sid}`, `POST /chat/feedback` — legacy bridge/chat routes still present in the gateway
+- `POST /sessions`, `GET /sessions/{sid}/history` — session bridge routes
 - `GET /agents` — agent catalog
+- `POST /embed` — embedding passthrough
 - `GET /metrics` — Prometheus metrics
 
 ### MCP v2 Interface — `interfaces/mcp/`
@@ -107,7 +111,10 @@ No other UI is active. `monitoring/` and `archive/ui_legacy/` are deleted.
 
 | Script | Purpose |
 |--------|---------|
+| `scripts/abrain` | Canonical Bash CLI |
+| `scripts/agentnn` | Thin legacy wrapper around `scripts/abrain` |
 | `scripts/abrain_mcp.py` | MCP v2 stdio entrypoint |
+| `scripts/setup.sh` | Hardened but currently partially stale bootstrap script |
 | `scripts/__init__.py` | Makes scripts importable |
 
 ---
@@ -178,7 +185,7 @@ Tests in `tests/mcp/` that are canonical:
 | Old core legacy | ~35 flat Python files in `core/` |
 | Old docs | ~100+ old doc files across use-cases, CLI, BenutzerHandbuch, Wiki, deployment, etc. |
 | Old CI | ci-core.yml, ci-full.yml, deploy.yml, docs.yml, deploy-docs.yml, plugin-release.yml |
-| Old root files | compose files, Dockerfiles, setup.py, flowise manifests, PDFs, planning docs |
+| Old root files | docker-compose files, Dockerfiles, setup.py, flowise manifests, PDFs, planning docs |
 
 ---
 

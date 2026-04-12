@@ -66,12 +66,32 @@ cd ABrain
 python3 -m venv .venv
 source .venv/bin/activate
 
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements-light.txt
 
-pytest
+# optional, but needed if you want console scripts like `abrain-mcp`
+python -m pip install -e .
+
+python -m pytest -o python_files='test_*.py' \
+  tests/state \
+  tests/mcp \
+  tests/approval \
+  tests/orchestration \
+  tests/execution \
+  tests/decision \
+  tests/adapters \
+  tests/core \
+  tests/services \
+  tests/integration/test_node_export.py
 ````
 
-Run a task:
+Start the API gateway:
+
+```bash
+python -m uvicorn api_gateway.main:app --reload
+```
+
+Run a control-plane task:
 
 ```bash
 curl -X POST http://localhost:8000/control-plane/tasks/run \
@@ -140,8 +160,11 @@ It is built for:
 ABrain exposes a **Model Context Protocol (MCP) server**:
 
 ```bash
-abrain-mcp
+python -m interfaces.mcp.server
 ```
+
+If you installed the package editable, the console entry `abrain-mcp` points to
+the same v2 server.
 
 Available tools:
 
@@ -154,11 +177,13 @@ Available tools:
 
 ---
 
-## ⚙️ Docker (fast setup)
+## 🖥️ UI build
 
 ```bash
-cp .env.example .env
-docker compose up --build
+cd frontend/agent-ui
+npm ci
+npm run type-check
+npm run build
 ```
 
 ---
@@ -166,10 +191,13 @@ docker compose up --build
 ## 🧰 CLI
 
 ```bash
-agentnn ask "Check system health"
+./scripts/abrain --version
+./scripts/abrain help
+./scripts/abrain status
 ```
 
-> Yes, `agentnn` is legacy — kept for compatibility.
+`./scripts/agentnn` remains only as a thin compatibility wrapper around the
+canonical Bash CLI `./scripts/abrain`.
 
 ---
 
@@ -255,4 +283,3 @@ ABrain is not trying to make AI more powerful.
 
 It’s trying to make AI
 **safe enough to trust.**
-
