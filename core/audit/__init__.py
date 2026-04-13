@@ -19,6 +19,8 @@ from .context import (
 )
 from .trace_models import (
     ExplainabilityRecord,
+    ReplayDescriptor,
+    ReplayStepInput,
     SpanRecord,
     TraceEvent,
     TraceRecord,
@@ -50,6 +52,8 @@ def audit_action(
 
 __all__ = [
     "ExplainabilityRecord",
+    "ReplayDescriptor",
+    "ReplayStepInput",
     "SpanRecord",
     "TraceContext",
     "TraceEvent",

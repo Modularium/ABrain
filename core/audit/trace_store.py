@@ -8,7 +8,16 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from .trace_models import ExplainabilityRecord, SpanRecord, TraceEvent, TraceRecord, TraceSnapshot, utcnow
+from .trace_models import (
+    ExplainabilityRecord,
+    ReplayDescriptor,
+    ReplayStepInput,
+    SpanRecord,
+    TraceEvent,
+    TraceRecord,
+    TraceSnapshot,
+    utcnow,
+)
 
 
 class TraceStore:
@@ -221,8 +230,13 @@ class TraceStore:
                     matched_policy_ids_json,
                     approval_required,
                     approval_id,
+                    routing_confidence,
+                    score_gap,
+                    confidence_band,
+                    policy_effect,
+                    scored_candidates_json,
                     metadata_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     record.trace_id,
@@ -234,6 +248,11 @@ class TraceStore:
                     json.dumps(record.matched_policy_ids, sort_keys=True),
                     int(record.approval_required),
                     record.approval_id,
+                    record.routing_confidence,
+                    record.score_gap,
+                    record.confidence_band,
+                    record.policy_effect,
+                    json.dumps(record.scored_candidates, sort_keys=True),
                     json.dumps(record.metadata, sort_keys=True),
                 ),
             )
@@ -255,10 +274,13 @@ class TraceStore:
                 "SELECT * FROM explainability WHERE trace_id = ? ORDER BY id",
                 (trace_id,),
             ).fetchall()
+        trace = self._row_to_trace(trace_row)
+        explainability = [self._row_to_explainability(row) for row in explain_rows]
         return TraceSnapshot(
-            trace=self._row_to_trace(trace_row),
+            trace=trace,
             spans=[self._row_to_span(row) for row in span_rows],
-            explainability=[self._row_to_explainability(row) for row in explain_rows],
+            explainability=explainability,
+            replay_descriptor=self._build_replay_descriptor(trace, explainability),
         )
 
     def get_explainability(self, trace_id: str) -> list[ExplainabilityRecord]:
@@ -322,6 +344,18 @@ class TraceStore:
                 );
                 """
             )
+            # S10: additive forensics columns — ALTER TABLE is idempotent via try/except
+            for _ddl in (
+                "ALTER TABLE explainability ADD COLUMN routing_confidence REAL",
+                "ALTER TABLE explainability ADD COLUMN score_gap REAL",
+                "ALTER TABLE explainability ADD COLUMN confidence_band TEXT",
+                "ALTER TABLE explainability ADD COLUMN policy_effect TEXT",
+                "ALTER TABLE explainability ADD COLUMN scored_candidates_json TEXT",
+            ):
+                try:
+                    connection.execute(_ddl)
+                except Exception:  # OperationalError: duplicate column
+                    pass
 
     def _get_span(self, span_id: str) -> SpanRecord | None:
         with self._connect() as connection:
@@ -367,6 +401,7 @@ class TraceStore:
         )
 
     def _row_to_explainability(self, row: sqlite3.Row) -> ExplainabilityRecord:
+        keys = row.keys()
         return ExplainabilityRecord.model_validate(
             {
                 "trace_id": row["trace_id"],
@@ -378,6 +413,71 @@ class TraceStore:
                 "matched_policy_ids": json.loads(row["matched_policy_ids_json"] or "[]"),
                 "approval_required": bool(row["approval_required"]),
                 "approval_id": row["approval_id"],
+                # S10 forensics columns — present on new rows, absent on old rows
+                "routing_confidence": row["routing_confidence"] if "routing_confidence" in keys else None,
+                "score_gap": row["score_gap"] if "score_gap" in keys else None,
+                "confidence_band": row["confidence_band"] if "confidence_band" in keys else None,
+                "policy_effect": row["policy_effect"] if "policy_effect" in keys else None,
+                "scored_candidates": json.loads(row["scored_candidates_json"] or "[]") if "scored_candidates_json" in keys else [],
                 "metadata": json.loads(row["metadata_json"] or "{}"),
             }
+        )
+
+    def _build_replay_descriptor(
+        self,
+        trace: TraceRecord,
+        explainability: list[ExplainabilityRecord],
+    ) -> ReplayDescriptor | None:
+        """Derive a replay-readiness descriptor from stored trace and explainability records.
+
+        Returns ``None`` when there are no explainability records (traces with no
+        routing decisions do not have meaningful replay context).
+        """
+        if not explainability:
+            return None
+
+        # Extract task_type: prefer trace metadata, fallback to first routing_decision
+        task_type: str | None = trace.metadata.get("task_type")
+        if not task_type:
+            first_routing = explainability[0].metadata.get("routing_decision") or {}
+            task_type = first_routing.get("task_type") or None
+
+        # Build per-step inputs
+        step_inputs: list[ReplayStepInput] = []
+        for exp in explainability:
+            routing_decision = exp.metadata.get("routing_decision") or {}
+            step_inputs.append(
+                ReplayStepInput(
+                    step_id=exp.step_id or "task",
+                    task_type=routing_decision.get("task_type") or task_type,
+                    required_capabilities=list(routing_decision.get("required_capabilities") or []),
+                    selected_agent_id=exp.selected_agent_id,
+                    candidate_agent_ids=list(exp.candidate_agent_ids),
+                    routing_confidence=exp.routing_confidence,
+                    confidence_band=exp.confidence_band,
+                    policy_effect=exp.policy_effect,
+                )
+            )
+
+        # can_replay: we have task_type and at least one decision step with candidates
+        missing: list[str] = []
+        if not task_type:
+            missing.append("task_type")
+        if not any(si.candidate_agent_ids for si in step_inputs):
+            missing.append("candidate_agent_ids")
+
+        return ReplayDescriptor(
+            trace_id=trace.trace_id,
+            workflow_name=trace.workflow_name,
+            task_type=task_type,
+            task_id=trace.task_id,
+            started_at=trace.started_at.isoformat() if trace.started_at else None,
+            step_inputs=step_inputs,
+            can_replay=len(missing) == 0,
+            missing_inputs=missing,
+            metadata={
+                "strategy": trace.metadata.get("strategy"),
+                "plan_id": trace.metadata.get("plan_id"),
+                "step_count": len(step_inputs),
+            },
         )

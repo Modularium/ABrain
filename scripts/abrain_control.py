@@ -324,8 +324,37 @@ def _render_trace_show(payload: dict[str, Any]) -> str:
         lines.append(_format_table(["name", "type", "status", "started_at", "ended_at"], rows))
     explainability = snapshot.get("explainability") or []
     if explainability:
-        lines.append(f"Explainability records: {len(explainability)}")
+        lines.append(f"Decision steps ({len(explainability)}):")
+        rows = [
+            [
+                str(item.get("step_id") or "task"),
+                str(item.get("selected_agent_id") or "-"),
+                _fmt_score(item.get("selected_score")),
+                str(item.get("confidence_band") or "-"),
+                str(item.get("policy_effect") or "-"),
+                "yes" if item.get("approval_required") else "no",
+            ]
+            for item in explainability
+        ]
+        lines.append(
+            _format_table(
+                ["step_id", "selected_agent", "score", "confidence", "policy_effect", "approval"],
+                rows,
+            )
+        )
+    replay = snapshot.get("replay_descriptor")
+    if replay:
+        can = "yes" if replay.get("can_replay") else "no"
+        missing = ", ".join(replay.get("missing_inputs") or []) or "-"
+        lines.append(f"Replay-readiness: can_replay={can}  missing={missing}")
     return "\n".join(lines)
+
+
+def _fmt_score(value: Any) -> str:
+    """Format a float score for table display."""
+    if isinstance(value, (int, float)):
+        return f"{value:.3f}"
+    return "-"
 
 
 def _render_explainability(payload: dict[str, Any]) -> str:
@@ -336,26 +365,140 @@ def _render_explainability(payload: dict[str, Any]) -> str:
         [
             str(item.get("step_id") or "task"),
             str(item.get("selected_agent_id") or "-"),
-            str(item.get("approval_required")),
-            str(item.get("approval_id") or "-"),
-            ",".join(str(policy_id) for policy_id in item.get("matched_policy_ids") or []) or "-",
+            _fmt_score(item.get("selected_score")),
+            _fmt_score(item.get("routing_confidence")),
+            str(item.get("confidence_band") or "-"),
+            _fmt_score(item.get("score_gap")),
+            str(item.get("policy_effect") or "-"),
+            "yes" if item.get("approval_required") else "no",
         ]
         for item in records
     ]
     sections = [
         f"Explainability records: {len(records)}",
         _format_table(
-            ["step_id", "selected_agent", "approval_required", "approval_id", "matched_policies"],
+            ["step_id", "selected_agent", "score", "confidence", "band", "gap", "policy_effect", "approval"],
             rows,
         ),
     ]
     for item in records:
         step_id = item.get("step_id") or "task"
-        sections.append(f"[{step_id}] {item.get('routing_reason_summary', '')}".strip())
-        metadata = item.get("metadata") or {}
-        if metadata:
-            sections.append(_indent(_compact_json(metadata)))
+        reason = item.get("routing_reason_summary", "")
+        sections.append(f"[{step_id}] {reason}".strip())
+        scored = item.get("scored_candidates") or []
+        if scored:
+            candidate_rows = [
+                [
+                    str(c.get("agent_id") or "-"),
+                    _fmt_score(c.get("score")),
+                    _fmt_score(c.get("capability_match_score")),
+                ]
+                for c in scored
+            ]
+            sections.append(
+                _indent(_format_table(["agent_id", "score", "cap_match"], candidate_rows))
+            )
     return "\n".join(sections)
+
+
+def _render_trace_drilldown(payload: dict[str, Any]) -> str:
+    """Forensics drilldown — structured decision reconstruction for a trace."""
+    snapshot = payload.get("trace")
+    if not snapshot:
+        return "Trace not found."
+    trace = snapshot.get("trace") or {}
+    explainability = snapshot.get("explainability") or []
+    replay = snapshot.get("replay_descriptor")
+
+    lines = [
+        "=== Trace Forensics Drilldown ===",
+        f"Trace ID:   {trace.get('trace_id', 'n/a')}",
+        f"Workflow:   {trace.get('workflow_name', 'n/a')}",
+        f"Status:     {trace.get('status', 'unknown')}",
+        f"Task ID:    {trace.get('task_id') or '-'}",
+        f"Started:    {trace.get('started_at', '-')}",
+        f"Ended:      {trace.get('ended_at') or '-'}",
+        "",
+    ]
+
+    if not explainability:
+        lines.append("No decision records found.")
+    else:
+        lines.append(f"Decision path  ({len(explainability)} step(s)):")
+        for i, exp in enumerate(explainability, 1):
+            step_id = exp.get("step_id") or "task"
+            selected = exp.get("selected_agent_id") or "none"
+            score = exp.get("selected_score")
+            confidence = exp.get("routing_confidence")
+            band = exp.get("confidence_band") or "-"
+            gap = exp.get("score_gap")
+            policy_effect = exp.get("policy_effect") or "allow"
+            approval_req = exp.get("approval_required", False)
+            approval_id = exp.get("approval_id")
+
+            score_str = f"  score={score:.3f}" if isinstance(score, float) else ""
+            conf_str = f"  routing_confidence={confidence:.3f}" if isinstance(confidence, float) else ""
+            gap_str = f"  gap={gap:.3f}" if isinstance(gap, float) else ""
+
+            lines.append(f"  Step {i}: [{step_id}]")
+            lines.append(f"    Selected:    {selected}{score_str}")
+            lines.append(f"    Confidence:  band={band}{conf_str}{gap_str}")
+            lines.append(
+                f"    Policy:      {policy_effect}"
+                + (" [APPROVAL REQUIRED]" if approval_req else "")
+            )
+            if approval_id:
+                lines.append(f"    Approval ID: {approval_id}")
+
+            # Ranked candidate table
+            scored_candidates = exp.get("scored_candidates") or []
+            if scored_candidates:
+                candidate_rows = [
+                    [
+                        str(c.get("agent_id") or "-"),
+                        _fmt_score(c.get("score")),
+                        _fmt_score(c.get("capability_match_score")),
+                    ]
+                    for c in scored_candidates
+                ]
+                lines.append("    Candidates:")
+                lines.append(
+                    _indent(
+                        _format_table(["agent_id", "score", "cap_match"], candidate_rows),
+                        "      ",
+                    )
+                )
+            elif exp.get("candidate_agent_ids"):
+                ids = ", ".join(exp["candidate_agent_ids"])
+                lines.append(f"    Candidates:  {ids}")
+
+            matched = exp.get("matched_policy_ids") or []
+            if matched:
+                lines.append(f"    Policies:    {', '.join(matched)}")
+
+            reason = exp.get("routing_reason_summary", "")
+            if reason:
+                lines.append(f"    Reason:      {reason}")
+
+            lines.append("")
+
+    # Replay-readiness summary
+    if replay:
+        can_replay = replay.get("can_replay", False)
+        task_type = replay.get("task_type") or "-"
+        missing = replay.get("missing_inputs") or []
+        lines.append("Replay readiness:")
+        lines.append(f"  can_replay:  {'yes' if can_replay else 'no'}")
+        lines.append(f"  task_type:   {task_type}")
+        if missing:
+            lines.append(f"  missing:     {', '.join(missing)}")
+        meta = replay.get("metadata") or {}
+        if meta.get("plan_id"):
+            lines.append(f"  plan_id:     {meta['plan_id']}")
+        if meta.get("strategy"):
+            lines.append(f"  strategy:    {meta['strategy']}")
+
+    return "\n".join(lines)
 
 
 def _render_plan_list(payload: dict[str, Any]) -> str:
@@ -523,6 +666,12 @@ def _handle_explain(args: argparse.Namespace) -> int:
     return _emit(payload, _render_explainability, json_mode=_json_mode(args))
 
 
+def _handle_trace_drilldown(args: argparse.Namespace) -> int:
+    core = _load_core()
+    payload = core.get_trace(args.trace_id)
+    return _emit(payload, _render_trace_drilldown, json_mode=_json_mode(args))
+
+
 def _handle_agent_list(args: argparse.Namespace) -> int:
     core = _load_core()
     payload = core.list_agent_catalog()
@@ -636,6 +785,13 @@ def build_parser() -> argparse.ArgumentParser:
     trace_show.add_argument("trace_id", help="Trace-ID")
     trace_show.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     trace_show.set_defaults(handler=_handle_trace_show)
+    trace_drilldown = trace_subparsers.add_parser(
+        "drilldown",
+        help="Forensische Entscheidungsrekonstruktion fuer einen Trace",
+    )
+    trace_drilldown.add_argument("trace_id", help="Trace-ID")
+    trace_drilldown.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    trace_drilldown.set_defaults(handler=_handle_trace_drilldown)
 
     explain_parser = subparsers.add_parser(
         "explain",
