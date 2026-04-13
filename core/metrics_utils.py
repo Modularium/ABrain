@@ -102,7 +102,7 @@ ROUTING_DECISIONS = Counter(
 def metrics_router() -> APIRouter:
     router = APIRouter()
 
-    @router.get("/metrics")
+    @router.get("/metrics", include_in_schema=False)
     async def metrics() -> Response:
         data = generate_latest()
         return Response(content=data, media_type=CONTENT_TYPE_LATEST)

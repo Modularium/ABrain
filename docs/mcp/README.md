@@ -2,6 +2,10 @@
 
 Der kanonische MCP-Pfad dieses Branches liegt unter `interfaces/mcp/*`. Diese Schicht ist nur ein externer Interface-Layer vor dem kanonischen Core-Pfad.
 
+Fuer browser-visible HTTP-Dokumentation und service-to-service Integration ist
+stattdessen die kanonische API-Oberflaeche unter `api_gateway/main.py`
+vorgesehen. Die aktuelle Referenz steht in [../guides/API_USAGE.md](../guides/API_USAGE.md).
+
 ## Aktueller Status
 
 - aktiv: lokaler stdio-basierter MCP-v2-Server
@@ -23,5 +27,6 @@ Der bevorzugte lokale Bootstrap fuer diesen Pfad ist `./scripts/abrain setup`.
 - [Setup One-Liner Flow](../architecture/SETUP_ONE_LINER_FLOW.md)
 - [Setup And Bootstrap Flow](../architecture/SETUP_AND_BOOTSTRAP_FLOW.md)
 - [MCP Usage](../guides/MCP_USAGE.md)
+- [API Usage](../guides/API_USAGE.md)
 - [Historische MCP V1 Usage](MCP_SERVER_USAGE.md)
 - [VS Code MCP Beispielkonfiguration](vscode_mcp_config.json)

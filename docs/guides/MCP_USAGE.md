@@ -4,6 +4,10 @@
 
 Der ABrain MCP-v2-Server stellt eine kleine, statische Tool-Oberflaeche ueber dem kanonischen Core bereit. Er ist capability-, policy-, approval- und trace-aware und fuehrt keine eigene Runtime-Logik aus.
 
+Wenn stattdessen browser-visible HTTP-Dokumentation, OpenAPI oder klassische
+service-to-service Integration benoetigt wird, ist die kanonische Referenz
+[API Usage](API_USAGE.md).
+
 Der bevorzugte Bootstrap fuer den lokalen MCP-Pfad ist:
 
 ```bash

@@ -1,11 +1,16 @@
 import asyncio
 import importlib
+import inspect
 import sys
 import types
 
 import pytest
 
 pytestmark = pytest.mark.unit
+
+
+def _unwrap(func):
+    return inspect.unwrap(func)
 
 
 def _install_gateway_dependency_stubs() -> None:
@@ -79,7 +84,7 @@ def test_control_plane_overview_aggregates_core_reads(monkeypatch):
     )
 
     request = types.SimpleNamespace(headers={})
-    payload = asyncio.run(gateway.control_plane_overview(request))
+    payload = asyncio.run(_unwrap(gateway.control_plane_overview)(request))
 
     assert payload["summary"]["agent_count"] == 1
     assert payload["summary"]["pending_approvals"] == 1
@@ -104,10 +109,10 @@ def test_control_plane_approve_forwards_to_canonical_core(monkeypatch):
     monkeypatch.setattr("services.core.approve_plan_step", fake_approve)
 
     payload = asyncio.run(
-        gateway.control_plane_approve(
-            "approval-42",
-            gateway.ApprovalDecisionRequest(decided_by="tester", comment="looks good"),
+        _unwrap(gateway.control_plane_approve)(
             types.SimpleNamespace(headers={}),
+            gateway.ApprovalDecisionRequest(decided_by="tester", comment="looks good"),
+            "approval-42",
         )
     )
 

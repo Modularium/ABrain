@@ -87,6 +87,18 @@ Start the API gateway:
 .venv/bin/python -m uvicorn api_gateway.main:app --reload
 ```
 
+Inspect the canonical developer HTTP surface in the browser:
+
+```text
+http://localhost:8000/docs
+http://localhost:8000/redoc
+http://localhost:8000/openapi.json
+```
+
+The public HTTP developer surface is the existing `api_gateway` and focuses on
+the canonical `/control-plane/*` routes. See `docs/guides/API_USAGE.md` for
+examples and guidance on when to use HTTP API vs MCP vs CLI.
+
 Run the same core paths directly from the canonical CLI:
 
 ```bash
@@ -97,7 +109,7 @@ Run the same core paths directly from the canonical CLI:
 ./scripts/abrain health --json
 ```
 
-Run a control-plane task:
+Run a control-plane task through the canonical HTTP surface:
 
 ```bash
 curl -X POST http://localhost:8000/control-plane/tasks/run \
@@ -211,8 +223,8 @@ npm run build
 ./scripts/abrain health --json
 ```
 
-`./scripts/abrain` remains only as a thin compatibility wrapper around the
-canonical Bash CLI `./scripts/abrain`.
+`./scripts/abrain` is the single canonical CLI for local developer and operator
+workflows.
 
 ---
 

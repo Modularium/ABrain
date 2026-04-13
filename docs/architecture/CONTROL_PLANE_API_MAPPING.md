@@ -4,6 +4,11 @@
 
 The UI talks to the API gateway. The API gateway exposes thin `/control-plane/*` routes. Those routes call canonical `services/core.py` functions or minimal read-only helpers derived from them.
 
+For external developers, the same route family is now the canonical documented
+HTTP surface via `/docs`, `/redoc` and `/openapi.json`. Compatibility or
+experimental helper routes remain outside the public OpenAPI contract so the
+gateway still has one external HTTP truth.
+
 ## View To API To Core Mapping
 
 | UI View / Action | HTTP Route | Core Mapping |
