@@ -11,6 +11,7 @@ from typing import Any
 
 from core.decision.agent_descriptor import AgentDescriptor, AgentExecutionKind, AgentSourceType
 from core.models.errors import StructuredError
+from core.execution.provider_capabilities import ExecutionCapabilities
 
 from .base import BaseExecutionAdapter, ExecutionResult
 
@@ -19,6 +20,15 @@ class ClaudeCodeExecutionAdapter(BaseExecutionAdapter):
     """Execute a task through the Claude CLI in JSON mode."""
 
     adapter_name = "claude_code"
+
+    capabilities = ExecutionCapabilities(
+        execution_protocol="cli_process",
+        requires_network=False,
+        requires_local_process=True,
+        supports_cost_reporting=True,
+        supports_token_reporting=True,
+        runtime_constraints=["requires_claude_cli"],
+    )
 
     def __init__(self, *, timeout_seconds: float = 30.0) -> None:
         self.timeout_seconds = timeout_seconds

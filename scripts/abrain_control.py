@@ -390,6 +390,7 @@ def _render_agent_list(payload: dict[str, Any]) -> str:
             str(item.get("availability") or "-"),
             str(item.get("source_type") or "-"),
             str(item.get("execution_kind") or "-"),
+            _format_exec_protocol(item.get("execution_capabilities")),
             ",".join(str(cap) for cap in item.get("capabilities") or []) or "-",
         ]
         for item in agents
@@ -397,9 +398,25 @@ def _render_agent_list(payload: dict[str, Any]) -> str:
     return "\n".join(
         [
             f"Registered agents: {len(agents)}",
-            _format_table(["agent_id", "availability", "source", "execution", "capabilities"], rows),
+            _format_table(
+                ["agent_id", "availability", "source", "execution", "protocol", "capabilities"],
+                rows,
+            ),
         ]
     )
+
+
+def _format_exec_protocol(exec_caps: Any) -> str:
+    """Format execution_capabilities dict as 'protocol[net][proc]' or '-'."""
+    if not isinstance(exec_caps, dict):
+        return "-"
+    proto = exec_caps.get("execution_protocol") or "-"
+    flags = ""
+    if exec_caps.get("requires_network"):
+        flags += "N"
+    if exec_caps.get("requires_local_process"):
+        flags += "L"
+    return f"{proto}[{flags}]" if flags else proto
 
 
 def _render_health(payload: dict[str, Any]) -> str:

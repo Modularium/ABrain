@@ -44,6 +44,15 @@ export interface ControlPlaneOverview {
   recent_governance: GovernanceEvent[]
 }
 
+export interface ExecutionCapabilities {
+  execution_protocol: 'cli_process' | 'http_api' | 'webhook_json' | 'tool_dispatch'
+  requires_network: boolean
+  requires_local_process: boolean
+  supports_cost_reporting: boolean
+  supports_token_reporting: boolean
+  runtime_constraints: string[]
+}
+
 export interface ControlPlaneAgent {
   agent_id: string
   display_name: string
@@ -52,6 +61,7 @@ export interface ControlPlaneAgent {
   execution_kind?: string | null
   availability?: string | null
   trust_level?: string | null
+  execution_capabilities?: ExecutionCapabilities | null
   metadata: Record<string, unknown>
 }
 

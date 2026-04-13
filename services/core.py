@@ -7,6 +7,7 @@ import logging
 import os
 from typing import Any, Dict
 
+from core.execution.adapters.registry import ExecutionAdapterRegistry
 from core.execution.dispatcher import ExecutionDispatcher
 from core.models import RequesterIdentity, RequesterType, ToolExecutionRequest
 from core.model_context import ModelContext
@@ -832,13 +833,25 @@ def list_recent_governance_decisions(
 
 
 def list_agent_catalog() -> Dict[str, Any]:
-    """Project currently listed agents into a control-plane-friendly catalog."""
+    """Project currently listed agents into a control-plane-friendly catalog.
+
+    Each entry is enriched with a ``execution_capabilities`` field derived
+    from the static adapter capability table — no IO required.
+    """
     raw_agents = list_agents().get("agents", [])
+    _adapter_registry = ExecutionAdapterRegistry()
     catalog: list[dict[str, Any]] = []
     for item in raw_agents:
         if not isinstance(item, dict):
             continue
         traits = item.get("traits") if isinstance(item.get("traits"), dict) else {}
+        raw_source_type = item.get("source_type") or ""
+        raw_execution_kind = item.get("execution_kind") or ""
+
+        # Look up static execution capabilities for this (execution_kind, source_type).
+        exec_caps = _adapter_registry.get_capabilities_for(raw_execution_kind, raw_source_type)
+        exec_caps_dict = exec_caps.model_dump(mode="json") if exec_caps is not None else None
+
         catalog.append(
             {
                 "agent_id": item.get("id") or item.get("agent_id") or item.get("name") or "unknown-agent",
@@ -848,6 +861,7 @@ def list_agent_catalog() -> Dict[str, Any]:
                 "execution_kind": item.get("execution_kind"),
                 "availability": traits.get("availability") or item.get("status"),
                 "trust_level": traits.get("trust_level"),
+                "execution_capabilities": exec_caps_dict,
                 "metadata": {
                     "domain": item.get("domain"),
                     "role": item.get("role"),

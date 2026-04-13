@@ -151,6 +151,7 @@ def test_list_agent_catalog_projects_existing_agent_listing(monkeypatch):
             "execution_kind": None,
             "availability": "online",
             "trust_level": None,
+            "execution_capabilities": None,
             "metadata": {
                 "domain": None,
                 "role": None,

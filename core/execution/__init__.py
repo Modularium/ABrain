@@ -8,6 +8,7 @@ __all__ = [
     "ClaudeCodeExecutionAdapter",
     "CodexExecutionAdapter",
     "ExecutionAdapterRegistry",
+    "ExecutionCapabilities",
     "ExecutionDispatcher",
     "ExecutionEngine",
     "ExecutionResult",
@@ -51,4 +52,8 @@ def __getattr__(name: str):
         from .adapters.base import ExecutionResult
 
         return ExecutionResult
+    if name == "ExecutionCapabilities":
+        from .provider_capabilities import ExecutionCapabilities
+
+        return ExecutionCapabilities
     raise AttributeError(name)

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from core.decision.agent_descriptor import AgentDescriptor, AgentExecutionKind, AgentSourceType
+from core.execution.provider_capabilities import ExecutionCapabilities
 
 from .adminbot_adapter import AdminBotExecutionAdapter
 from .base import BaseExecutionAdapter
@@ -38,3 +39,16 @@ class ExecutionAdapterRegistry:
                 f"source_type={descriptor.source_type.value}"
             )
         return adapter
+
+    def get_capabilities_for(
+        self, execution_kind: str, source_type: str
+    ) -> ExecutionCapabilities | None:
+        """Return the static capabilities for a given (execution_kind, source_type) pair.
+
+        Returns ``None`` when no adapter is registered for the combination.
+        Both arguments are matched as string values (the ``.value`` of the enums).
+        """
+        adapter = self._adapters.get((execution_kind, source_type))
+        if adapter is None:
+            return None
+        return getattr(adapter, "capabilities", None)
