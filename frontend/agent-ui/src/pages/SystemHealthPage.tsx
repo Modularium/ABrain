@@ -83,6 +83,19 @@ function planStatusClass(status: string): string {
   }
 }
 
+function qualityBandClass(band: string | null | undefined): string {
+  switch (band) {
+    case 'good':
+      return 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700'
+    case 'fair':
+      return 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700'
+    case 'poor':
+      return 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700'
+    default:
+      return 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-gray-700 dark:text-gray-400 dark:border-gray-600'
+  }
+}
+
 function governanceClass(effect: string): string {
   switch (effect) {
     case 'allow':
@@ -317,9 +330,19 @@ export default function SystemHealthPage() {
                       <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{agent.display_name}</p>
                       <p className="mt-0.5 text-xs text-slate-500 dark:text-gray-400 truncate">{agent.agent_id}</p>
                     </div>
-                    <span className={`flex-shrink-0 rounded-full border px-2 py-1 text-xs font-medium ${availabilityClass(agent.availability)}`}>
-                      {agent.availability ?? 'unknown'}
-                    </span>
+                    <div className="flex flex-shrink-0 items-center gap-2">
+                      {agent.quality && (
+                        <span
+                          className={`rounded-full border px-2 py-1 text-xs font-medium ${qualityBandClass(agent.quality.quality_band)}`}
+                          title={`Quality score: ${agent.quality.quality_score.toFixed(2)}`}
+                        >
+                          {agent.quality.quality_band}
+                        </span>
+                      )}
+                      <span className={`rounded-full border px-2 py-1 text-xs font-medium ${availabilityClass(agent.availability)}`}>
+                        {agent.availability ?? 'unknown'}
+                      </span>
+                    </div>
                   </div>
                 ))
               )}

@@ -7,6 +7,9 @@ import logging
 import os
 from typing import Any, Dict
 
+from core.decision.agent_descriptor import AgentAvailability, AgentTrustLevel
+from core.decision.agent_quality import compute_agent_quality
+from core.decision.performance_history import AgentPerformanceHistory
 from core.execution.dispatcher import ExecutionDispatcher
 from core.models import RequesterIdentity, RequesterType, ToolExecutionRequest
 from core.model_context import ModelContext
@@ -831,23 +834,92 @@ def list_recent_governance_decisions(
     return {"governance": decisions}
 
 
+def _coerce_availability(raw: object) -> AgentAvailability:
+    """Coerce a raw string to AgentAvailability, defaulting to UNKNOWN."""
+    if raw is None:
+        return AgentAvailability.UNKNOWN
+    try:
+        return AgentAvailability(str(raw).lower())
+    except ValueError:
+        return AgentAvailability.UNKNOWN
+
+
+def _coerce_trust_level(raw: object) -> AgentTrustLevel:
+    """Coerce a raw string to AgentTrustLevel, defaulting to UNKNOWN."""
+    if raw is None:
+        return AgentTrustLevel.UNKNOWN
+    try:
+        return AgentTrustLevel(str(raw).lower())
+    except ValueError:
+        return AgentTrustLevel.UNKNOWN
+
+
+def _coerce_float(value: object, default: float) -> float:
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return default
+
+
+def _coerce_int(value: object, default: int) -> int:
+    try:
+        return int(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return default
+
+
 def list_agent_catalog() -> Dict[str, Any]:
-    """Project currently listed agents into a control-plane-friendly catalog."""
+    """Project currently listed agents into a control-plane-friendly catalog.
+
+    Each entry is enriched with a deterministic ``quality`` summary derived
+    from the agent's static metadata signals (availability, trust_level, and
+    any performance-history fields present in the raw agent data).
+    """
     raw_agents = list_agents().get("agents", [])
     catalog: list[dict[str, Any]] = []
     for item in raw_agents:
         if not isinstance(item, dict):
             continue
         traits = item.get("traits") if isinstance(item.get("traits"), dict) else {}
+        raw_availability = traits.get("availability") or item.get("status")
+        raw_trust = traits.get("trust_level")
+        agent_id = (
+            item.get("id") or item.get("agent_id") or item.get("name") or "unknown-agent"
+        )
+
+        # Build a performance history from whatever static fields are available.
+        history = AgentPerformanceHistory(
+            success_rate=_coerce_float(item.get("success_rate"), 0.5),
+            avg_latency=_coerce_float(item.get("avg_response_time"), 1.0),
+            avg_cost=_coerce_float(item.get("estimated_cost_per_token"), 0.0),
+            recent_failures=_coerce_int(item.get("recent_failures"), 0),
+            execution_count=_coerce_int(item.get("execution_count"), 0),
+            load_factor=_coerce_float(item.get("load_factor"), 0.0),
+        )
+
+        # Compute quality — safe; never raises.
+        try:
+            quality = compute_agent_quality(
+                agent_id=agent_id,
+                availability=_coerce_availability(raw_availability),
+                trust_level=_coerce_trust_level(raw_trust),
+                history=history,
+            ).model_dump(mode="json")
+        except Exception:  # pragma: no cover — defensive
+            quality = None
+
         catalog.append(
             {
-                "agent_id": item.get("id") or item.get("agent_id") or item.get("name") or "unknown-agent",
-                "display_name": item.get("name") or item.get("display_name") or item.get("id") or "unknown-agent",
+                "agent_id": agent_id,
+                "display_name": (
+                    item.get("name") or item.get("display_name") or item.get("id") or "unknown-agent"
+                ),
                 "capabilities": list(item.get("capabilities") or []),
                 "source_type": item.get("source_type"),
                 "execution_kind": item.get("execution_kind"),
-                "availability": traits.get("availability") or item.get("status"),
-                "trust_level": traits.get("trust_level"),
+                "availability": raw_availability,
+                "trust_level": raw_trust,
+                "quality": quality,
                 "metadata": {
                     "domain": item.get("domain"),
                     "role": item.get("role"),

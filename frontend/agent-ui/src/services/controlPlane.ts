@@ -44,6 +44,15 @@ export interface ControlPlaneOverview {
   recent_governance: GovernanceEvent[]
 }
 
+export interface AgentQualitySummary {
+  quality_score: number
+  quality_band: 'good' | 'fair' | 'poor'
+  score_components: Record<string, number>
+  attention_flags: string[]
+  data_sufficient: boolean
+  execution_count: number
+}
+
 export interface ControlPlaneAgent {
   agent_id: string
   display_name: string
@@ -52,6 +61,7 @@ export interface ControlPlaneAgent {
   execution_kind?: string | null
   availability?: string | null
   trust_level?: string | null
+  quality?: AgentQualitySummary | null
   metadata: Record<string, unknown>
 }
 

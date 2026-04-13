@@ -9,6 +9,7 @@ from .agent_descriptor import (
     AgentSourceType,
     AgentTrustLevel,
 )
+from .agent_quality import AgentQualitySummary, MIN_EXECUTIONS, compute_agent_quality
 from .agent_registry import AgentRegistry
 from .agent_creation import AgentCreationEngine
 from .candidate_filter import CandidateAgent, CandidateAgentSet, CandidateFilter
@@ -29,6 +30,9 @@ from .task_intent import TaskIntent
 
 __all__ = [
     "AgentAvailability",
+    "AgentQualitySummary",
+    "MIN_EXECUTIONS",
+    "compute_agent_quality",
     "AgentCreationEngine",
     "AgentCostProfile",
     "AgentDescriptor",

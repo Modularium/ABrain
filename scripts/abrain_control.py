@@ -390,6 +390,7 @@ def _render_agent_list(payload: dict[str, Any]) -> str:
             str(item.get("availability") or "-"),
             str(item.get("source_type") or "-"),
             str(item.get("execution_kind") or "-"),
+            _format_quality(item.get("quality")),
             ",".join(str(cap) for cap in item.get("capabilities") or []) or "-",
         ]
         for item in agents
@@ -397,9 +398,23 @@ def _render_agent_list(payload: dict[str, Any]) -> str:
     return "\n".join(
         [
             f"Registered agents: {len(agents)}",
-            _format_table(["agent_id", "availability", "source", "execution", "capabilities"], rows),
+            _format_table(
+                ["agent_id", "availability", "source", "execution", "quality", "capabilities"],
+                rows,
+            ),
         ]
     )
+
+
+def _format_quality(quality: Any) -> str:
+    """Format quality dict as 'band(score)' or '-' when absent."""
+    if not isinstance(quality, dict):
+        return "-"
+    band = quality.get("quality_band") or "-"
+    score = quality.get("quality_score")
+    if score is not None:
+        return f"{band}({score:.2f})"
+    return band
 
 
 def _render_health(payload: dict[str, Any]) -> str:

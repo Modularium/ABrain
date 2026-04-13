@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from core.approval.models import ApprovalRequest
 from core.audit.trace_models import ExplainabilityRecord, SpanRecord, TraceRecord, TraceSnapshot
 from core.decision.agent_descriptor import AgentDescriptor
+from core.decision.agent_quality import AgentQualitySummary
 from core.decision.plan_models import ExecutionPlan
 from core.decision.routing_engine import RoutingDecision
 from core.execution.adapters.base import ExecutionResult
@@ -167,6 +168,7 @@ class AgentCatalogEntry(BaseModel):
     execution_kind: str | None = None
     availability: str | None = None
     trust_level: str | None = None
+    quality: AgentQualitySummary | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 

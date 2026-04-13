@@ -142,28 +142,24 @@ def test_list_agent_catalog_projects_existing_agent_listing(monkeypatch):
 
     catalog = core.list_agent_catalog()["agents"]
 
-    assert catalog == [
-        {
-            "agent_id": "agent-1",
-            "display_name": "Flow Agent",
-            "capabilities": ["workflow.execute"],
-            "source_type": None,
-            "execution_kind": None,
-            "availability": "online",
-            "trust_level": None,
-            "metadata": {
-                "domain": None,
-                "role": None,
-                "version": "1.2.0",
-                "skills": [],
-                "estimated_cost_per_token": None,
-                "avg_response_time": None,
-                "load_factor": None,
-                "projection_source": "services.core.list_agents",
-                "descriptor_projection_complete": False,
-            },
-        }
-    ]
+    assert len(catalog) == 1
+    entry = catalog[0]
+    assert entry["agent_id"] == "agent-1"
+    assert entry["display_name"] == "Flow Agent"
+    assert entry["capabilities"] == ["workflow.execute"]
+    assert entry["source_type"] is None
+    assert entry["execution_kind"] is None
+    assert entry["availability"] == "online"
+    assert entry["trust_level"] is None
+    assert entry["metadata"]["version"] == "1.2.0"
+    assert entry["metadata"]["projection_source"] == "services.core.list_agents"
+    # S8: quality summary must be present (availability=online, no execution data → good/insufficient_data)
+    quality = entry["quality"]
+    assert quality is not None
+    assert quality["quality_band"] in {"good", "fair", "poor"}
+    assert 0.0 <= quality["quality_score"] <= 1.0
+    assert isinstance(quality["attention_flags"], list)
+    assert "insufficient_data" in quality["attention_flags"]  # no execution data
 
 
 def test_get_control_plane_overview_aggregates_canonical_reads(monkeypatch):
