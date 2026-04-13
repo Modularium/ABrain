@@ -1540,6 +1540,15 @@ def _store_trace_explainability(
 
     if trace_context is None or not getattr(trace_context, "trace_id", None):
         return
+    # Build scored_candidates list for first-class forensics access
+    scored_candidates = [
+        {
+            "agent_id": candidate.agent_id,
+            "score": candidate.score,
+            "capability_match_score": candidate.capability_match_score,
+        }
+        for candidate in (decision.ranked_candidates or [])
+    ]
     trace_context.store_explainability(
         ExplainabilityRecord(
             trace_id=trace_context.trace_id,
@@ -1551,6 +1560,12 @@ def _store_trace_explainability(
             matched_policy_ids=list(policy_decision.matched_rules),
             approval_required=approval_required,
             approval_id=approval_id,
+            # S10 — first-class forensics signals
+            routing_confidence=decision.routing_confidence,
+            score_gap=decision.score_gap,
+            confidence_band=decision.confidence_band,
+            policy_effect=policy_decision.effect if policy_decision is not None else None,
+            scored_candidates=scored_candidates,
             metadata={
                 "routing_decision": decision.model_dump(mode="json"),
                 "rejected_agents": decision.diagnostics.get("rejected_agents") or [],

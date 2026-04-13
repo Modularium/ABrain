@@ -7,7 +7,14 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from core.approval.models import ApprovalRequest
-from core.audit.trace_models import ExplainabilityRecord, SpanRecord, TraceRecord, TraceSnapshot
+from core.audit.trace_models import (
+    ExplainabilityRecord,
+    ReplayDescriptor,
+    ReplayStepInput,
+    SpanRecord,
+    TraceRecord,
+    TraceSnapshot,
+)
 from core.decision.agent_descriptor import AgentDescriptor
 from core.decision.plan_models import ExecutionPlan
 from core.decision.routing_engine import RoutingDecision

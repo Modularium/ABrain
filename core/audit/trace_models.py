@@ -86,7 +86,15 @@ class SpanRecord(BaseModel):
 
 
 class ExplainabilityRecord(BaseModel):
-    """Compact explainability snapshot for a routed step or task."""
+    """Compact explainability snapshot for a routed step or task.
+
+    S10 additions (backwards-compatible, all nullable/defaulted):
+    - ``routing_confidence`` — top candidate score at decision time
+    - ``score_gap`` — score difference between #1 and #2 candidate
+    - ``confidence_band`` — "high"/"medium"/"low" routing certainty
+    - ``policy_effect`` — governance outcome for this step
+    - ``scored_candidates`` — ranked candidate list with per-agent scores
+    """
 
     model_config = ConfigDict(extra="forbid")
 
@@ -99,9 +107,18 @@ class ExplainabilityRecord(BaseModel):
     matched_policy_ids: list[str] = Field(default_factory=list)
     approval_required: bool = False
     approval_id: str | None = Field(default=None, max_length=128)
+    # S10 — first-class forensics signals (all optional for backwards compat)
+    routing_confidence: float | None = None
+    score_gap: float | None = None
+    confidence_band: str | None = Field(default=None, max_length=32)
+    policy_effect: str | None = Field(default=None, max_length=64)
+    scored_candidates: list[dict[str, Any]] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
-    @field_validator("trace_id", "step_id", "selected_agent_id", "routing_reason_summary", "approval_id")
+    @field_validator(
+        "trace_id", "step_id", "selected_agent_id", "routing_reason_summary",
+        "approval_id", "confidence_band", "policy_effect",
+    )
     @classmethod
     def normalize_strings(cls, value: str | None) -> str | None:
         if value is None:
@@ -124,11 +141,60 @@ class ExplainabilityRecord(BaseModel):
         return normalized_values
 
 
+class ReplayStepInput(BaseModel):
+    """Per-step inputs captured for replay-readiness assessment.
+
+    Describes the minimal context needed to reproduce one routing decision
+    step.  Not an execution request — a descriptive summary only.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    step_id: str
+    task_type: str | None = None
+    required_capabilities: list[str] = Field(default_factory=list)
+    selected_agent_id: str | None = None
+    candidate_agent_ids: list[str] = Field(default_factory=list)
+    routing_confidence: float | None = None
+    confidence_band: str | None = None
+    policy_effect: str | None = None
+
+
+class ReplayDescriptor(BaseModel):
+    """Canonical replay-readiness descriptor derived from a stored trace.
+
+    Answers: "what would be needed to reproduce this trace's decisions?"
+    Not an execution request — a structured forensics summary.
+
+    ``can_replay`` is True when enough context was captured at record time to
+    meaningfully reproduce the routing inputs (task_type + candidates present).
+    ``missing_inputs`` lists what gaps prevent full reproducibility.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    trace_id: str
+    workflow_name: str
+    task_type: str | None = None
+    task_id: str | None = None
+    started_at: str | None = None
+    step_inputs: list[ReplayStepInput] = Field(default_factory=list)
+    can_replay: bool = False
+    missing_inputs: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
 class TraceSnapshot(BaseModel):
-    """Full trace payload returned for internal inspection."""
+    """Full trace payload returned for internal inspection.
+
+    S10: includes ``replay_descriptor`` — derived from stored explainability
+    records.  Always present when the trace has explainability data; None for
+    traces with no routing decisions (e.g. bare system-status calls).
+    """
 
     model_config = ConfigDict(extra="forbid")
 
     trace: TraceRecord
     spans: list[SpanRecord] = Field(default_factory=list)
     explainability: list[ExplainabilityRecord] = Field(default_factory=list)
+    replay_descriptor: ReplayDescriptor | None = None

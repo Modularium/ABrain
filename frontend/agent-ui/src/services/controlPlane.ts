@@ -96,6 +96,39 @@ export interface ExplainabilityRecord {
   matched_policy_ids: string[]
   approval_required: boolean
   approval_id?: string | null
+  // S10 — first-class forensics fields
+  routing_confidence?: number | null
+  score_gap?: number | null
+  confidence_band?: 'high' | 'medium' | 'low' | null
+  policy_effect?: 'allow' | 'deny' | 'require_approval' | null
+  scored_candidates: Array<{
+    agent_id: string
+    score: number
+    capability_match_score: number
+  }>
+  metadata: Record<string, any>
+}
+
+export interface ReplayStepInput {
+  step_id: string
+  task_type?: string | null
+  required_capabilities: string[]
+  selected_agent_id?: string | null
+  candidate_agent_ids: string[]
+  routing_confidence?: number | null
+  confidence_band?: string | null
+  policy_effect?: string | null
+}
+
+export interface ReplayDescriptor {
+  trace_id: string
+  workflow_name: string
+  task_type?: string | null
+  task_id?: string | null
+  started_at?: string | null
+  step_inputs: ReplayStepInput[]
+  can_replay: boolean
+  missing_inputs: string[]
   metadata: Record<string, any>
 }
 
@@ -103,6 +136,7 @@ export interface TraceSnapshot {
   trace: TraceRecord
   spans: SpanRecord[]
   explainability: ExplainabilityRecord[]
+  replay_descriptor?: ReplayDescriptor | null
 }
 
 export interface ApprovalRequest {
