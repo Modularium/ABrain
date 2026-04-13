@@ -91,6 +91,7 @@ class ApprovalDecisionRequest(BaseModel):
 
     decided_by: str = Field(default="control-plane", min_length=1, max_length=128)
     comment: str | None = Field(default=None, max_length=2048)
+    rating: float | None = Field(default=None, ge=0.0, le=1.0)
 
 
 def _control_plane_layers() -> list[dict[str, str]]:
@@ -353,6 +354,7 @@ async def control_plane_approve(
         approval_id,
         decided_by=payload.decided_by,
         comment=payload.comment,
+        rating=payload.rating,
     )
 
 
@@ -372,6 +374,7 @@ async def control_plane_reject(
         approval_id,
         decided_by=payload.decided_by,
         comment=payload.comment,
+        rating=payload.rating,
     )
 
 

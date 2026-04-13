@@ -95,10 +95,11 @@ def test_control_plane_approve_forwards_to_canonical_core(monkeypatch):
     gateway = importlib.import_module("api_gateway.main")
     captured = {}
 
-    def fake_approve(approval_id: str, *, decided_by: str, comment: str | None = None):
+    def fake_approve(approval_id: str, *, decided_by: str, comment: str | None = None, rating: float | None = None):
         captured["approval_id"] = approval_id
         captured["decided_by"] = decided_by
         captured["comment"] = comment
+        captured["rating"] = rating
         return {"approval": {"approval_id": approval_id}, "result": {"status": "completed"}}
 
     monkeypatch.setattr("services.core.approve_plan_step", fake_approve)
@@ -116,4 +117,5 @@ def test_control_plane_approve_forwards_to_canonical_core(monkeypatch):
         "approval_id": "approval-42",
         "decided_by": "tester",
         "comment": "looks good",
+        "rating": None,
     }

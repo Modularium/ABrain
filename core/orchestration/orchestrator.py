@@ -65,6 +65,7 @@ class PlanExecutionOrchestrator:
         start_step_index: int = 0,
         existing_step_results: list[StepExecutionResult] | None = None,
         approved_step_ids: set[str] | None = None,
+        approved_step_rating: float | None = None,
     ) -> PlanExecutionResult:
         creation_engine = creation_engine or AgentCreationEngine()
         approval_policy = approval_policy or ApprovalPolicy()
@@ -102,6 +103,7 @@ class PlanExecutionOrchestrator:
                 trace_context,
                 step_index_offset=plan.steps.index(group[0]),
                 ordered_results=ordered_results,
+                approved_step_rating=approved_step_rating,
             )
             if isinstance(group_results, PlanExecutionResult):
                 finish_span(
@@ -209,6 +211,7 @@ class PlanExecutionOrchestrator:
         *,
         step_index_offset: int,
         ordered_results: list[StepExecutionResult],
+        approved_step_rating: float | None = None,
     ) -> list[StepExecutionResult] | PlanExecutionResult:
         if len(steps) == 1 or not self.allow_parallel_groups:
             results: list[StepExecutionResult] = []
@@ -228,6 +231,7 @@ class PlanExecutionOrchestrator:
                     approval_store=approval_store,
                     approved_step_ids=approved_step_ids,
                     trace_context=trace_context,
+                    approved_step_rating=approved_step_rating,
                 )
                 if outcome.approval_request is not None:
                     return self._build_paused_result(
@@ -269,6 +273,7 @@ class PlanExecutionOrchestrator:
                     approval_store=approval_store,
                     approved_step_ids=approved_step_ids,
                     trace_context=trace_context,
+                    approved_step_rating=approved_step_rating,
                 )
                 for index, step in enumerate(steps)
             ]
@@ -318,6 +323,7 @@ class PlanExecutionOrchestrator:
         approval_store: ApprovalStore | None,
         approved_step_ids: set[str],
         trace_context: Any | None,
+        approved_step_rating: float | None = None,
     ) -> _StepOutcome:
         step_span = start_child_span(
             trace_context,
@@ -637,6 +643,8 @@ class PlanExecutionOrchestrator:
             attributes={"step_id": step.step_id, "selected_agent_id": decision.selected_agent_id},
         )
         execution = execution_engine.execute(step_task, decision, registry)
+        if step.step_id in approved_step_ids and approved_step_rating is not None:
+            execution.metadata["approval_decision"] = {"rating": approved_step_rating}
         finish_span(
             trace_context,
             execution_span,
@@ -675,6 +683,7 @@ class PlanExecutionOrchestrator:
                     attributes={
                         "reward": feedback.reward,
                         "token_count": feedback.token_count,
+                        "user_rating": feedback.user_rating,
                         "dataset_size": feedback.dataset_size,
                         "training_triggered": feedback.training_metrics is not None,
                         "warning_count": len(feedback.warnings),

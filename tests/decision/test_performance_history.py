@@ -73,3 +73,28 @@ def test_performance_history_token_count_none_does_not_reset_average():
 def test_performance_history_default_avg_token_count():
     history = PerformanceHistoryStore().get("nonexistent")
     assert history.avg_token_count == pytest.approx(0.0)
+
+
+def test_performance_history_records_user_rating():
+    store = PerformanceHistoryStore()
+
+    first = store.record_result("agent-1", success=True, user_rating=0.8)
+    second = store.record_result("agent-1", success=True, user_rating=0.4)
+
+    assert first.avg_user_rating == pytest.approx(0.8)
+    assert second.avg_user_rating == pytest.approx(0.6)  # rolling average of 0.8 and 0.4
+
+
+def test_performance_history_user_rating_none_does_not_reset_average():
+    store = PerformanceHistoryStore()
+
+    store.record_result("agent-1", success=True, user_rating=0.6)
+    second = store.record_result("agent-1", success=True, user_rating=None)
+
+    # When user_rating is None the rolling average must be preserved unchanged
+    assert second.avg_user_rating == pytest.approx(0.6)
+
+
+def test_performance_history_default_avg_user_rating():
+    history = PerformanceHistoryStore().get("nonexistent")
+    assert history.avg_user_rating == pytest.approx(0.0)

@@ -36,3 +36,38 @@ def test_approval_decision_rejects_pending_as_terminal_state():
             decided_by="reviewer",
             decided_at=datetime.now(UTC),
         )
+
+
+def test_approval_decision_accepts_optional_rating():
+    decision = ApprovalDecision(
+        approval_id="approval-2",
+        decision=ApprovalStatus.APPROVED,
+        decided_by="reviewer",
+        rating=0.8,
+    )
+
+    assert decision.rating == pytest.approx(0.8)
+    payload = decision.model_dump(mode="json")
+    assert payload["rating"] == pytest.approx(0.8)
+
+
+def test_approval_decision_rating_defaults_to_none():
+    decision = ApprovalDecision(
+        approval_id="approval-3",
+        decision=ApprovalStatus.APPROVED,
+        decided_by="reviewer",
+    )
+
+    assert decision.rating is None
+    payload = decision.model_dump(mode="json")
+    assert payload["rating"] is None
+
+
+def test_approval_decision_rejects_rating_out_of_range():
+    with pytest.raises(Exception):
+        ApprovalDecision(
+            approval_id="approval-4",
+            decision=ApprovalStatus.APPROVED,
+            decided_by="reviewer",
+            rating=1.5,
+        )

@@ -38,6 +38,7 @@ class ApprovalDecision(BaseModel):
     decided_by: str = Field(min_length=1, max_length=128)
     decided_at: datetime = Field(default_factory=utcnow)
     comment: str | None = Field(default=None, max_length=2048)
+    rating: float | None = Field(default=None, ge=0.0, le=1.0)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("decision")

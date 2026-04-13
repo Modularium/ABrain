@@ -156,3 +156,79 @@ def test_reject_plan_step_finishes_without_learning_as_failure():
     assert rejected["result"]["step_results"][0]["metadata"]["approval_status"] == "rejected"
     assert engine.calls == []
     assert feedback_loop.performance_history.get("workflow-agent").execution_count == 0
+
+
+def test_approve_plan_step_with_rating_updates_avg_user_rating():
+    core = importlib.import_module("services.core")
+    registry = build_workflow_registry()
+    routing_engine = RoutingEngine(performance_history=PerformanceHistoryStore())
+    feedback_loop = FeedbackLoop(performance_history=routing_engine.performance_history)
+    approval_store = ApprovalStore()
+    approval_policy = ApprovalPolicy()
+    engine = RecordingExecutionEngine()
+
+    initial = core.run_task_plan(
+        {"task_type": "workflow_automation"},
+        registry=registry,
+        routing_engine=routing_engine,
+        execution_engine=engine,
+        feedback_loop=feedback_loop,
+        plan_builder=StaticPlanBuilder(build_sensitive_plan()),
+        approval_store=approval_store,
+        approval_policy=approval_policy,
+    )
+
+    approval_id = initial["result"]["state"]["pending_approval_id"]
+    core.approve_plan_step(
+        approval_id,
+        registry=registry,
+        routing_engine=routing_engine,
+        execution_engine=engine,
+        feedback_loop=feedback_loop,
+        approval_store=approval_store,
+        approval_policy=approval_policy,
+        rating=0.8,
+    )
+
+    history = feedback_loop.performance_history.get("workflow-agent")
+    assert history.avg_user_rating == pytest.approx(0.8)
+
+
+def test_reject_plan_step_with_rating_surfaces_rating_without_learning():
+    core = importlib.import_module("services.core")
+    registry = build_workflow_registry()
+    routing_engine = RoutingEngine(performance_history=PerformanceHistoryStore())
+    feedback_loop = FeedbackLoop(performance_history=routing_engine.performance_history)
+    approval_store = ApprovalStore()
+    approval_policy = ApprovalPolicy()
+    engine = RecordingExecutionEngine()
+
+    initial = core.run_task_plan(
+        {"task_type": "workflow_automation"},
+        registry=registry,
+        routing_engine=routing_engine,
+        execution_engine=engine,
+        feedback_loop=feedback_loop,
+        plan_builder=StaticPlanBuilder(build_sensitive_plan()),
+        approval_store=approval_store,
+        approval_policy=approval_policy,
+    )
+
+    approval_id = initial["result"]["state"]["pending_approval_id"]
+    core.reject_plan_step(
+        approval_id,
+        registry=registry,
+        routing_engine=routing_engine,
+        execution_engine=engine,
+        feedback_loop=feedback_loop,
+        approval_store=approval_store,
+        approval_policy=approval_policy,
+        rating=0.2,
+    )
+
+    # Rejection skips learning — execution_count stays 0 but rating is stored in approval decision
+    history = feedback_loop.performance_history.get("workflow-agent")
+    assert history.execution_count == 0
+    # Rating on rejected path lives in the stored approval decision metadata, not in performance history
+    stored = approval_store.get_request(approval_id)
+    assert stored.metadata["decision"]["rating"] == pytest.approx(0.2)

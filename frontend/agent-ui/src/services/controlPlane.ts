@@ -188,15 +188,15 @@ export const controlPlaneApi = {
     )).explainability,
   listApprovals: async () =>
     (await request<{ approvals: ApprovalRequest[] }>('/control-plane/approvals')).approvals,
-  approve: (approvalId: string, comment?: string) =>
+  approve: (approvalId: string, comment?: string, rating?: number) =>
     request(`/control-plane/approvals/${approvalId}/approve`, {
       method: 'POST',
-      body: JSON.stringify({ decided_by: 'agent-ui', comment }),
+      body: JSON.stringify({ decided_by: 'agent-ui', comment, rating }),
     }),
-  reject: (approvalId: string, comment?: string) =>
+  reject: (approvalId: string, comment?: string, rating?: number) =>
     request(`/control-plane/approvals/${approvalId}/reject`, {
       method: 'POST',
-      body: JSON.stringify({ decided_by: 'agent-ui', comment }),
+      body: JSON.stringify({ decided_by: 'agent-ui', comment, rating }),
     }),
   listPlans: async (limit = 10) =>
     (await request<{ plans: PlanRun[] }>(`/control-plane/plans?limit=${limit}`)).plans,

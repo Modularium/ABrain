@@ -40,7 +40,11 @@ def resume_plan(
         trace_context,
         span_type="approval",
         name="resume_plan",
-        attributes={"approval_id": approval_request.approval_id, "decision": decision.decision.value},
+        attributes={
+            "approval_id": approval_request.approval_id,
+            "decision": decision.decision.value,
+            "user_rating": decision.rating,
+        },
     )
     if decision.decision == ApprovalStatus.APPROVED:
         add_span_event(
@@ -71,6 +75,7 @@ def resume_plan(
             start_step_index=state.next_step_index or 0,
             existing_step_results=list(state.step_results),
             approved_step_ids={state.next_step_id} if state.next_step_id else set(),
+            approved_step_rating=decision.rating,
             trace_context=trace_context,
         )
         finish_span(

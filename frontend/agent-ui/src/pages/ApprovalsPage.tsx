@@ -10,6 +10,7 @@ function formatTimestamp(value: string): string {
 export default function ApprovalsPage() {
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([])
   const [comments, setComments] = useState<Record<string, string>>({})
+  const [ratings, setRatings] = useState<Record<string, number | null>>({})
   const [loading, setLoading] = useState(true)
   const [actingId, setActingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -36,10 +37,12 @@ export default function ApprovalsPage() {
     setError(null)
     try {
       const comment = comments[approvalId]
+      const rawRating = ratings[approvalId]
+      const rating = typeof rawRating === 'number' ? rawRating / 5 : undefined
       const result =
         action === 'approve'
-          ? await controlPlaneApi.approve(approvalId, comment)
-          : await controlPlaneApi.reject(approvalId, comment)
+          ? await controlPlaneApi.approve(approvalId, comment, rating)
+          : await controlPlaneApi.reject(approvalId, comment, rating)
       setLastDecision(result)
       await loadApprovals()
     } catch (err) {
@@ -149,6 +152,39 @@ export default function ApprovalsPage() {
                       }))
                     }
                   />
+                </div>
+
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-gray-200">
+                    Rating (optional)
+                  </label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        className={`text-2xl transition-colors ${
+                          (ratings[approval.approval_id] ?? 0) >= star
+                            ? 'text-amber-400'
+                            : 'text-slate-300 dark:text-gray-600'
+                        }`}
+                        onClick={() =>
+                          setRatings((current) => ({
+                            ...current,
+                            [approval.approval_id]:
+                              current[approval.approval_id] === star ? null : star,
+                          }))
+                        }
+                      >
+                        ★
+                      </button>
+                    ))}
+                    {ratings[approval.approval_id] != null && (
+                      <span className="ml-2 self-center text-xs text-slate-500 dark:text-gray-400">
+                        {ratings[approval.approval_id]}/5
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-3">

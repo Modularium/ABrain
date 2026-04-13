@@ -31,6 +31,7 @@ class FeedbackUpdate(BaseModel):
     score_delta: int
     reward: float | None = None
     token_count: int | None = None
+    user_rating: float | None = None
     dataset_size: int | None = None
     training_metrics: TrainingMetrics | None = None
     warnings: list[str] = Field(default_factory=list)
@@ -60,11 +61,17 @@ class FeedbackLoop:
         task: TaskContext | ModelContext | Mapping[str, Any] | None = None,
         agent_descriptor: AgentDescriptor | None = None,
     ) -> FeedbackUpdate:
+        approval_decision_meta = result.metadata.get("approval_decision") or {}
+        user_rating: float | None = None
+        raw_rating = approval_decision_meta.get("rating") if isinstance(approval_decision_meta, dict) else None
+        if isinstance(raw_rating, (int, float)):
+            user_rating = float(raw_rating)
         if str(result.metadata.get("approval_status") or "") in {"rejected", "cancelled", "expired"}:
             return FeedbackUpdate(
                 agent_id=agent_id,
                 performance=self.performance_history.get(agent_id),
                 score_delta=0,
+                user_rating=user_rating,
                 warnings=["approval_outcome_not_learned"],
             )
         updated = self.performance_history.record_result(
@@ -73,6 +80,7 @@ class FeedbackLoop:
             latency=(result.duration_ms / 1000.0) if result.duration_ms is not None else None,
             cost=result.cost,
             token_count=result.token_count,
+            user_rating=user_rating,
         )
         reward = None
         dataset_size = None
@@ -112,6 +120,7 @@ class FeedbackLoop:
             score_delta=1 if result.success else -1,
             reward=reward,
             token_count=result.token_count,
+            user_rating=user_rating,
             dataset_size=dataset_size,
             training_metrics=training_metrics,
             warnings=warnings,
