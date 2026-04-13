@@ -363,17 +363,37 @@ class PlanExecutionOrchestrator:
         )
         try:
             decision = routing_engine.route_step(step, step_task, descriptors)
+            routing_span_attrs: dict[str, Any] = {
+                "selected_agent_id": decision.selected_agent_id,
+                "selected_score": decision.selected_score,
+                "candidate_count": len(decision.ranked_candidates),
+                "rejected_count": len(decision.diagnostics.get("rejected_agents") or []),
+            }
+            # S4.2 — confidence metrics
+            if decision.routing_confidence is not None:
+                routing_span_attrs["routing_confidence"] = decision.routing_confidence
+            if decision.score_gap is not None:
+                routing_span_attrs["score_gap"] = decision.score_gap
+            if decision.confidence_band is not None:
+                routing_span_attrs["confidence_band"] = decision.confidence_band
             finish_span(
                 trace_context,
                 routing_span,
                 status="completed",
-                attributes={
-                    "selected_agent_id": decision.selected_agent_id,
-                    "selected_score": decision.selected_score,
-                    "candidate_count": len(decision.ranked_candidates),
-                    "rejected_count": len(decision.diagnostics.get("rejected_agents") or []),
-                },
+                attributes=routing_span_attrs,
             )
+            # S4.2 — emit span event when routing confidence is low
+            if decision.confidence_band == "low":
+                add_span_event(
+                    trace_context,
+                    routing_span,
+                    "routing_low_confidence",
+                    {
+                        "routing_confidence": decision.routing_confidence,
+                        "score_gap": decision.score_gap,
+                        "selected_agent_id": decision.selected_agent_id,
+                    },
+                )
         except Exception as exc:
             record_error(
                 trace_context,
