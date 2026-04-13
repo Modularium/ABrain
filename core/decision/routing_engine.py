@@ -77,7 +77,11 @@ class RoutingEngine:
         step: PlanStep,
         task: TaskContext | ModelContext | Mapping[str, Any],
         descriptors: Sequence[AgentDescriptor],
+        *,
+        exclude_agent_ids: set[str] | None = None,
     ) -> RoutingDecision:
+        if exclude_agent_ids:
+            descriptors = [d for d in descriptors if d.agent_id not in exclude_agent_ids]
         preferences = {}
         if isinstance(task, TaskContext):
             preferences = dict(task.preferences or {})

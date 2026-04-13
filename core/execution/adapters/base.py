@@ -29,6 +29,26 @@ class ExecutionResult(BaseModel):
     token_count: int | None = None
 
 
+_FALLBACK_ELIGIBLE_ERROR_CODES: frozenset[str] = frozenset({
+    "adapter_unavailable",      # CLI not installed/found — clear provider absence
+    "adapter_timeout",          # timed out — provider unresponsive
+    "adapter_transport_error",  # network/connection failure — transport down
+})
+
+
+def is_fallback_eligible(result: ExecutionResult) -> bool:
+    """Return True iff the failure is a clear provider/availability error.
+
+    Only infrastructure-level errors trigger fallback: missing CLI, timeout,
+    transport failure.  Domain errors, policy decisions, process errors, and
+    ambiguous codes are intentionally excluded to avoid masking real task
+    failures with a silent retry.
+    """
+    if result.success or result.error is None:
+        return False
+    return str(result.error.error_code) in _FALLBACK_ELIGIBLE_ERROR_CODES
+
+
 class BaseExecutionAdapter:
     """Base adapter contract for executing a task via an external agent."""
 

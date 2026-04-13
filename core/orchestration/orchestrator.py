@@ -14,6 +14,7 @@ from core.audit import ExplainabilityRecord, add_span_event, finish_span, record
 from core.decision import AgentCreationEngine, AgentDescriptor, AgentRegistry, FeedbackLoop, RoutingDecision, RoutingEngine
 from core.decision.plan_models import ExecutionPlan, PlanStep, PlanStrategy
 from core.decision.task_intent import TaskIntent
+from core.execution.adapters.base import is_fallback_eligible
 from core.execution.execution_engine import ExecutionEngine
 from core.governance import PolicyEngine, PolicyViolationError, enforce_policy
 
@@ -33,6 +34,22 @@ class _StepOutcome:
     step_result: StepExecutionResult | None = None
     approval_request: ApprovalRequest | None = None
     approval_metadata: dict[str, Any] | None = None
+
+
+@dataclass
+class _FallbackAttemptResult:
+    """Internal result of a single bounded provider-fallback attempt."""
+
+    primary_agent_id: str | None
+    primary_error_code: str | None
+    primary_feedback: Any | None  # FeedbackUpdate | None
+    primary_feedback_error: dict[str, Any] | None
+    approval_request: ApprovalRequest | None = None
+    approval_metadata: dict[str, Any] | None = None
+    fallback_decision: RoutingDecision | None = None
+    fallback_execution: Any | None = None  # ExecutionResult | None
+    fallback_feedback: Any | None = None   # FeedbackUpdate | None
+    fallback_feedback_error: dict[str, Any] | None = None
 
 
 class PlanExecutionOrchestrator:
@@ -659,9 +676,50 @@ class PlanExecutionOrchestrator:
             },
             error=execution.error.model_dump(mode="json") if execution.error is not None else None,
         )
+        # S4: Controlled provider fallback — single bounded attempt on infrastructure errors
+        _fallback: _FallbackAttemptResult | None = None
+        if not execution.success and is_fallback_eligible(execution):
+            _fallback = self._attempt_fallback_step(
+                step=step,
+                step_task=step_task,
+                primary_decision=decision,
+                primary_execution=execution,
+                primary_policy_decision=policy_decision,
+                registry=registry,
+                routing_engine=routing_engine,
+                execution_engine=execution_engine,
+                feedback_loop=feedback_loop,
+                policy_engine=policy_engine,
+                approved_step_ids=approved_step_ids,
+                approved_step_rating=approved_step_rating,
+                trace_context=trace_context,
+                step_span=step_span,
+                plan=plan,
+                created_agent=created_agent,
+            )
+            if _fallback.approval_request is not None:
+                finish_span(trace_context, step_span, status="paused")
+                return _StepOutcome(
+                    approval_request=_fallback.approval_request,
+                    approval_metadata=_fallback.approval_metadata,
+                )
+            if _fallback.fallback_execution is not None:
+                execution = _fallback.fallback_execution
         feedback = None
         feedback_error: dict[str, Any] | None = None
-        if execution.agent_id and isinstance(registry, AgentRegistry):
+        if _fallback is not None:
+            # Primary feedback already recorded in _attempt_fallback_step
+            feedback = (
+                _fallback.fallback_feedback
+                if _fallback.fallback_execution is not None
+                else _fallback.primary_feedback
+            )
+            feedback_error = (
+                _fallback.fallback_feedback_error
+                if _fallback.fallback_execution is not None
+                else _fallback.primary_feedback_error
+            )
+        elif execution.agent_id and isinstance(registry, AgentRegistry):
             feedback_span = start_child_span(
                 trace_context,
                 span_type="learning",
@@ -717,6 +775,22 @@ class PlanExecutionOrchestrator:
                     message="feedback_loop_failed",
                     payload={"step_id": step.step_id, "agent_id": execution.agent_id},
                 )
+        fallback_metadata: dict[str, Any] = {}
+        if _fallback is not None:
+            fallback_metadata = {
+                "fallback_triggered": True,
+                "primary_agent_id": _fallback.primary_agent_id,
+                "primary_error_code": _fallback.primary_error_code,
+                "fallback_agent_id": (
+                    _fallback.fallback_execution.agent_id if _fallback.fallback_execution else None
+                ),
+                "fallback_routing_decision": (
+                    _fallback.fallback_decision.model_dump(mode="json") if _fallback.fallback_decision else None
+                ),
+                "primary_feedback": (
+                    _fallback.primary_feedback.model_dump(mode="json") if _fallback.primary_feedback else None
+                ),
+            }
         metadata = {
             "title": step.title,
             "policy_decision": policy_decision.model_dump(mode="json"),
@@ -725,6 +799,7 @@ class PlanExecutionOrchestrator:
             "feedback_error": feedback_error,
             "created_agent": created_agent.model_dump(mode="json") if created_agent else None,
             "dependencies": list(step.inputs_from_steps),
+            **fallback_metadata,
         }
         if feedback:
             execution.warnings.extend(warning for warning in feedback.warnings if warning not in execution.warnings)
@@ -732,10 +807,405 @@ class PlanExecutionOrchestrator:
             trace_context,
             step_span,
             status="completed" if execution.success else "failed",
-            attributes={"step_id": step.step_id, "success": execution.success},
+            attributes={
+                "step_id": step.step_id,
+                "success": execution.success,
+                **({"fallback_triggered": True} if _fallback else {}),
+            },
         )
         return _StepOutcome(
             step_result=StepExecutionResult.from_execution_result(step.step_id, execution, metadata=metadata)
+        )
+
+    def _attempt_fallback_step(  # noqa: C901 — bounded by design; single fallback path
+        self,
+        *,
+        step: PlanStep,
+        step_task: dict[str, Any],
+        primary_decision: RoutingDecision,
+        primary_execution: Any,  # ExecutionResult
+        primary_policy_decision: Any,
+        registry: AgentRegistry | Sequence[AgentDescriptor] | Mapping[str, AgentDescriptor],
+        routing_engine: RoutingEngine,
+        execution_engine: ExecutionEngine,
+        feedback_loop: FeedbackLoop,
+        policy_engine: PolicyEngine,
+        approved_step_ids: set[str],
+        approved_step_rating: float | None,
+        trace_context: Any | None,
+        step_span: Any | None,
+        plan: ExecutionPlan,
+        created_agent: AgentDescriptor | None,
+    ) -> _FallbackAttemptResult:
+        """Attempt a single controlled provider fallback after an infrastructure-level failure.
+
+        Always records primary failure feedback before attempting fallback routing.
+        Returns a _FallbackAttemptResult that the caller uses to determine the final
+        StepExecutionResult.  Invariants: max one fallback per call, governance always
+        re-enforced, feedback never double-recorded.
+        """
+        primary_agent_id: str | None = primary_execution.agent_id or primary_decision.selected_agent_id
+        primary_error_code: str | None = (
+            primary_execution.error.error_code if primary_execution.error else None
+        )
+
+        # 1. Record primary failure feedback before fallback attempt
+        primary_feedback = None
+        primary_feedback_error = None
+        if primary_agent_id and isinstance(registry, AgentRegistry):
+            primary_feedback_span = start_child_span(
+                trace_context,
+                span_type="learning",
+                name="feedback_update",
+                parent_span_id=step_span,
+                attributes={
+                    "step_id": step.step_id,
+                    "agent_id": primary_agent_id,
+                    "fallback_role": "primary",
+                },
+            )
+            try:
+                primary_feedback = feedback_loop.update_performance(
+                    primary_agent_id,
+                    primary_execution,
+                    task=step_task,
+                    agent_descriptor=registry.get(primary_agent_id),
+                )
+                finish_span(
+                    trace_context,
+                    primary_feedback_span,
+                    status="completed",
+                    attributes={
+                        "reward": primary_feedback.reward,
+                        "token_count": primary_feedback.token_count,
+                        "user_rating": primary_feedback.user_rating,
+                        "dataset_size": primary_feedback.dataset_size,
+                        "training_triggered": primary_feedback.training_metrics is not None,
+                        "warning_count": len(primary_feedback.warnings),
+                    },
+                )
+            except Exception as exc:  # pragma: no cover - defensive containment
+                warning = f"feedback_loop_failed:{exc.__class__.__name__}"
+                primary_execution.warnings.append(warning)
+                primary_feedback_error = {
+                    "error_type": exc.__class__.__name__,
+                    "error": str(exc),
+                    "warning": warning,
+                }
+                logger.warning(
+                    json.dumps(
+                        {
+                            "event": "plan_feedback_loop_failed",
+                            "agent_id": primary_agent_id,
+                            "step_id": step.step_id,
+                            "task_id": plan.task_id,
+                            "error_type": exc.__class__.__name__,
+                            "error": str(exc),
+                            "context": "primary_before_fallback",
+                        },
+                        sort_keys=True,
+                    )
+                )
+                record_error(
+                    trace_context,
+                    primary_feedback_span,
+                    exc,
+                    message="feedback_loop_failed",
+                    payload={"step_id": step.step_id, "agent_id": primary_agent_id},
+                )
+
+        # 2. Signal fallback trigger in trace
+        add_span_event(
+            trace_context,
+            step_span,
+            event_type="fallback_triggered",
+            message="provider failure triggered controlled single-attempt fallback",
+            payload={
+                "primary_agent_id": primary_agent_id,
+                "primary_error_code": primary_error_code,
+            },
+        )
+
+        # 3. Re-route excluding the failed primary agent
+        descriptors = registry.list_descriptors() if isinstance(registry, AgentRegistry) else registry
+        exclude_ids: set[str] = {primary_agent_id} if primary_agent_id else set()
+        fallback_routing_span = start_child_span(
+            trace_context,
+            span_type="decision",
+            name="fallback_route_step",
+            parent_span_id=step_span,
+            attributes={"step_id": step.step_id, "excluded_agent_id": primary_agent_id},
+        )
+        try:
+            fallback_decision = routing_engine.route_step(
+                step, step_task, descriptors, exclude_agent_ids=exclude_ids
+            )
+            finish_span(
+                trace_context,
+                fallback_routing_span,
+                status="completed",
+                attributes={
+                    "selected_agent_id": fallback_decision.selected_agent_id,
+                    "selected_score": fallback_decision.selected_score,
+                    "candidate_count": len(fallback_decision.ranked_candidates),
+                },
+            )
+        except Exception as exc:
+            record_error(
+                trace_context,
+                fallback_routing_span,
+                exc,
+                message="fallback_routing_failed",
+                payload={"step_id": step.step_id},
+            )
+            finish_span(trace_context, fallback_routing_span, status="failed")
+            return _FallbackAttemptResult(
+                primary_agent_id=primary_agent_id,
+                primary_error_code=primary_error_code,
+                primary_feedback=primary_feedback,
+                primary_feedback_error=primary_feedback_error,
+            )
+
+        if not fallback_decision.selected_agent_id:
+            add_span_event(
+                trace_context,
+                step_span,
+                event_type="fallback_no_candidate",
+                message="no fallback candidate available after excluding primary agent",
+                payload={"excluded_agent_id": primary_agent_id},
+            )
+            return _FallbackAttemptResult(
+                primary_agent_id=primary_agent_id,
+                primary_error_code=primary_error_code,
+                primary_feedback=primary_feedback,
+                primary_feedback_error=primary_feedback_error,
+                fallback_decision=fallback_decision,
+            )
+
+        # 4. Re-enforce governance for the fallback agent (invariant: governance always runs)
+        fallback_descriptor = self._resolve_descriptor(fallback_decision.selected_agent_id, registry)
+        step_intent = self._build_step_intent(plan, step, step_task)
+        fallback_policy_span = start_child_span(
+            trace_context,
+            span_type="governance",
+            name="fallback_policy_check",
+            parent_span_id=step_span,
+            attributes={
+                "step_id": step.step_id,
+                "fallback_agent_id": fallback_decision.selected_agent_id,
+            },
+        )
+        fallback_policy_decision = policy_engine.evaluate(
+            step_intent,
+            fallback_descriptor,
+            policy_engine.build_execution_context(
+                step_intent,
+                fallback_descriptor,
+                task=step_task,
+                task_id=step_task["task_id"],
+                plan_id=plan.task_id,
+                step_id=step.step_id,
+                metadata={
+                    "external_side_effect": step.metadata.get("external_side_effect"),
+                    "risky_operation": step.metadata.get("risky_operation"),
+                    "requires_human_approval": step.metadata.get("requires_human_approval"),
+                },
+            ),
+        )
+        try:
+            fallback_policy_result = enforce_policy(fallback_policy_decision)
+        except PolicyViolationError:
+            finish_span(
+                trace_context,
+                fallback_policy_span,
+                status="denied",
+                attributes={"matched_rules": fallback_policy_decision.matched_rules},
+            )
+            add_span_event(
+                trace_context,
+                step_span,
+                event_type="fallback_governance_denied",
+                message="fallback agent denied by policy",
+                payload={"fallback_agent_id": fallback_decision.selected_agent_id},
+            )
+            return _FallbackAttemptResult(
+                primary_agent_id=primary_agent_id,
+                primary_error_code=primary_error_code,
+                primary_feedback=primary_feedback,
+                primary_feedback_error=primary_feedback_error,
+                fallback_decision=fallback_decision,
+            )
+
+        # 5. Approval gate for fallback agent
+        if fallback_policy_result == "approval_required" and step.step_id not in approved_step_ids:
+            # Step not pre-approved; must pause — approval covers the step, not agent-specific
+            approval_request = ApprovalRequest(
+                plan_id=plan.task_id,
+                step_id=step.step_id,
+                task_summary=step.description,
+                agent_id=fallback_decision.selected_agent_id,
+                source_type=fallback_descriptor.source_type if fallback_descriptor else None,
+                execution_kind=fallback_descriptor.execution_kind if fallback_descriptor else None,
+                reason=fallback_policy_decision.reason,
+                risk=step.risk,
+                preview={
+                    "task_type": step_task["task_type"],
+                    "required_capabilities": list(step.required_capabilities),
+                    "dependencies": list(step.inputs_from_steps),
+                },
+                proposed_action_summary=(
+                    f"Fallback: governed step {step.step_id} ({step.title}) via "
+                    f"{fallback_descriptor.display_name if fallback_descriptor else 'unselected-agent'}"
+                ),
+                metadata={
+                    "policy_decision": fallback_policy_decision.model_dump(mode="json"),
+                    "plan": plan.model_dump(mode="json"),
+                    "approval_origin": "fallback_governance",
+                    "trace_id": getattr(trace_context, "trace_id", None),
+                    "fallback_context": {
+                        "primary_agent_id": primary_agent_id,
+                        "primary_error_code": primary_error_code,
+                    },
+                },
+            )
+            finish_span(
+                trace_context,
+                fallback_policy_span,
+                status="approval_required",
+                attributes={"matched_rules": fallback_policy_decision.matched_rules},
+            )
+            return _FallbackAttemptResult(
+                primary_agent_id=primary_agent_id,
+                primary_error_code=primary_error_code,
+                primary_feedback=primary_feedback,
+                primary_feedback_error=primary_feedback_error,
+                fallback_decision=fallback_decision,
+                approval_request=approval_request,
+                approval_metadata={
+                    "routing_decision": fallback_decision.model_dump(mode="json"),
+                    "selected_agent": (
+                        fallback_descriptor.model_dump(mode="json") if fallback_descriptor else None
+                    ),
+                    "policy_decision": fallback_policy_decision.model_dump(mode="json"),
+                    "trace_id": getattr(trace_context, "trace_id", None),
+                },
+            )
+
+        finish_span(
+            trace_context,
+            fallback_policy_span,
+            status="completed",
+            attributes={"matched_rules": fallback_policy_decision.matched_rules},
+        )
+
+        # 6. Execute fallback agent
+        fallback_execution_span = start_child_span(
+            trace_context,
+            span_type="execution",
+            name="fallback_adapter_execution",
+            parent_span_id=step_span,
+            attributes={
+                "step_id": step.step_id,
+                "fallback_agent_id": fallback_decision.selected_agent_id,
+            },
+        )
+        fallback_execution = execution_engine.execute(step_task, fallback_decision, registry)
+        if step.step_id in approved_step_ids and approved_step_rating is not None:
+            fallback_execution.metadata["approval_decision"] = {"rating": approved_step_rating}
+        finish_span(
+            trace_context,
+            fallback_execution_span,
+            status="completed" if fallback_execution.success else "failed",
+            attributes={
+                "success": fallback_execution.success,
+                "duration_ms": fallback_execution.duration_ms,
+                "cost": fallback_execution.cost,
+                "token_count": fallback_execution.token_count,
+                "warning_count": len(fallback_execution.warnings),
+                "adapter_name": fallback_execution.metadata.get("adapter_name"),
+            },
+            error=(
+                fallback_execution.error.model_dump(mode="json")
+                if fallback_execution.error is not None
+                else None
+            ),
+        )
+
+        # 7. Record fallback feedback (separate from primary — never mixed)
+        fallback_feedback = None
+        fallback_feedback_error = None
+        fallback_agent_id = fallback_execution.agent_id
+        if fallback_agent_id and isinstance(registry, AgentRegistry):
+            fallback_feedback_span = start_child_span(
+                trace_context,
+                span_type="learning",
+                name="feedback_update",
+                parent_span_id=step_span,
+                attributes={
+                    "step_id": step.step_id,
+                    "agent_id": fallback_agent_id,
+                    "fallback_role": "fallback",
+                },
+            )
+            try:
+                fallback_feedback = feedback_loop.update_performance(
+                    fallback_agent_id,
+                    fallback_execution,
+                    task=step_task,
+                    agent_descriptor=registry.get(fallback_agent_id),
+                )
+                finish_span(
+                    trace_context,
+                    fallback_feedback_span,
+                    status="completed",
+                    attributes={
+                        "reward": fallback_feedback.reward,
+                        "token_count": fallback_feedback.token_count,
+                        "user_rating": fallback_feedback.user_rating,
+                        "dataset_size": fallback_feedback.dataset_size,
+                        "training_triggered": fallback_feedback.training_metrics is not None,
+                        "warning_count": len(fallback_feedback.warnings),
+                    },
+                )
+            except Exception as exc:  # pragma: no cover - defensive containment
+                warning = f"fallback_feedback_loop_failed:{exc.__class__.__name__}"
+                fallback_execution.warnings.append(warning)
+                fallback_feedback_error = {
+                    "error_type": exc.__class__.__name__,
+                    "error": str(exc),
+                    "warning": warning,
+                }
+                logger.warning(
+                    json.dumps(
+                        {
+                            "event": "plan_feedback_loop_failed",
+                            "agent_id": fallback_agent_id,
+                            "step_id": step.step_id,
+                            "task_id": plan.task_id,
+                            "error_type": exc.__class__.__name__,
+                            "error": str(exc),
+                            "context": "fallback",
+                        },
+                        sort_keys=True,
+                    )
+                )
+                record_error(
+                    trace_context,
+                    fallback_feedback_span,
+                    exc,
+                    message="fallback_feedback_loop_failed",
+                    payload={"step_id": step.step_id, "agent_id": fallback_agent_id},
+                )
+
+        return _FallbackAttemptResult(
+            primary_agent_id=primary_agent_id,
+            primary_error_code=primary_error_code,
+            primary_feedback=primary_feedback,
+            primary_feedback_error=primary_feedback_error,
+            fallback_decision=fallback_decision,
+            fallback_execution=fallback_execution,
+            fallback_feedback=fallback_feedback,
+            fallback_feedback_error=fallback_feedback_error,
         )
 
     def _build_denied_result(
