@@ -467,7 +467,7 @@ show_version() {
     echo "${CYAN}ABrain CLI${NC} v${CLI_VERSION}"
     echo
     echo "Build-Informationen:"
-    echo "  Repository: $(git -C "$REPO_ROOT" remote get-url origin 2>/dev/null || echo 'Unbekannt')"
+    echo "  Repository: $REPO_ROOT"
     echo "  Branch: $(git -C "$REPO_ROOT" branch --show-current 2>/dev/null || echo 'Unbekannt')"
     echo "  Commit: $(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo 'Unbekannt')"
     echo "  Build-Zeit: $(date)"
