@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from core.model_context import ModelContext, TaskContext
 
-from .agent_descriptor import AgentDescriptor
+from .agent_descriptor import AgentAvailability, AgentCostProfile, AgentDescriptor
 from .candidate_filter import CandidateFilter
-from .neural_policy import NeuralPolicyModel
+from .neural_policy import NeuralPolicyModel, ScoredCandidate
 from .performance_history import PerformanceHistoryStore
 from .plan_models import PlanStep
 from .planner import Planner
@@ -31,6 +31,28 @@ class RankedCandidate(BaseModel):
     feature_summary: dict[str, float] = Field(default_factory=dict)
 
 
+class RoutingPreferences(BaseModel):
+    """Routing configuration for health, cost, and confidence signals.
+
+    These preferences are instance-level settings on RoutingEngine and are
+    applied *after* neural scoring in route_intent(). They do not alter the
+    MLP model, the CandidateFilter hard policy, or S4 hard-fallback behaviour.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # DEGRADED agents' scores are multiplied by this value after neural scoring.
+    # Default 0.85 = 15 % penalty; use 1.0 to disable.
+    degraded_availability_penalty: float = Field(default=0.85, ge=0.0, le=1.0)
+
+    # Within this score band around the top candidate, prefer the lower-cost
+    # agent.  Default 0.05 = 5 % band; use 0.0 to disable tie-breaking.
+    cost_tie_band: float = Field(default=0.05, ge=0.0, le=1.0)
+
+    # Unused in v1 (reserved for future caller-level override).
+    low_confidence_threshold: float = Field(default=0.0, ge=0.0, le=1.0)
+
+
 class RoutingDecision(BaseModel):
     """Structured routing result without triggering execution."""
 
@@ -42,6 +64,138 @@ class RoutingDecision(BaseModel):
     selected_agent_id: str | None = None
     selected_score: float | None = None
     diagnostics: dict[str, Any] = Field(default_factory=dict)
+    # S4.2 confidence metrics — None when there are no candidates
+    routing_confidence: float | None = None
+    score_gap: float | None = None
+    confidence_band: Literal["high", "medium", "low"] | None = None
+
+
+# ---------------------------------------------------------------------------
+# S4.2 helper functions (module-level, not methods — no hidden state needed)
+# ---------------------------------------------------------------------------
+
+# Cost preference order: lower index = cheaper.
+_COST_PREFERENCE_ORDER: dict[AgentCostProfile, int] = {
+    AgentCostProfile.LOW: 0,
+    AgentCostProfile.MEDIUM: 1,
+    AgentCostProfile.UNKNOWN: 2,
+    AgentCostProfile.VARIABLE: 3,
+    AgentCostProfile.HIGH: 4,
+}
+
+
+def _apply_degraded_penalty(
+    scored: list[ScoredCandidate],
+    descriptors_by_id: dict[str, AgentDescriptor],
+    multiplier: float,
+) -> list[ScoredCandidate]:
+    """Return scored list re-sorted after applying a penalty to DEGRADED agents.
+
+    Agents whose availability is DEGRADED have their score multiplied by
+    *multiplier* (< 1.0 = penalty).  The list is then re-sorted descending.
+    Only the in-memory score representation is changed; descriptor state is
+    not mutated.
+
+    If *multiplier* is 1.0 (or no candidates are DEGRADED) the original order
+    is preserved.
+    """
+    if multiplier >= 1.0:
+        return scored
+
+    penalised: list[ScoredCandidate] = []
+    changed = False
+    for candidate in scored:
+        descriptor = descriptors_by_id.get(candidate.agent_id)
+        if descriptor is not None and descriptor.availability is AgentAvailability.DEGRADED:
+            # ScoredCandidate is a Pydantic model; create a new instance with
+            # the adjusted score to avoid mutating the original.
+            candidate = candidate.model_copy(update={"score": candidate.score * multiplier})
+            changed = True
+        penalised.append(candidate)
+
+    if not changed:
+        return scored
+
+    penalised.sort(key=lambda c: c.score, reverse=True)
+    return penalised
+
+
+def _apply_cost_tiebreak(
+    scored: list[ScoredCandidate],
+    descriptors_by_id: dict[str, AgentDescriptor],
+    band: float,
+) -> list[ScoredCandidate]:
+    """Within *band* of the top score prefer the cheaper agent.
+
+    Candidates whose score is within *band* of the top candidate's score are
+    sorted by cost profile (LOW < MEDIUM < UNKNOWN < VARIABLE < HIGH).
+    Candidates outside the band keep their original order relative to each
+    other.
+
+    If *band* is 0.0 or there is only one candidate, the list is returned
+    unchanged.
+    """
+    if band <= 0.0 or len(scored) <= 1:
+        return scored
+
+    if not scored:
+        return scored
+
+    top_score = scored[0].score
+    threshold = top_score - band
+
+    in_band: list[ScoredCandidate] = []
+    out_of_band: list[ScoredCandidate] = []
+    for candidate in scored:
+        if candidate.score >= threshold:
+            in_band.append(candidate)
+        else:
+            out_of_band.append(candidate)
+
+    if len(in_band) <= 1:
+        return scored
+
+    in_band.sort(
+        key=lambda c: (
+            _COST_PREFERENCE_ORDER.get(
+                descriptors_by_id[c.agent_id].cost_profile
+                if c.agent_id in descriptors_by_id
+                else AgentCostProfile.UNKNOWN,
+                _COST_PREFERENCE_ORDER[AgentCostProfile.UNKNOWN],
+            ),
+            # Secondary: higher score wins within same cost tier
+            -c.score,
+        )
+    )
+    return in_band + out_of_band
+
+
+def _compute_routing_metrics(
+    scored: list[ScoredCandidate],
+) -> tuple[float | None, float | None, Literal["high", "medium", "low"] | None]:
+    """Compute (routing_confidence, score_gap, confidence_band) from scored list.
+
+    - ``routing_confidence``: top candidate's score (honest proxy for certainty)
+    - ``score_gap``: difference between #1 and #2 score (0.0 if only one)
+    - ``confidence_band``: "high" ≥ 0.65, "medium" ≥ 0.35, "low" < 0.35
+
+    Returns (None, None, None) when there are no candidates.
+    """
+    if not scored:
+        return None, None, None
+
+    top_score = scored[0].score
+    second_score = scored[1].score if len(scored) > 1 else top_score
+    score_gap = top_score - second_score
+
+    if top_score >= 0.65:
+        confidence_band: Literal["high", "medium", "low"] = "high"
+    elif top_score >= 0.35:
+        confidence_band = "medium"
+    else:
+        confidence_band = "low"
+
+    return top_score, score_gap, confidence_band
 
 
 class RoutingEngine:
@@ -54,11 +208,13 @@ class RoutingEngine:
         candidate_filter: CandidateFilter | None = None,
         neural_policy: NeuralPolicyModel | None = None,
         performance_history: PerformanceHistoryStore | None = None,
+        preferences: RoutingPreferences | None = None,
     ) -> None:
         self.planner = planner or Planner()
         self.candidate_filter = candidate_filter or CandidateFilter()
         self.neural_policy = neural_policy or NeuralPolicyModel()
         self.performance_history = performance_history or PerformanceHistoryStore()
+        self.preferences = preferences or RoutingPreferences()
 
     def route(
         self,
@@ -127,6 +283,29 @@ class RoutingEngine:
             candidate_set,
             self.performance_history,
         )
+
+        # S4.2 — build a descriptor lookup for post-scoring adjustments
+        descriptors_by_id: dict[str, AgentDescriptor] = {
+            d.agent_id: d for d in descriptors
+        }
+
+        # S4.2 — apply DEGRADED availability penalty (post-MLP, pre-selection)
+        scored_candidates = _apply_degraded_penalty(
+            scored_candidates,
+            descriptors_by_id,
+            self.preferences.degraded_availability_penalty,
+        )
+
+        # S4.2 — apply cost tie-breaking within the top score band
+        scored_candidates = _apply_cost_tiebreak(
+            scored_candidates,
+            descriptors_by_id,
+            self.preferences.cost_tie_band,
+        )
+
+        # S4.2 — compute confidence metrics for audit / trace
+        routing_confidence, score_gap, confidence_band = _compute_routing_metrics(scored_candidates)
+
         capability_match_by_agent = {
             candidate.agent.agent_id: candidate.capability_match_score
             for candidate in candidate_set.candidates
@@ -161,6 +340,9 @@ class RoutingEngine:
             ranked_candidates=ranked_candidates,
             selected_agent_id=selected.agent_id if selected else None,
             selected_score=selected.score if selected else None,
+            routing_confidence=routing_confidence,
+            score_gap=score_gap,
+            confidence_band=confidence_band,
             diagnostics={
                 **(diagnostics or {}),
                 "candidate_filter": candidate_set.diagnostics,
