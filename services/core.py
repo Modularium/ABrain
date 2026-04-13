@@ -9,7 +9,6 @@ from typing import Any, Dict
 
 from core.decision.agent_descriptor import AgentAvailability, AgentTrustLevel
 from core.decision.agent_quality import compute_agent_quality
-from core.decision.performance_history import AgentPerformanceHistory
 from core.execution.adapters.registry import ExecutionAdapterRegistry
 from core.execution.dispatcher import ExecutionDispatcher
 from core.models import RequesterIdentity, RequesterType, ToolExecutionRequest
@@ -855,31 +854,23 @@ def _coerce_trust_level(raw: object) -> AgentTrustLevel:
         return AgentTrustLevel.UNKNOWN
 
 
-def _coerce_float(value: object, default: float) -> float:
-    try:
-        return float(value)  # type: ignore[arg-type]
-    except (TypeError, ValueError):
-        return default
-
-
-def _coerce_int(value: object, default: int) -> int:
-    try:
-        return int(value)  # type: ignore[arg-type]
-    except (TypeError, ValueError):
-        return default
-
-
 def list_agent_catalog() -> Dict[str, Any]:
     """Project currently listed agents into a control-plane-friendly catalog.
 
     Each entry is enriched with a deterministic ``quality`` summary derived
-    from the agent's static metadata signals (availability, trust_level, and
-    any performance-history fields present in the raw agent data).
+    from the canonical descriptor + performance-history state.
 
     Each entry is also enriched with an ``execution_capabilities`` field derived
     from the static adapter capability table — no IO required.
     """
+    from core.decision.agent_registry import AgentRegistry
+
     raw_agents = list_agents().get("agents", [])
+    descriptors_by_id = {
+        descriptor.agent_id: descriptor
+        for descriptor in AgentRegistry().list_descriptors()
+    }
+    perf_history = _get_learning_state()["perf_history"]
     _adapter_registry = ExecutionAdapterRegistry()
     catalog: list[dict[str, Any]] = []
     for item in raw_agents:
@@ -893,24 +884,27 @@ def list_agent_catalog() -> Dict[str, Any]:
         )
         raw_source_type = item.get("source_type") or ""
         raw_execution_kind = item.get("execution_kind") or ""
-
-        # Build a performance history from whatever static fields are available.
-        history = AgentPerformanceHistory(
-            success_rate=_coerce_float(item.get("success_rate"), 0.5),
-            avg_latency=_coerce_float(item.get("avg_response_time"), 1.0),
-            avg_cost=_coerce_float(item.get("estimated_cost_per_token"), 0.0),
-            recent_failures=_coerce_int(item.get("recent_failures"), 0),
-            execution_count=_coerce_int(item.get("execution_count"), 0),
-            load_factor=_coerce_float(item.get("load_factor"), 0.0),
-        )
+        descriptor = descriptors_by_id.get(agent_id)
 
         # Compute quality — safe; never raises.
         try:
             quality = compute_agent_quality(
                 agent_id=agent_id,
-                availability=_coerce_availability(raw_availability),
-                trust_level=_coerce_trust_level(raw_trust),
-                history=history,
+                availability=(
+                    descriptor.availability
+                    if descriptor is not None
+                    else _coerce_availability(raw_availability)
+                ),
+                trust_level=(
+                    descriptor.trust_level
+                    if descriptor is not None
+                    else _coerce_trust_level(raw_trust)
+                ),
+                history=(
+                    perf_history.get_for_descriptor(descriptor)
+                    if descriptor is not None
+                    else perf_history.get(agent_id)
+                ),
             ).model_dump(mode="json")
         except Exception:  # pragma: no cover — defensive
             quality = None
@@ -1633,6 +1627,7 @@ def _store_trace_explainability(
         }
         for candidate in (decision.ranked_candidates or [])
     ]
+    selected_candidate = decision.diagnostics.get("selected_candidate") or {}
     trace_context.store_explainability(
         ExplainabilityRecord(
             trace_id=trace_context.trace_id,
@@ -1651,11 +1646,17 @@ def _store_trace_explainability(
             policy_effect=policy_decision.effect if policy_decision is not None else None,
             scored_candidates=scored_candidates,
             metadata={
-                "routing_decision": decision.model_dump(mode="json"),
+                "task_type": decision.task_type,
+                "required_capabilities": list(decision.required_capabilities),
                 "rejected_agents": decision.diagnostics.get("rejected_agents") or [],
                 "candidate_filter": decision.diagnostics.get("candidate_filter") or {},
                 "created_agent": created_agent.model_dump(mode="json") if created_agent else None,
                 "winning_policy_rule": policy_decision.winning_rule_id,
+                "routing_model_source": decision.diagnostics.get("neural_policy_source"),
+                "selected_candidate_model_source": selected_candidate.get("model_source"),
+                "selected_candidate_feature_summary": (
+                    selected_candidate.get("feature_summary") or {}
+                ),
             },
         )
     )

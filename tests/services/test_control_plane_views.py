@@ -164,6 +164,70 @@ def test_list_agent_catalog_projects_existing_agent_listing(monkeypatch):
     assert "insufficient_data" in quality["attention_flags"]  # no execution data
 
 
+def test_list_agent_catalog_uses_canonical_performance_history(monkeypatch):
+    core = importlib.import_module("services.core")
+    descriptors = AgentRegistry(
+        [
+            AgentDescriptor(
+                agent_id="agent-1",
+                display_name="Flow Agent",
+                source_type=AgentSourceType.N8N,
+                execution_kind=AgentExecutionKind.WORKFLOW_ENGINE,
+                capabilities=["workflow.execute"],
+                availability=AgentAvailability.ONLINE,
+            )
+        ]
+    ).list_descriptors()
+    perf_history = PerformanceHistoryStore()
+    perf_history.set(
+        "agent-1",
+        perf_history.get("agent-1").model_copy(
+            update={
+                "success_rate": 1.0,
+                "avg_user_rating": 5.0,
+                "execution_count": 8,
+                "recent_failures": 0,
+            }
+        ),
+    )
+
+    monkeypatch.setattr(
+        core,
+        "list_agents",
+        lambda: {
+            "agents": [
+                {
+                    "id": "agent-1",
+                    "name": "Flow Agent",
+                    "capabilities": ["workflow.execute"],
+                    "traits": {"availability": "offline"},
+                    # Deliberately misleading raw values — quality must ignore them.
+                    "success_rate": 0.0,
+                    "execution_count": 0,
+                    "recent_failures": 99,
+                }
+            ]
+        },
+    )
+    monkeypatch.setattr(
+        "core.decision.agent_registry.AgentRegistry.list_descriptors",
+        lambda self, descriptors=descriptors: descriptors,
+    )
+    monkeypatch.setattr(
+        core,
+        "_get_learning_state",
+        lambda: {"perf_history": perf_history},
+    )
+
+    catalog = core.list_agent_catalog()["agents"]
+
+    quality = catalog[0]["quality"]
+    assert quality is not None
+    assert quality["execution_count"] == 8
+    assert quality["quality_band"] == "good"
+    assert "insufficient_data" not in quality["attention_flags"]
+
+
 def test_get_control_plane_overview_aggregates_canonical_reads(monkeypatch):
     core = importlib.import_module("services.core")
     monkeypatch.setattr(

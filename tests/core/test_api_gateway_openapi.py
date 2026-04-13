@@ -1,9 +1,10 @@
 import importlib
 import sys
+from functools import partial
 
+import anyio
+import httpx
 import pytest
-
-TestClient = pytest.importorskip("fastapi.testclient").TestClient
 
 pytestmark = pytest.mark.unit
 
@@ -13,13 +14,17 @@ def _gateway_module():
     return importlib.import_module("api_gateway.main")
 
 
+async def _request(app, method: str, path: str, **kwargs) -> httpx.Response:
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+        return await client.request(method, path, **kwargs)
+
+
 def test_docs_endpoints_are_available():
     gateway = _gateway_module()
-    client = TestClient(gateway.app)
-
-    docs_response = client.get("/docs")
-    redoc_response = client.get("/redoc")
-    openapi_response = client.get("/openapi.json")
+    docs_response = anyio.run(_request, gateway.app, "GET", "/docs")
+    redoc_response = anyio.run(_request, gateway.app, "GET", "/redoc")
+    openapi_response = anyio.run(_request, gateway.app, "GET", "/openapi.json")
 
     assert docs_response.status_code == 200
     assert "Swagger UI" in docs_response.text
@@ -30,9 +35,7 @@ def test_docs_endpoints_are_available():
 
 def test_openapi_exposes_only_canonical_control_plane_surface():
     gateway = _gateway_module()
-    client = TestClient(gateway.app)
-
-    payload = client.get("/openapi.json").json()
+    payload = anyio.run(_request, gateway.app, "GET", "/openapi.json").json()
     paths = payload["paths"]
 
     assert payload["info"]["title"] == "ABrain Developer API"
@@ -63,9 +66,7 @@ def test_openapi_exposes_only_canonical_control_plane_surface():
 
 def test_openapi_documents_control_plane_request_and_response_models():
     gateway = _gateway_module()
-    client = TestClient(gateway.app)
-
-    payload = client.get("/openapi.json").json()
+    payload = anyio.run(_request, gateway.app, "GET", "/openapi.json").json()
     task_run = payload["paths"]["/control-plane/tasks/run"]["post"]
     overview = payload["paths"]["/control-plane/overview"]["get"]
 
@@ -80,7 +81,6 @@ def test_openapi_documents_control_plane_request_and_response_models():
 
 def test_control_plane_overview_http_route_uses_canonical_core(monkeypatch):
     gateway = _gateway_module()
-    client = TestClient(gateway.app)
 
     monkeypatch.setattr(
         "services.core.get_control_plane_overview",
@@ -145,7 +145,7 @@ def test_control_plane_overview_http_route_uses_canonical_core(monkeypatch):
         },
     )
 
-    response = client.get("/control-plane/overview")
+    response = anyio.run(_request, gateway.app, "GET", "/control-plane/overview")
 
     assert response.status_code == 200
     payload = response.json()
@@ -156,7 +156,6 @@ def test_control_plane_overview_http_route_uses_canonical_core(monkeypatch):
 
 def test_control_plane_task_run_http_route_returns_documented_shape(monkeypatch):
     gateway = _gateway_module()
-    client = TestClient(gateway.app)
 
     monkeypatch.setattr(
         "services.core.run_task",
@@ -206,14 +205,19 @@ def test_control_plane_task_run_http_route_returns_documented_shape(monkeypatch)
         },
     )
 
-    response = client.post(
-        "/control-plane/tasks/run",
-        json={
-            "task_type": "system_status",
-            "description": "Check system health",
-            "input_data": {},
-            "options": {"timeout": 5},
-        },
+    response = anyio.run(
+        partial(
+            _request,
+            gateway.app,
+            "POST",
+            "/control-plane/tasks/run",
+            json={
+                "task_type": "system_status",
+                "description": "Check system health",
+                "input_data": {},
+                "options": {"timeout": 5},
+            },
+        )
     )
 
     assert response.status_code == 200

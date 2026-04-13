@@ -305,6 +305,7 @@ def test_trace_store_missing_forensics_columns_produce_none_defaults(tmp_path):
     assert exp.confidence_band is None
     assert exp.policy_effect is None
     assert exp.scored_candidates == []
+    assert "routing_decision" not in exp.metadata
 
 
 # ---------------------------------------------------------------------------
@@ -326,7 +327,7 @@ def test_replay_descriptor_built_from_explainability(tmp_path):
             routing_confidence=0.82,
             confidence_band="high",
             policy_effect="allow",
-            metadata={"routing_decision": {"task_type": "system_status", "required_capabilities": []}},
+            metadata={"task_type": "system_status", "required_capabilities": []},
         )
     )
     snapshot = store.get_trace(trace.trace_id)
@@ -355,7 +356,7 @@ def test_replay_descriptor_can_replay_true_when_complete(tmp_path):
             step_id="task",
             candidate_agent_ids=["agent-1"],
             routing_reason_summary="selected agent-1",
-            metadata={"routing_decision": {"task_type": "system_status"}},
+            metadata={"task_type": "system_status"},
         )
     )
     snapshot = store.get_trace(trace.trace_id)
@@ -374,7 +375,7 @@ def test_replay_descriptor_missing_task_type_when_not_in_metadata(tmp_path):
             step_id="task",
             candidate_agent_ids=["agent-1"],
             routing_reason_summary="selected agent-1",
-            # No task_type in metadata.routing_decision
+            # No task_type in metadata
         )
     )
     snapshot = store.get_trace(trace.trace_id)
@@ -393,7 +394,7 @@ def test_replay_descriptor_missing_candidates(tmp_path):
             step_id="task",
             candidate_agent_ids=[],  # no candidates
             routing_reason_summary="no candidates available",
-            metadata={"routing_decision": {"task_type": "system_status"}},
+            metadata={"task_type": "system_status"},
         )
     )
     snapshot = store.get_trace(trace.trace_id)
@@ -424,7 +425,7 @@ def test_replay_descriptor_multiple_steps(tmp_path):
                 routing_reason_summary=f"selected {agent}",
                 routing_confidence=0.9,
                 confidence_band="high",
-                metadata={"routing_decision": {"task_type": "code_review"}},
+                metadata={"task_type": "code_review"},
             )
         )
     snapshot = store.get_trace(trace.trace_id)
@@ -434,3 +435,55 @@ def test_replay_descriptor_multiple_steps(tmp_path):
     assert rd.step_inputs[0].step_id == "step-1"
     assert rd.step_inputs[1].step_id == "step-2"
     assert rd.can_replay is True
+
+
+def test_replay_descriptor_normalizes_legacy_routing_decision_metadata(tmp_path):
+    store = TraceStore(tmp_path / "t.sqlite3")
+    trace = store.create_trace("legacy_workflow")
+    store.store_explainability(
+        ExplainabilityRecord(
+            trace_id=trace.trace_id,
+            step_id="task",
+            candidate_agent_ids=["agent-1"],
+            routing_reason_summary="selected agent-1",
+            metadata={
+                "routing_decision": {
+                    "task_type": "system_status",
+                    "required_capabilities": ["system.read"],
+                    "routing_confidence": 0.91,
+                    "score_gap": 0.10,
+                    "confidence_band": "high",
+                    "ranked_candidates": [
+                        {
+                            "agent_id": "agent-1",
+                            "score": 0.91,
+                            "capability_match_score": 1.0,
+                        }
+                    ],
+                    "diagnostics": {
+                        "neural_policy_source": "default-mlp",
+                        "selected_candidate": {
+                            "model_source": "default-mlp",
+                            "feature_summary": {"success_rate": 0.9},
+                        },
+                    },
+                }
+            },
+        )
+    )
+
+    snapshot = store.get_trace(trace.trace_id)
+    assert snapshot is not None
+    exp = snapshot.explainability[0]
+    assert exp.routing_confidence == pytest.approx(0.91)
+    assert exp.score_gap == pytest.approx(0.10)
+    assert exp.confidence_band == "high"
+    assert exp.scored_candidates[0]["agent_id"] == "agent-1"
+    assert exp.metadata["task_type"] == "system_status"
+    assert exp.metadata["required_capabilities"] == ["system.read"]
+    assert "routing_decision" not in exp.metadata
+
+    rd = snapshot.replay_descriptor
+    assert rd is not None
+    assert rd.step_inputs[0].task_type == "system_status"
+    assert rd.step_inputs[0].required_capabilities == ["system.read"]

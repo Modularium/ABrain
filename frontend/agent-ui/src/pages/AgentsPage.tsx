@@ -135,6 +135,64 @@ export default function AgentsPage() {
                     )}
                   </div>
 
+                  <div className="mt-6 rounded-2xl border border-slate-200 p-4 dark:border-gray-700">
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">Execution Surface</p>
+                    {agent.execution_capabilities ? (
+                      <>
+                        <div className="mt-3 grid gap-3 md:grid-cols-2">
+                          <div className="rounded-2xl bg-slate-50 p-4 text-sm dark:bg-gray-900/40">
+                            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Protocol</p>
+                            <p className="mt-2 text-slate-800 dark:text-gray-100">
+                              {agent.execution_capabilities.execution_protocol}
+                            </p>
+                          </div>
+                          <div className="rounded-2xl bg-slate-50 p-4 text-sm dark:bg-gray-900/40">
+                            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Runtime</p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                                network {agent.execution_capabilities.requires_network ? 'required' : 'not-required'}
+                              </span>
+                              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                                local process {agent.execution_capabilities.requires_local_process ? 'required' : 'not-required'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
+                            cost reporting {agent.execution_capabilities.supports_cost_reporting ? 'yes' : 'no'}
+                          </span>
+                          <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
+                            token reporting {agent.execution_capabilities.supports_token_reporting ? 'yes' : 'no'}
+                          </span>
+                        </div>
+                        <div className="mt-4">
+                          <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Runtime Constraints</p>
+                          {agent.execution_capabilities.runtime_constraints.length ? (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {agent.execution_capabilities.runtime_constraints.map((constraint) => (
+                                <span
+                                  key={constraint}
+                                  className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-200"
+                                >
+                                  {constraint}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="mt-3 text-sm text-slate-500 dark:text-gray-400">
+                              No additional runtime constraints exposed.
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    ) : (
+                      <p className="mt-3 text-sm text-slate-500 dark:text-gray-400">
+                        No execution surface exposed for this agent.
+                      </p>
+                    )}
+                  </div>
+
                   <div className="mt-6 grid gap-3 md:grid-cols-2">
                     <div className="rounded-2xl bg-slate-50 p-4 text-sm dark:bg-gray-900/40">
                       <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Version</p>

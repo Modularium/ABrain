@@ -275,7 +275,10 @@ class TraceStore:
                 (trace_id,),
             ).fetchall()
         trace = self._row_to_trace(trace_row)
-        explainability = [self._row_to_explainability(row) for row in explain_rows]
+        explainability = self._normalize_explainability_records(
+            trace,
+            [self._row_to_explainability(row) for row in explain_rows],
+        )
         return TraceSnapshot(
             trace=trace,
             spans=[self._row_to_span(row) for row in span_rows],
@@ -402,6 +405,45 @@ class TraceStore:
 
     def _row_to_explainability(self, row: sqlite3.Row) -> ExplainabilityRecord:
         keys = row.keys()
+        metadata = json.loads(row["metadata_json"] or "{}")
+        legacy_routing = metadata.pop("routing_decision", None)
+        if isinstance(legacy_routing, dict):
+            metadata.setdefault("task_type", legacy_routing.get("task_type"))
+            metadata.setdefault(
+                "required_capabilities",
+                list(legacy_routing.get("required_capabilities") or []),
+            )
+            diagnostics = legacy_routing.get("diagnostics") or {}
+            selected_candidate = diagnostics.get("selected_candidate") or {}
+            metadata.setdefault(
+                "routing_model_source",
+                diagnostics.get("neural_policy_source"),
+            )
+            metadata.setdefault(
+                "selected_candidate_model_source",
+                selected_candidate.get("model_source"),
+            )
+            metadata.setdefault(
+                "selected_candidate_feature_summary",
+                selected_candidate.get("feature_summary") or {},
+            )
+
+        scored_candidates = (
+            json.loads(row["scored_candidates_json"] or "[]")
+            if "scored_candidates_json" in keys
+            else []
+        )
+        if not scored_candidates and isinstance(legacy_routing, dict):
+            scored_candidates = [
+                {
+                    "agent_id": candidate.get("agent_id"),
+                    "score": candidate.get("score"),
+                    "capability_match_score": candidate.get("capability_match_score"),
+                }
+                for candidate in (legacy_routing.get("ranked_candidates") or [])
+                if isinstance(candidate, dict)
+            ]
+
         return ExplainabilityRecord.model_validate(
             {
                 "trace_id": row["trace_id"],
@@ -414,14 +456,42 @@ class TraceStore:
                 "approval_required": bool(row["approval_required"]),
                 "approval_id": row["approval_id"],
                 # S10 forensics columns — present on new rows, absent on old rows
-                "routing_confidence": row["routing_confidence"] if "routing_confidence" in keys else None,
-                "score_gap": row["score_gap"] if "score_gap" in keys else None,
-                "confidence_band": row["confidence_band"] if "confidence_band" in keys else None,
+                "routing_confidence": (
+                    row["routing_confidence"]
+                    if "routing_confidence" in keys and row["routing_confidence"] is not None
+                    else (legacy_routing or {}).get("routing_confidence")
+                ),
+                "score_gap": (
+                    row["score_gap"]
+                    if "score_gap" in keys and row["score_gap"] is not None
+                    else (legacy_routing or {}).get("score_gap")
+                ),
+                "confidence_band": (
+                    row["confidence_band"]
+                    if "confidence_band" in keys and row["confidence_band"] is not None
+                    else (legacy_routing or {}).get("confidence_band")
+                ),
                 "policy_effect": row["policy_effect"] if "policy_effect" in keys else None,
-                "scored_candidates": json.loads(row["scored_candidates_json"] or "[]") if "scored_candidates_json" in keys else [],
-                "metadata": json.loads(row["metadata_json"] or "{}"),
+                "scored_candidates": scored_candidates,
+                "metadata": metadata,
             }
         )
+
+    def _normalize_explainability_records(
+        self,
+        trace: TraceRecord,
+        explainability: list[ExplainabilityRecord],
+    ) -> list[ExplainabilityRecord]:
+        """Lift legacy trace-level fields into the canonical explainability model."""
+        policy_effect = trace.metadata.get("policy_effect")
+        if not isinstance(policy_effect, str) or not policy_effect.strip():
+            return explainability
+        return [
+            record
+            if record.policy_effect is not None
+            else record.model_copy(update={"policy_effect": policy_effect})
+            for record in explainability
+        ]
 
     def _build_replay_descriptor(
         self,
@@ -436,21 +506,20 @@ class TraceStore:
         if not explainability:
             return None
 
-        # Extract task_type: prefer trace metadata, fallback to first routing_decision
+        # Extract task_type: prefer trace metadata, fallback to explainability metadata.
         task_type: str | None = trace.metadata.get("task_type")
         if not task_type:
-            first_routing = explainability[0].metadata.get("routing_decision") or {}
-            task_type = first_routing.get("task_type") or None
+            first_metadata = explainability[0].metadata
+            task_type = first_metadata.get("task_type") or None
 
         # Build per-step inputs
         step_inputs: list[ReplayStepInput] = []
         for exp in explainability:
-            routing_decision = exp.metadata.get("routing_decision") or {}
             step_inputs.append(
                 ReplayStepInput(
                     step_id=exp.step_id or "task",
-                    task_type=routing_decision.get("task_type") or task_type,
-                    required_capabilities=list(routing_decision.get("required_capabilities") or []),
+                    task_type=exp.metadata.get("task_type") or task_type,
+                    required_capabilities=list(exp.metadata.get("required_capabilities") or []),
                     selected_agent_id=exp.selected_agent_id,
                     candidate_agent_ids=list(exp.candidate_agent_ids),
                     routing_confidence=exp.routing_confidence,
