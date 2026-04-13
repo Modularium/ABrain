@@ -13,6 +13,7 @@ from core.decision.agent_quality import AgentQualitySummary
 from core.decision.plan_models import ExecutionPlan
 from core.decision.routing_engine import RoutingDecision
 from core.execution.adapters.base import ExecutionResult
+from core.execution.provider_capabilities import ExecutionCapabilities
 from core.governance.policy_models import PolicyDecision
 from core.orchestration.result_aggregation import PlanExecutionResult, PlanExecutionState
 
@@ -169,6 +170,7 @@ class AgentCatalogEntry(BaseModel):
     availability: str | None = None
     trust_level: str | None = None
     quality: AgentQualitySummary | None = None
+    execution_capabilities: ExecutionCapabilities | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 

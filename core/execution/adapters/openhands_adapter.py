@@ -10,6 +10,7 @@ import httpx
 
 from core.decision.agent_descriptor import AgentDescriptor, AgentExecutionKind, AgentSourceType
 from core.models.errors import StructuredError
+from core.execution.provider_capabilities import ExecutionCapabilities
 
 from .base import BaseExecutionAdapter, ExecutionResult
 
@@ -19,6 +20,15 @@ class OpenHandsExecutionAdapter(BaseExecutionAdapter):
 
     adapter_name = "openhands"
     conversation_path = "/api/v1/app-conversations"
+
+    capabilities = ExecutionCapabilities(
+        execution_protocol="http_api",
+        requires_network=True,
+        requires_local_process=False,
+        supports_cost_reporting=True,
+        supports_token_reporting=False,
+        runtime_constraints=["requires_service_endpoint"],
+    )
 
     def __init__(self, *, timeout_seconds: float = 10.0) -> None:
         self.timeout_seconds = timeout_seconds

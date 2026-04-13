@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from core.decision.agent_descriptor import AgentDescriptor
 from core.models.errors import StructuredError
 from core.model_context import ModelContext, TaskContext
+from core.execution.provider_capabilities import ExecutionCapabilities
 
 
 class ExecutionResult(BaseModel):
@@ -53,6 +54,15 @@ class BaseExecutionAdapter:
     """Base adapter contract for executing a task via an external agent."""
 
     adapter_name = "base"
+
+    # Subclasses override this with their specific static capabilities.
+    capabilities: ExecutionCapabilities = ExecutionCapabilities(
+        execution_protocol="http_api",
+        requires_network=False,
+        requires_local_process=False,
+        supports_cost_reporting=False,
+        supports_token_reporting=False,
+    )
 
     def validate(self, task: TaskContext | ModelContext | Mapping[str, Any], agent_descriptor: AgentDescriptor) -> None:
         """Validate that the adapter can execute the given task for the descriptor."""

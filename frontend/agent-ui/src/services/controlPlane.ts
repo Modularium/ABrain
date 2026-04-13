@@ -53,6 +53,15 @@ export interface AgentQualitySummary {
   execution_count: number
 }
 
+export interface ExecutionCapabilities {
+  execution_protocol: 'cli_process' | 'http_api' | 'webhook_json' | 'tool_dispatch'
+  requires_network: boolean
+  requires_local_process: boolean
+  supports_cost_reporting: boolean
+  supports_token_reporting: boolean
+  runtime_constraints: string[]
+}
+
 export interface ControlPlaneAgent {
   agent_id: string
   display_name: string
@@ -62,6 +71,7 @@ export interface ControlPlaneAgent {
   availability?: string | null
   trust_level?: string | null
   quality?: AgentQualitySummary | null
+  execution_capabilities?: ExecutionCapabilities | null
   metadata: Record<string, unknown>
 }
 

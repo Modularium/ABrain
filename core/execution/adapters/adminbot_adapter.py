@@ -7,6 +7,7 @@ from typing import Any
 
 from core.decision.agent_descriptor import AgentDescriptor
 from core.models.errors import CoreExecutionError, StructuredError
+from core.execution.provider_capabilities import ExecutionCapabilities
 
 from .base import BaseExecutionAdapter, ExecutionResult
 
@@ -15,6 +16,15 @@ class AdminBotExecutionAdapter(BaseExecutionAdapter):
     """Use the hardened AdminBot tools as a system-executor adapter."""
 
     adapter_name = "adminbot"
+
+    capabilities = ExecutionCapabilities(
+        execution_protocol="tool_dispatch",
+        requires_network=False,
+        requires_local_process=False,
+        supports_cost_reporting=False,
+        supports_token_reporting=False,
+        runtime_constraints=["requires_adminbot_tools"],
+    )
 
     _TASK_TO_TOOL = {
         "system_status": "adminbot_system_status",

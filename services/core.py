@@ -10,6 +10,7 @@ from typing import Any, Dict
 from core.decision.agent_descriptor import AgentAvailability, AgentTrustLevel
 from core.decision.agent_quality import compute_agent_quality
 from core.decision.performance_history import AgentPerformanceHistory
+from core.execution.adapters.registry import ExecutionAdapterRegistry
 from core.execution.dispatcher import ExecutionDispatcher
 from core.models import RequesterIdentity, RequesterType, ToolExecutionRequest
 from core.model_context import ModelContext
@@ -874,8 +875,12 @@ def list_agent_catalog() -> Dict[str, Any]:
     Each entry is enriched with a deterministic ``quality`` summary derived
     from the agent's static metadata signals (availability, trust_level, and
     any performance-history fields present in the raw agent data).
+
+    Each entry is also enriched with an ``execution_capabilities`` field derived
+    from the static adapter capability table — no IO required.
     """
     raw_agents = list_agents().get("agents", [])
+    _adapter_registry = ExecutionAdapterRegistry()
     catalog: list[dict[str, Any]] = []
     for item in raw_agents:
         if not isinstance(item, dict):
@@ -886,6 +891,8 @@ def list_agent_catalog() -> Dict[str, Any]:
         agent_id = (
             item.get("id") or item.get("agent_id") or item.get("name") or "unknown-agent"
         )
+        raw_source_type = item.get("source_type") or ""
+        raw_execution_kind = item.get("execution_kind") or ""
 
         # Build a performance history from whatever static fields are available.
         history = AgentPerformanceHistory(
@@ -908,6 +915,10 @@ def list_agent_catalog() -> Dict[str, Any]:
         except Exception:  # pragma: no cover — defensive
             quality = None
 
+        # Look up static execution capabilities for this (execution_kind, source_type).
+        exec_caps = _adapter_registry.get_capabilities_for(raw_execution_kind, raw_source_type)
+        exec_caps_dict = exec_caps.model_dump(mode="json") if exec_caps is not None else None
+
         catalog.append(
             {
                 "agent_id": agent_id,
@@ -920,6 +931,7 @@ def list_agent_catalog() -> Dict[str, Any]:
                 "availability": raw_availability,
                 "trust_level": raw_trust,
                 "quality": quality,
+                "execution_capabilities": exec_caps_dict,
                 "metadata": {
                     "domain": item.get("domain"),
                     "role": item.get("role"),

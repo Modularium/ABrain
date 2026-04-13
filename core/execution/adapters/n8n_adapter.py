@@ -12,6 +12,7 @@ import httpx
 from core.decision.agent_descriptor import AgentDescriptor, AgentExecutionKind, AgentSourceType
 from core.models.errors import StructuredError
 from core.model_context import ModelContext, TaskContext
+from core.execution.provider_capabilities import ExecutionCapabilities
 
 from .base import BaseExecutionAdapter, ExecutionResult
 
@@ -20,6 +21,15 @@ class N8NExecutionAdapter(BaseExecutionAdapter):
     """Execute workflow-style tasks through a fixed n8n webhook contract."""
 
     adapter_name = "n8n"
+
+    capabilities = ExecutionCapabilities(
+        execution_protocol="webhook_json",
+        requires_network=True,
+        requires_local_process=False,
+        supports_cost_reporting=True,
+        supports_token_reporting=False,
+        runtime_constraints=["requires_webhook_url"],
+    )
 
     def __init__(self, *, timeout_seconds: float = 15.0) -> None:
         self.timeout_seconds = timeout_seconds

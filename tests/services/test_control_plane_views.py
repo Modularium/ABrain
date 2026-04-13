@@ -151,6 +151,8 @@ def test_list_agent_catalog_projects_existing_agent_listing(monkeypatch):
     assert entry["execution_kind"] is None
     assert entry["availability"] == "online"
     assert entry["trust_level"] is None
+    # S9: no adapter registered for (None, None) → capabilities absent
+    assert entry["execution_capabilities"] is None
     assert entry["metadata"]["version"] == "1.2.0"
     assert entry["metadata"]["projection_source"] == "services.core.list_agents"
     # S8: quality summary must be present (availability=online, no execution data → good/insufficient_data)
