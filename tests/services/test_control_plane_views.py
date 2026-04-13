@@ -216,3 +216,144 @@ def test_get_control_plane_overview_aggregates_canonical_reads(monkeypatch):
     }
     assert overview["system"]["layers"][-1]["name"] == "MCP v2"
     assert overview["recent_governance"][0]["effect"] == "allow"
+
+
+# ---------------------------------------------------------------------------
+# S7 health summary tests
+# ---------------------------------------------------------------------------
+
+def _make_overview_patches(monkeypatch, *, agents=None, approvals=None, plans=None):
+    """Helper: patch services.core reads with controlled data."""
+    core = importlib.import_module("services.core")
+    monkeypatch.setattr(core, "list_agent_catalog", lambda: {"agents": agents or []})
+    monkeypatch.setattr(core, "list_pending_approvals", lambda: {"approvals": approvals or []})
+    monkeypatch.setattr(core, "list_recent_traces", lambda limit=5: {"traces": []})
+    monkeypatch.setattr(core, "list_recent_plans", lambda limit=5: {"plans": plans or []})
+    monkeypatch.setattr(core, "list_recent_governance_decisions", lambda limit=5: {"governance": []})
+    monkeypatch.setattr(core, "get_governance_state", lambda: {"engine": "PolicyEngine", "registry": "R", "policy_path": None})
+    return core
+
+
+def test_health_section_present_in_overview(monkeypatch):
+    core = _make_overview_patches(monkeypatch)
+    overview = core.get_control_plane_overview()
+    assert "health" in overview
+    health = overview["health"]
+    assert "overall" in health
+    assert health["overall"] in {"healthy", "attention", "degraded"}
+
+
+def test_health_healthy_when_all_clear(monkeypatch):
+    core = _make_overview_patches(monkeypatch, agents=[], approvals=[], plans=[])
+    overview = core.get_control_plane_overview()
+    assert overview["health"]["overall"] == "healthy"
+    assert overview["health"]["attention_items"] == []
+
+
+def test_health_attention_when_pending_approvals(monkeypatch):
+    core = _make_overview_patches(
+        monkeypatch,
+        approvals=[{"approval_id": "ap-1", "status": "pending"}],
+    )
+    overview = core.get_control_plane_overview()
+    health = overview["health"]
+    assert health["overall"] == "attention"
+    assert health["pending_approval_count"] == 1
+    labels = [item["label"] for item in health["attention_items"]]
+    assert any("approval" in label.lower() for label in labels)
+
+
+def test_health_attention_when_paused_plan(monkeypatch):
+    core = _make_overview_patches(
+        monkeypatch,
+        plans=[{"plan_id": "plan-1", "workflow_name": "My Flow", "status": "paused"}],
+    )
+    overview = core.get_control_plane_overview()
+    health = overview["health"]
+    assert health["overall"] == "attention"
+    assert health["paused_plan_count"] == 1
+
+
+def test_health_attention_when_failed_plan(monkeypatch):
+    core = _make_overview_patches(
+        monkeypatch,
+        plans=[{"plan_id": "plan-f", "workflow_name": "Bad Flow", "status": "failed"}],
+    )
+    overview = core.get_control_plane_overview()
+    health = overview["health"]
+    assert health["overall"] == "attention"
+    assert health["failed_plan_count"] == 1
+
+
+def test_health_attention_when_degraded_agent(monkeypatch):
+    core = _make_overview_patches(
+        monkeypatch,
+        agents=[{"agent_id": "ag-1", "display_name": "Sluggish Agent", "availability": "degraded"}],
+    )
+    overview = core.get_control_plane_overview()
+    health = overview["health"]
+    assert health["overall"] == "attention"
+    assert health["degraded_agent_count"] == 1
+
+
+def test_health_degraded_when_offline_agent(monkeypatch):
+    core = _make_overview_patches(
+        monkeypatch,
+        agents=[{"agent_id": "ag-2", "display_name": "Dead Agent", "availability": "offline"}],
+    )
+    overview = core.get_control_plane_overview()
+    health = overview["health"]
+    assert health["overall"] == "degraded"
+    assert health["offline_agent_count"] == 1
+
+
+def test_health_layer_statuses_in_overview(monkeypatch):
+    core = _make_overview_patches(monkeypatch)
+    overview = core.get_control_plane_overview()
+    layers = overview["system"]["layers"]
+    layer_names = [l["name"] for l in layers]
+    assert "Decision" in layer_names
+    assert "Governance" in layer_names
+    assert "MCP v2" in layer_names
+    # All reads succeed in this test — all layers should be available
+    for layer in layers:
+        assert layer["status"] == "available"
+
+
+def test_health_warnings_surface_in_has_warnings(monkeypatch):
+    core = importlib.import_module("services.core")
+    # Simulate a failed read by raising from list_agent_catalog
+    monkeypatch.setattr(core, "list_agent_catalog", lambda: (_ for _ in ()).throw(RuntimeError("disk error")))
+    monkeypatch.setattr(core, "list_pending_approvals", lambda: {"approvals": []})
+    monkeypatch.setattr(core, "list_recent_traces", lambda limit=5: {"traces": []})
+    monkeypatch.setattr(core, "list_recent_plans", lambda limit=5: {"plans": []})
+    monkeypatch.setattr(core, "list_recent_governance_decisions", lambda limit=5: {"governance": []})
+    monkeypatch.setattr(core, "get_governance_state", lambda: {"engine": "E", "registry": "R", "policy_path": None})
+
+    overview = core.get_control_plane_overview()
+    assert overview["health"]["has_warnings"] is True
+    assert overview["system"]["warnings"]  # at least one warning string captured
+
+
+def test_compute_health_summary_direct():
+    """Unit-test _compute_health_summary in isolation."""
+    core = importlib.import_module("services.core")
+    summary = core._compute_health_summary(
+        agents=[
+            {"agent_id": "a1", "availability": "degraded"},
+            {"agent_id": "a2", "availability": "online"},
+        ],
+        approvals=[{"approval_id": "ap-1"}],
+        plans=[
+            {"plan_id": "p1", "status": "failed"},
+            {"plan_id": "p2", "status": "completed"},
+        ],
+        warnings=[],
+        layers=[{"name": "Decision", "status": "available"}],
+    )
+    assert summary["degraded_agent_count"] == 1
+    assert summary["offline_agent_count"] == 0
+    assert summary["failed_plan_count"] == 1
+    assert summary["pending_approval_count"] == 1
+    assert summary["overall"] == "attention"
+    assert len(summary["attention_items"]) > 0

@@ -315,6 +315,34 @@ class ControlPlaneOverviewCounts(BaseModel):
     recent_governance_events: int
 
 
+class HealthAttentionItem(BaseModel):
+    """A single operator-relevant attention item in the health summary."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    level: str = Field(description="'warning' or 'info'")
+    label: str
+    detail: str
+
+
+class ControlPlaneHealthSummary(BaseModel):
+    """Derived health summary computed from canonical control-plane signals.
+
+    Computed inside ``services/core._compute_health_summary`` — no new IO.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    overall: str = Field(description="'healthy', 'attention', or 'degraded'")
+    degraded_agent_count: int = 0
+    offline_agent_count: int = 0
+    paused_plan_count: int = 0
+    failed_plan_count: int = 0
+    pending_approval_count: int = 0
+    has_warnings: bool = False
+    attention_items: list[HealthAttentionItem] = Field(default_factory=list)
+
+
 class ControlPlaneOverviewResponse(BaseModel):
     """Canonical overview response for the external control plane API."""
 
@@ -322,6 +350,7 @@ class ControlPlaneOverviewResponse(BaseModel):
 
     system: ControlPlaneSystemSummary
     summary: ControlPlaneOverviewCounts
+    health: ControlPlaneHealthSummary
     agents: list[AgentCatalogEntry] = Field(default_factory=list)
     pending_approvals: list[ApprovalRequest] = Field(default_factory=list)
     recent_traces: list[TraceRecord] = Field(default_factory=list)
