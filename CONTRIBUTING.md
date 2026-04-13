@@ -15,12 +15,21 @@ Vielen Dank für dein Interesse an ABrain. Dieses Projekt verwendet GitHub Flow.
    ./scripts/abrain setup deps
    ./scripts/abrain setup cli
    ```
-4. Für das Frontend:
+4. Fuer lokale Kern- und Debug-Checks musst du keine internen Module direkt
+   importieren. Nutze die kanonische CLI:
+   ```bash
+   ./scripts/abrain health
+   ./scripts/abrain task run system_status "Check system health"
+   ./scripts/abrain plan list
+   ./scripts/abrain approval list
+   ./scripts/abrain trace list
+   ```
+5. Für das Frontend:
    ```bash
    cd frontend/agent-ui
    npm ci
    ```
-5. Richte optionale Hooks ein:
+6. Richte optionale Hooks ein:
    ```bash
    pip install pre-commit
    pre-commit install
@@ -40,6 +49,9 @@ ruff check .
   tests/state tests/mcp tests/approval tests/orchestration \
   tests/execution tests/decision tests/adapters tests/core \
   tests/services tests/integration/test_node_export.py
+python -m py_compile scripts/abrain_control.py services/core.py api_gateway/main.py
+bash scripts/abrain help
+bash scripts/agentnn help
 cd frontend/agent-ui && npm run type-check && npm run build && npm run lint
 ```
 

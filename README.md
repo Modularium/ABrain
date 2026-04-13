@@ -84,6 +84,16 @@ Start the API gateway:
 .venv/bin/python -m uvicorn api_gateway.main:app --reload
 ```
 
+Run the same core paths directly from the canonical CLI:
+
+```bash
+./scripts/abrain task run system_status "Check system health"
+./scripts/abrain plan run workflow_automation "Trigger deployment workflow"
+./scripts/abrain approval list
+./scripts/abrain trace list
+./scripts/abrain health --json
+```
+
 Run a control-plane task:
 
 ```bash
@@ -189,6 +199,13 @@ npm run build
 ./scripts/abrain help
 ./scripts/abrain setup
 ./scripts/abrain status
+./scripts/abrain task run system_status "Check system health"
+./scripts/abrain plan list
+./scripts/abrain approval list
+./scripts/abrain trace show <trace_id>
+./scripts/abrain explain <trace_id>
+./scripts/abrain agent list
+./scripts/abrain health --json
 ```
 
 `./scripts/agentnn` remains only as a thin compatibility wrapper around the

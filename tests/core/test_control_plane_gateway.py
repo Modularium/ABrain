@@ -55,28 +55,27 @@ def test_control_plane_overview_aggregates_core_reads(monkeypatch):
     gateway = importlib.import_module("api_gateway.main")
 
     monkeypatch.setattr(
-        "services.core.list_agent_catalog",
-        lambda: {"agents": [{"agent_id": "agent-1", "display_name": "Agent One"}]},
-    )
-    monkeypatch.setattr(
-        "services.core.list_pending_approvals",
-        lambda: {"approvals": [{"approval_id": "approval-1"}]},
-    )
-    monkeypatch.setattr(
-        "services.core.list_recent_traces",
-        lambda limit=8: {"traces": [{"trace_id": "trace-1"}]},
-    )
-    monkeypatch.setattr(
-        "services.core.list_recent_plans",
-        lambda limit=6: {"plans": [{"trace_id": "trace-plan-1"}]},
-    )
-    monkeypatch.setattr(
-        "services.core.list_recent_governance_decisions",
-        lambda limit=8: {"governance": [{"trace_id": "trace-1", "effect": "allow"}]},
-    )
-    monkeypatch.setattr(
-        "services.core.get_governance_state",
-        lambda: {"engine": "PolicyEngine", "registry": "PolicyRegistry", "policy_path": None},
+        "services.core.get_control_plane_overview",
+        lambda **kwargs: {
+            "summary": {
+                "agent_count": 1,
+                "pending_approvals": 1,
+                "recent_traces": 1,
+                "recent_plans": 1,
+                "recent_governance_events": 1,
+            },
+            "system": {
+                "name": "ABrain Control Plane",
+                "layers": [{"name": "MCP v2", "status": "available"}],
+                "governance": {"engine": "PolicyEngine", "registry": "PolicyRegistry", "policy_path": None},
+                "warnings": [],
+            },
+            "agents": [{"agent_id": "agent-1", "display_name": "Agent One"}],
+            "pending_approvals": [{"approval_id": "approval-1"}],
+            "recent_traces": [{"trace_id": "trace-1"}],
+            "recent_plans": [{"trace_id": "trace-plan-1"}],
+            "recent_governance": [{"trace_id": "trace-1", "effect": "allow"}],
+        },
     )
 
     request = types.SimpleNamespace(headers={})

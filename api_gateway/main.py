@@ -94,26 +94,6 @@ class ApprovalDecisionRequest(BaseModel):
     rating: float | None = Field(default=None, ge=0.0, le=1.0)
 
 
-def _control_plane_layers() -> list[dict[str, str]]:
-    return [
-        {"name": "Decision", "status": "available"},
-        {"name": "Execution", "status": "available"},
-        {"name": "Learning", "status": "available"},
-        {"name": "Orchestration", "status": "available"},
-        {"name": "Approval", "status": "available"},
-        {"name": "Governance", "status": "available"},
-        {"name": "Audit/Trace", "status": "available"},
-        {"name": "MCP v2", "status": "available"},
-    ]
-
-
-def _safe_control_plane_call(label: str, func) -> tuple[Any, list[str]]:
-    try:
-        return func(), []
-    except Exception as exc:  # pragma: no cover - defensive UI containment
-        return None, [f"{label}_unavailable:{exc.__class__.__name__}"]
-
-
 def _decode_token(token: str) -> dict | None:
     try:
         return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
@@ -219,57 +199,15 @@ async def list_agents_route(request: Request) -> dict:
 async def control_plane_overview(request: Request) -> dict:
     """Return a thin overview assembled from canonical control-plane reads."""
     check_scope(request, "agents:read")
-    from services.core import (
-        get_governance_state,
-        list_agent_catalog,
-        list_pending_approvals,
-        list_recent_governance_decisions,
-        list_recent_plans,
-        list_recent_traces,
+    from services.core import get_control_plane_overview
+
+    return get_control_plane_overview(
+        agent_limit=5,
+        approval_limit=5,
+        trace_limit=5,
+        plan_limit=5,
+        governance_limit=5,
     )
-
-    warnings: list[str] = []
-    agents_result, issues = _safe_control_plane_call("agents", list_agent_catalog)
-    warnings.extend(issues)
-    approvals_result, issues = _safe_control_plane_call("approvals", list_pending_approvals)
-    warnings.extend(issues)
-    traces_result, issues = _safe_control_plane_call("traces", lambda: list_recent_traces(limit=8))
-    warnings.extend(issues)
-    plans_result, issues = _safe_control_plane_call("plans", lambda: list_recent_plans(limit=6))
-    warnings.extend(issues)
-    governance_result, issues = _safe_control_plane_call(
-        "governance", lambda: list_recent_governance_decisions(limit=8)
-    )
-    warnings.extend(issues)
-    governance_state, issues = _safe_control_plane_call("governance_state", get_governance_state)
-    warnings.extend(issues)
-
-    agents = (agents_result or {}).get("agents", [])
-    approvals = (approvals_result or {}).get("approvals", [])
-    traces = (traces_result or {}).get("traces", [])
-    plans = (plans_result or {}).get("plans", [])
-    governance = (governance_result or {}).get("governance", [])
-
-    return {
-        "system": {
-            "name": "ABrain Control Plane",
-            "layers": _control_plane_layers(),
-            "governance": governance_state or {},
-            "warnings": warnings,
-        },
-        "summary": {
-            "agent_count": len(agents),
-            "pending_approvals": len(approvals),
-            "recent_traces": len(traces),
-            "recent_plans": len(plans),
-            "recent_governance_events": len(governance),
-        },
-        "agents": agents[:5],
-        "pending_approvals": approvals[:5],
-        "recent_traces": traces[:5],
-        "recent_plans": plans[:5],
-        "recent_governance": governance[:5],
-    }
 
 
 @api_route(version="dev")

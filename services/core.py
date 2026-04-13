@@ -15,6 +15,7 @@ from core.tools import build_default_registry
 __all__ = [
     "approve_plan_step",
     "execute_tool",
+    "get_control_plane_overview",
     "get_explainability",
     "get_governance_state",
     "get_trace",
@@ -863,6 +864,90 @@ def list_agent_catalog() -> Dict[str, Any]:
             }
         )
     return {"agents": catalog}
+
+
+def get_control_plane_overview(
+    *,
+    agent_limit: int = 5,
+    approval_limit: int = 5,
+    trace_limit: int = 5,
+    plan_limit: int = 5,
+    governance_limit: int = 5,
+) -> Dict[str, Any]:
+    """Return the canonical control-plane overview for API and CLI callers."""
+
+    def _safe_read(label: str, func) -> tuple[Any, list[str]]:
+        try:
+            return func(), []
+        except Exception as exc:  # pragma: no cover - defensive operator read path
+            return None, [f"{label}_unavailable:{exc.__class__.__name__}"]
+
+    warnings: list[str] = []
+    agents_result, issues = _safe_read(
+        "agents",
+        lambda: list_agent_catalog()["agents"][: max(0, agent_limit)],
+    )
+    warnings.extend(issues)
+    approvals_result, issues = _safe_read(
+        "approvals",
+        lambda: list_pending_approvals()["approvals"][: max(0, approval_limit)],
+    )
+    warnings.extend(issues)
+    traces_result, issues = _safe_read(
+        "traces",
+        lambda: list_recent_traces(limit=max(1, trace_limit))["traces"][: max(0, trace_limit)],
+    )
+    warnings.extend(issues)
+    plans_result, issues = _safe_read(
+        "plans",
+        lambda: list_recent_plans(limit=max(1, plan_limit))["plans"][: max(0, plan_limit)],
+    )
+    warnings.extend(issues)
+    governance_result, issues = _safe_read(
+        "governance",
+        lambda: list_recent_governance_decisions(limit=max(1, governance_limit))["governance"][
+            : max(0, governance_limit)
+        ],
+    )
+    warnings.extend(issues)
+    governance_state, issues = _safe_read("governance_state", get_governance_state)
+    warnings.extend(issues)
+
+    agents = list(agents_result or [])
+    approvals = list(approvals_result or [])
+    traces = list(traces_result or [])
+    plans = list(plans_result or [])
+    governance = list(governance_result or [])
+
+    return {
+        "system": {
+            "name": "ABrain Control Plane",
+            "layers": [
+                {"name": "Decision", "status": "available"},
+                {"name": "Execution", "status": "available"},
+                {"name": "Learning", "status": "available"},
+                {"name": "Orchestration", "status": "available"},
+                {"name": "Approval", "status": "available"},
+                {"name": "Governance", "status": "available"},
+                {"name": "Audit/Trace", "status": "available"},
+                {"name": "MCP v2", "status": "available"},
+            ],
+            "governance": governance_state or {},
+            "warnings": warnings,
+        },
+        "summary": {
+            "agent_count": len(agents),
+            "pending_approvals": len(approvals),
+            "recent_traces": len(traces),
+            "recent_plans": len(plans),
+            "recent_governance_events": len(governance),
+        },
+        "agents": agents,
+        "pending_approvals": approvals,
+        "recent_traces": traces,
+        "recent_plans": plans,
+        "recent_governance": governance,
+    }
 
 
 def get_governance_state() -> Dict[str, Any]:

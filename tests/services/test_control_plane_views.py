@@ -164,3 +164,55 @@ def test_list_agent_catalog_projects_existing_agent_listing(monkeypatch):
             },
         }
     ]
+
+
+def test_get_control_plane_overview_aggregates_canonical_reads(monkeypatch):
+    core = importlib.import_module("services.core")
+    monkeypatch.setattr(
+        core,
+        "list_agent_catalog",
+        lambda: {"agents": [{"agent_id": "agent-1", "display_name": "Agent One"}]},
+    )
+    monkeypatch.setattr(
+        core,
+        "list_pending_approvals",
+        lambda: {"approvals": [{"approval_id": "approval-1"}]},
+    )
+    monkeypatch.setattr(
+        core,
+        "list_recent_traces",
+        lambda limit=3: {"traces": [{"trace_id": f"trace-{limit}"}]},
+    )
+    monkeypatch.setattr(
+        core,
+        "list_recent_plans",
+        lambda limit=3: {"plans": [{"plan_id": f"plan-{limit}"}]},
+    )
+    monkeypatch.setattr(
+        core,
+        "list_recent_governance_decisions",
+        lambda limit=3: {"governance": [{"trace_id": f"governance-{limit}", "effect": "allow"}]},
+    )
+    monkeypatch.setattr(
+        core,
+        "get_governance_state",
+        lambda: {"engine": "PolicyEngine", "registry": "PolicyRegistry", "policy_path": None},
+    )
+
+    overview = core.get_control_plane_overview(
+        agent_limit=3,
+        approval_limit=3,
+        trace_limit=3,
+        plan_limit=3,
+        governance_limit=3,
+    )
+
+    assert overview["summary"] == {
+        "agent_count": 1,
+        "pending_approvals": 1,
+        "recent_traces": 1,
+        "recent_plans": 1,
+        "recent_governance_events": 1,
+    }
+    assert overview["system"]["layers"][-1]["name"] == "MCP v2"
+    assert overview["recent_governance"][0]["effect"] == "allow"

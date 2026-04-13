@@ -16,6 +16,7 @@ LEGACY_CONFIG_FILE="$LEGACY_STATE_DIR/config.json"
 ABRAIN_STATUS_FILE="$ABRAIN_STATE_DIR/status.json"
 LEGACY_STATUS_FILE="$LEGACY_STATE_DIR/status.json"
 ABRAIN_CLI_ALIAS="${ABRAIN_CLI_ALIAS:-}"
+ABRAIN_OUTPUT_FORMAT="${ABRAIN_OUTPUT_FORMAT:-text}"
 
 source_if_exists() {
     local file="$1"
@@ -174,6 +175,32 @@ run_setup_script() {
     exec "$SCRIPT_DIR/setup.sh" "$@"
 }
 
+find_python_for_control_plane() {
+    local venv_python="$REPO_ROOT/.venv/bin/python"
+
+    if [[ -x "$venv_python" ]]; then
+        echo "$venv_python"
+        return 0
+    fi
+
+    if has_command python3; then
+        command -v python3
+        return 0
+    fi
+
+    log_err "Python 3 ist nicht verfügbar"
+    exit 1
+}
+
+run_control_plane_bridge() {
+    local python_bin=""
+    python_bin="$(find_python_for_control_plane)"
+
+    PYTHONPATH="$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}" \
+    ABRAIN_OUTPUT="$ABRAIN_OUTPUT_FORMAT" \
+    exec "$python_bin" -m scripts.abrain_control "$@"
+}
+
 print_banner() {
     cat << EOF
 ${BLUE}
@@ -204,6 +231,16 @@ OPERATIONS:
   logs <service>         Logs eines Services anzeigen
   deploy <target>        Lokales Deployment ausführen
 
+DEVELOPER & OPERATIONS:
+  task run ...           Task über den kanonischen Kernpfad auslösen
+  plan run ...           Plan über den kanonischen Kernpfad auslösen
+  plan list              Letzte Pläne und Planstatus anzeigen
+  approval <action>      Pending approvals listen oder entscheiden
+  trace <action>         Traces listen oder im Detail anzeigen
+  explain <trace_id>     Explainability eines Trace anzeigen
+  agent list             Registrierte Agenten aus dem Kern anzeigen
+  health                 Kernstatus, Governance und Startpfade anzeigen
+
 DIAGNOSTICS:
   status                 System- und Runtime-Status anzeigen
   validate               Grundlegende Validierung ausführen
@@ -224,6 +261,7 @@ GLOBAL OPTIONS:
   --dry-run              Nur anzeigen, nicht ausführen
   --yes, -y              Bestätigungen automatisch annehmen
   --config FILE          Alternative Shell-Konfiguration laden
+  --json                 Maschinenlesbare JSON-Ausgabe für Control-Plane-Kommandos
   --version              Kurzform für 'version'
   --help, -h             Kurzform für 'help'
 
@@ -231,6 +269,9 @@ BEISPIELE:
   ${CLI_NAME} help
   ${CLI_NAME} setup
   ${CLI_NAME} status --watch
+  ${CLI_NAME} task run system_status "Check system health"
+  ${CLI_NAME} approval list
+  ${CLI_NAME} trace list --json
   ${CLI_NAME} config show
   ${CLI_NAME} test unit
   ${CLI_NAME} doctor --fix
@@ -370,6 +411,95 @@ BEISPIELE:
   ${CLI_NAME} config validate
 EOF
             ;;
+        task)
+            cat << EOF
+${CYAN}${CLI_NAME} task${NC} - Task direkt ueber services/core.py starten
+
+Usage: ${CLI_NAME} task run <task_type> [description] [options]
+
+BEISPIELE:
+  ${CLI_NAME} task run system_status "Check system health"
+  ${CLI_NAME} task run code_review --input path=services/core.py
+  ${CLI_NAME} task run system_status --json
+
+HINWEIS:
+  Dieses Kommando ist eine duenne Kontrollschicht ueber den kanonischen
+  Kernpfad. Fuer Details siehe '${CLI_NAME} task run --help'.
+EOF
+            ;;
+        plan)
+            cat << EOF
+${CYAN}${CLI_NAME} plan${NC} - Planpfade ueber den kanonischen Kern ansprechen
+
+Usage: ${CLI_NAME} plan run <task_type> [description] [options]
+       ${CLI_NAME} plan list [options]
+
+BEISPIELE:
+  ${CLI_NAME} plan run workflow_automation "Trigger deployment workflow"
+  ${CLI_NAME} plan list
+  ${CLI_NAME} plan list --json
+EOF
+            ;;
+        approval)
+            cat << EOF
+${CYAN}${CLI_NAME} approval${NC} - Pending approvals einsehen und entscheiden
+
+Usage: ${CLI_NAME} approval list [options]
+       ${CLI_NAME} approval approve <approval_id> [options]
+       ${CLI_NAME} approval reject <approval_id> [options]
+
+BEISPIELE:
+  ${CLI_NAME} approval list
+  ${CLI_NAME} approval approve approval-123 --comment "safe"
+  ${CLI_NAME} approval reject approval-123 --comment "blocked"
+EOF
+            ;;
+        trace)
+            cat << EOF
+${CYAN}${CLI_NAME} trace${NC} - Traces aus dem kanonischen Trace-Store lesen
+
+Usage: ${CLI_NAME} trace list [options]
+       ${CLI_NAME} trace show <trace_id> [options]
+
+BEISPIELE:
+  ${CLI_NAME} trace list
+  ${CLI_NAME} trace show trace-123
+  ${CLI_NAME} explain trace-123
+EOF
+            ;;
+        explain)
+            cat << EOF
+${CYAN}${CLI_NAME} explain${NC} - Explainability fuer einen Trace anzeigen
+
+Usage: ${CLI_NAME} explain <trace_id> [options]
+
+BEISPIELE:
+  ${CLI_NAME} explain trace-123
+  ${CLI_NAME} explain trace-123 --json
+EOF
+            ;;
+        agent)
+            cat << EOF
+${CYAN}${CLI_NAME} agent${NC} - Agent-Katalog des kanonischen Kerns inspizieren
+
+Usage: ${CLI_NAME} agent list [options]
+
+BEISPIELE:
+  ${CLI_NAME} agent list
+  ${CLI_NAME} agent list --json
+EOF
+            ;;
+        health)
+            cat << EOF
+${CYAN}${CLI_NAME} health${NC} - Kernstatus, Governance und Startpfade anzeigen
+
+Usage: ${CLI_NAME} health [options]
+
+BEISPIELE:
+  ${CLI_NAME} health
+  ${CLI_NAME} health --json
+EOF
+            ;;
         *)
             echo "Keine detaillierte Hilfe für '$command' verfügbar."
             echo "Verwende '${CLI_NAME} help' für eine Übersicht aller Kommandos."
@@ -491,6 +621,34 @@ run_validation_checks() {
 
 cmd_setup() {
     run_setup_script "$@"
+}
+
+cmd_task() {
+    run_control_plane_bridge task "$@"
+}
+
+cmd_plan() {
+    run_control_plane_bridge plan "$@"
+}
+
+cmd_approval() {
+    run_control_plane_bridge approval "$@"
+}
+
+cmd_trace() {
+    run_control_plane_bridge trace "$@"
+}
+
+cmd_explain() {
+    run_control_plane_bridge explain "$@"
+}
+
+cmd_agent() {
+    run_control_plane_bridge agent "$@"
+}
+
+cmd_health() {
+    run_control_plane_bridge health "$@"
 }
 
 cmd_start() {
@@ -886,6 +1044,11 @@ main() {
                 config_file="${2:-}"
                 shift 2
                 ;;
+            --json)
+                ABRAIN_OUTPUT_FORMAT="json"
+                export ABRAIN_OUTPUT_FORMAT
+                shift
+                ;;
             --version)
                 show_version
                 exit 0
@@ -929,6 +1092,27 @@ main() {
             ;;
         start)
             cmd_start "${command_args[@]}"
+            ;;
+        task)
+            cmd_task "${command_args[@]}"
+            ;;
+        plan)
+            cmd_plan "${command_args[@]}"
+            ;;
+        approval)
+            cmd_approval "${command_args[@]}"
+            ;;
+        trace)
+            cmd_trace "${command_args[@]}"
+            ;;
+        explain)
+            cmd_explain "${command_args[@]}"
+            ;;
+        agent)
+            cmd_agent "${command_args[@]}"
+            ;;
+        health)
+            cmd_health "${command_args[@]}"
             ;;
         stop)
             cmd_stop "${command_args[@]}"
