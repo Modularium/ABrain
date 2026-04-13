@@ -21,9 +21,9 @@ Der Branch wurde vor Commit/Push auf Konsistenz geprüft und bereinigt, ohne den
 
 ## Bewusst verblieben
 
-- Paket-/Import-Slugs wie `agentnn`, `agent_nn`
-- Deploy-/Helm-/Compose-/Image-Slugs wie `agent-nn`
-- externe Repo-URLs `EcoSphereNetwork/Agent-NN`
+- Paket-/Import-Slugs wie `legacy runtime`, `agent_nn`
+- Deploy-/Helm-/Compose-/Image-Slugs wie `abrain`
+- externe Repo-URLs `EcoSphereNetwork/ABrain`
 - historische Langform-Handbücher, SVGs und Altbestände, nun aber als historisch eingerahmt
 
 ## Sicherheitszustand

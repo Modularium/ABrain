@@ -9,11 +9,11 @@ Dieses Audit prüft den aktuellen Branch auf Benennungsinkonsistenzen, Parallelp
 | Pfad / Bereich | Problemtyp | Einstufung | Maßnahme | Risiko / Begründung |
 |---|---|---:|---|---|
 | `README.md`, `docs/*`, sichtbare API-/UI-Texte | fachliche Altbenennung | B | repo-weit auf `ABrain` harmonisiert | geringe Gefahr, nur sichtbare Texte |
-| `server/main.py`, `agentnn/mcp/mcp_server.py`, `monitoring/monitoring/api/server.py` | sichtbare API-Titel | B | auf `ABrain` umgestellt | sicher, keine Importänderung |
+| `server/main.py`, `legacy runtime/mcp/mcp_server.py`, `monitoring/monitoring/api/server.py` | sichtbare API-Titel | B | auf `ABrain` umgestellt | sicher, keine Importänderung |
 | `frontend/agent-ui/*`, `monitoring/*` sichtbare Labels | UI-/Monitoring-Branding | B | auf `ABrain` umgestellt | sicher, keine Strukturänderung |
-| `agentnn`, `agent_nn`, `agent-nn` in Paket-, CLI-, Deploy- oder Publish-Slugs | technisch/sluggebunden | F | bewusst belassen | Import-, Packaging- und Deploy-Risiko zu hoch für diesen Schritt |
-| GitHub-Repo-URLs `EcoSphereNetwork/Agent-NN` | extern gebunden | F | bewusst belassen | Repo-/Pages-/Badge-Rename liegt außerhalb des Repos |
-| `agentnn-adminbot-adapter` | sicherheitsrelevante technische Identität | D | bewusst belassen | stabiler Adapter-Identifier, kein Branding-Problem im Sicherheitskontext |
+| `legacy runtime`, `agent_nn`, `abrain` in Paket-, CLI-, Deploy- oder Publish-Slugs | technisch/sluggebunden | F | bewusst belassen | Import-, Packaging- und Deploy-Risiko zu hoch für diesen Schritt |
+| GitHub-Repo-URLs `EcoSphereNetwork/ABrain` | extern gebunden | F | bewusst belassen | Repo-/Pages-/Badge-Rename liegt außerhalb des Repos |
+| `abrain-adminbot-adapter` | sicherheitsrelevante technische Identität | D | bewusst belassen | stabiler Adapter-Identifier, kein Branding-Problem im Sicherheitskontext |
 
 ## Redundanzen / Parallelpfade
 
@@ -41,8 +41,8 @@ Dieses Audit prüft den aktuellen Branch auf Benennungsinkonsistenzen, Parallelp
 |---|---|---:|---|---|
 | `docs/ui_migration_audit.md`, `docs/migration_status.md` | veraltete Audit-/Migrationsschnappschüsse | D | explizit als historisch markiert | sinnvoll als Referenz, nicht als Primärdoku |
 | `docs/BenutzerHandbuch/*.svg` und langes Handbuch | Altbestand mit alter Produktstory | D | bewusst belassen, über Index/Handbuch als historisch eingerahmt | Massenumbenennung der Assets wäre teuer und nicht sicherheitsrelevant |
-| `deploy/k8s/helm/agent-nn`, Compose-/Helm-/Image-Slugs | technische Deploy-Reste | F | bewusst offener Follow-up | breiter Deploy-/Release-Impact |
-| `package.json`, `pyproject.toml`, Integrations-Paketnamen mit `agentnn*` | technische Packaging-Slugs | F | bewusst offener Follow-up | Paket-/Import-/Publish-Risiko |
+| `deploy/k8s/helm/abrain`, Compose-/Helm-/Image-Slugs | technische Deploy-Reste | F | bewusst offener Follow-up | breiter Deploy-/Release-Impact |
+| `package.json`, `pyproject.toml`, Integrations-Paketnamen mit `legacy runtime*` | technische Packaging-Slugs | F | bewusst offener Follow-up | Paket-/Import-/Publish-Risiko |
 
 ## Sicherheitsrelevante Guardrails
 
@@ -68,7 +68,7 @@ Dieses Audit prüft den aktuellen Branch auf Benennungsinkonsistenzen, Parallelp
 
 ## Bewusst offen gelassene Follow-ups
 
-- vollständiger Paket-/Importpfad-Rename `agentnn` / `agent_nn`
-- Deploy-/Helm-/Compose-/GHCR-Slug-Rename `agent-nn`
+- vollständiger Paket-/Importpfad-Rename `legacy runtime` / `agent_nn`
+- Deploy-/Helm-/Compose-/GHCR-Slug-Rename `abrain`
 - GitHub-Repo-Umbenennung und externe URL-/Badge-Anpassung
 - breite inhaltliche Modernisierung aller historischen Langform-Handbücher und SVG-Assets

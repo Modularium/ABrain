@@ -116,7 +116,7 @@ const mockSystemInfo: SystemInfo = {
   freeMemory: '5.2 GB',
   uptime: '15d 8h 42m',
   cpuCores: 8,
-  hostname: 'agent-nn-prod-01',
+  hostname: 'abrain-prod-01',
   version: '2.1.0',
   environment: 'production',
   buildTime: '2024-01-15T10:30:00Z',
@@ -126,7 +126,7 @@ const mockSystemInfo: SystemInfo = {
 const mockEnvironmentVars: EnvironmentVariable[] = [
   { key: 'NODE_ENV', value: 'production', masked: false, category: 'system' },
   { key: 'PORT', value: '8000', masked: false, category: 'system' },
-  { key: 'DATABASE_URL', value: 'postgresql://***:***@localhost:5432/agentnn', masked: true, category: 'database' },
+  { key: 'DATABASE_URL', value: 'postgresql://***:***@localhost:5432/abrain', masked: true, category: 'database' },
   { key: 'REDIS_URL', value: 'redis://localhost:6379', masked: false, category: 'database' },
   { key: 'JWT_SECRET', value: '***hidden***', masked: true, category: 'security' },
   { key: 'OPENAI_API_KEY', value: 'sk-***hidden***', masked: true, category: 'api' },

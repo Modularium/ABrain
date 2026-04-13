@@ -51,7 +51,7 @@ ruff check .
   tests/services tests/integration/test_node_export.py
 python -m py_compile scripts/abrain_control.py services/core.py api_gateway/main.py
 bash scripts/abrain help
-bash scripts/agentnn help
+bash scripts/abrain help
 cd frontend/agent-ui && npm run type-check && npm run build && npm run lint
 ```
 

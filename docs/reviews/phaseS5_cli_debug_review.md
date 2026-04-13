@@ -25,7 +25,7 @@ Developer-/Operator-Subcommands ergaenzt:
 ### Einstiegspunkt
 
 - Der einzige user-facing Einstiegspunkt bleibt `scripts/abrain`.
-- `scripts/agentnn` bleibt ein duennes Alias auf `scripts/abrain`.
+- `scripts/abrain` bleibt ein duennes Alias auf `scripts/abrain`.
 
 ### Interne Implementierung
 
@@ -97,8 +97,8 @@ zurueckzudrehen.
 ### Kein Revival alter Strukturen
 
 - Es wurde kein `sdk/`-Revival gebaut.
-- Es wurde kein `agentnn/`- oder `managers/`-Revival eingefuehrt.
-- `scripts/agentnn` bleibt reine Kompatibilitaetsschicht.
+- Es wurde kein `legacy runtime/`- oder `managers/`-Revival eingefuehrt.
+- `scripts/abrain` bleibt reine Kompatibilitaetsschicht.
 
 ### Keine Business-Logik in der CLI
 
@@ -111,7 +111,7 @@ zurueckzudrehen.
 
 1. Wurde keine zweite CLI gebaut?
    Ja. `scripts/abrain` bleibt der einzige user-facing Einstiegspunkt.
-2. Wurde kein `sdk/`- oder `agentnn/`-Revival gebaut?
+2. Wurde kein `sdk/`- oder `legacy runtime/`-Revival gebaut?
    Ja. Es gibt nur eine interne Bridge-Datei unter `scripts/`.
 3. Wurde keine Business-Logik in die CLI verlagert?
    Ja. Die CLI parst nur Eingaben, rendert Ausgaben und delegiert an den Kern.

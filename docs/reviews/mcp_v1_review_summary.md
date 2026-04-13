@@ -26,7 +26,7 @@ Jeder erfolgreiche `tools/call` läuft ausschließlich über `services.core.exec
 
 ## Alte MCP-Pfade, die nicht genutzt werden
 
-- `agentnn/mcp/*`
+- `legacy runtime/mcp/*`
 - `mcp/plugin_agent_service/*`
 - historische `/v1/mcp/*`-HTTP-Proxy-Pfade
 

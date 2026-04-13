@@ -18,7 +18,7 @@ Diese Inhalte wurden absichtlich nicht übernommen, weil sie keinen reviewbaren 
 
 ## Nach der Konsolidierung weiter relevante Punkte
 
-- noch offene technische Slugs wie `agentnn`, `agent-nn` und Repo-URLs separat migrieren
+- noch offene technische Slugs wie `legacy runtime`, `abrain` und Repo-URLs separat migrieren
 - Doku-Lücken in README, Setup-Flow und Entwicklerdokumentation
 - weitere Testabdeckung für Service-Helfer und Legacy-Kompatibilität
 - CI-Ausbau über die AdminBot-Sicherheitsgates hinaus

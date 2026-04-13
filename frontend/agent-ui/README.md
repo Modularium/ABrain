@@ -52,8 +52,8 @@ A modern, responsive web interface for managing AI agents with enhanced UX/UI de
 
 ```bash
 # Clone the repository
-git clone https://github.com/EcoSphereNetwork/Agent-NN.git
-cd Agent-NN/frontend/agent-ui
+git clone https://github.com/EcoSphereNetwork/ABrain.git
+cd ABrain/frontend/agent-ui
 
 # Install dependencies
 npm install

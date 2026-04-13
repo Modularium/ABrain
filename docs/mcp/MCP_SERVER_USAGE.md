@@ -45,7 +45,7 @@ Beispielkonfiguration mit stabilem CLI-Pfad:
   "servers": {
     "abrain": {
       "type": "stdio",
-      "command": "/home/dev/Agent-NN/.venv/bin/abrain-mcp-v1",
+      "command": "/home/dev/ABrain/.venv/bin/abrain-mcp-v1",
       "args": []
     }
   }
@@ -59,7 +59,7 @@ Alternative mit explizitem Python-Interpreter:
   "servers": {
     "abrain": {
       "type": "stdio",
-      "command": "/home/dev/Agent-NN/.venv/bin/python",
+      "command": "/home/dev/ABrain/.venv/bin/python",
       "args": ["-m", "interfaces.mcp_v1.server"]
     }
   }
@@ -77,13 +77,13 @@ Wichtig:
 Für den empfohlenen Startpfad muss das Projekt in die Ziel-`venv` installiert sein:
 
 ```bash
-/home/dev/Agent-NN/.venv/bin/python -m pip install -e /home/dev/Agent-NN --no-deps
+/home/dev/ABrain/.venv/bin/python -m pip install -e /home/dev/ABrain --no-deps
 ```
 
 Danach steht der historische Entry bereit unter:
 
 ```bash
-/home/dev/Agent-NN/.venv/bin/abrain-mcp-v1
+/home/dev/ABrain/.venv/bin/abrain-mcp-v1
 ```
 
 Wenn du Poetry statt `pip` nutzt, installiere das Projekt nicht mit `--no-root`, sondern als echtes Paket, damit der Console-Script-Entry erzeugt wird.
@@ -95,13 +95,13 @@ Der installierte historische CLI-Entry zeigt direkt auf `interfaces.mcp_v1.serve
 Empfohlen:
 
 ```bash
-/home/dev/Agent-NN/.venv/bin/abrain-mcp-v1
+/home/dev/ABrain/.venv/bin/abrain-mcp-v1
 ```
 
 Alternative:
 
 ```bash
-/home/dev/Agent-NN/.venv/bin/python -m interfaces.mcp_v1.server
+/home/dev/ABrain/.venv/bin/python -m interfaces.mcp_v1.server
 ```
 
 ## VS Code Ablauf
@@ -122,7 +122,7 @@ Alternative:
 
 ## Claude Desktop als sekundäre Option
 
-Claude Desktop kann denselben stdio-Server ebenfalls starten, ist in dieser Phase aber nur ein sekundaerer lokaler Client. Verwende dort fuer v1 bevorzugt den absoluten CLI-Pfad `/home/dev/Agent-NN/.venv/bin/abrain-mcp-v1`.
+Claude Desktop kann denselben stdio-Server ebenfalls starten, ist in dieser Phase aber nur ein sekundaerer lokaler Client. Verwende dort fuer v1 bevorzugt den absoluten CLI-Pfad `/home/dev/ABrain/.venv/bin/abrain-mcp-v1`.
 
 Typische manuelle Konfigurationsorte:
 

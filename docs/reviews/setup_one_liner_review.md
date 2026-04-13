@@ -73,11 +73,11 @@ Ausgefuehrt wurden mindestens:
 
 - `rm -rf .venv`
 - `./scripts/abrain setup`
-- `bash -n scripts/setup.sh scripts/abrain scripts/agentnn`
-- `shellcheck scripts/setup.sh scripts/abrain scripts/agentnn`
+- `bash -n scripts/setup.sh scripts/abrain scripts/abrain`
+- `shellcheck scripts/setup.sh scripts/abrain scripts/abrain`
 - `./scripts/abrain help setup`
 - `./scripts/abrain --version`
-- `./scripts/agentnn --version`
+- `./scripts/abrain --version`
 - `bash scripts/setup.sh help`
 - `bash scripts/setup.sh mcp`
 - `.venv/bin/python -m py_compile core/config.py api_gateway/main.py interfaces/mcp/server.py scripts/abrain_mcp.py`
@@ -108,5 +108,5 @@ Ergebnis:
 - keine Parallel-Implementierung gebaut
 - keine zweite Runtime eingefuehrt
 - keine alten `scripts/lib`- oder `scripts/helpers`-Strukturen wiederbelebt
-- kein Legacy-Agent-NN-Setup rekonstruiert
+- kein Legacy-ABrain-Setup rekonstruiert
 - der Setup-Pfad entspricht dem aktuellen kanonischen ABrain-Repo deutlich besser

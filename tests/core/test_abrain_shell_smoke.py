@@ -35,8 +35,8 @@ def test_abrain_health_help_smoke():
     assert "--json" in result.stdout
 
 
-def test_agentnn_wrapper_remains_thin_alias():
-    result = _run_script("agentnn", "help")
+def test_abrain_version_smoke():
+    result = _run_script("abrain", "--version")
 
     assert result.returncode == 0
-    assert "Kompatibilitätsalias aktiv: agentnn -> abrain" in result.stdout
+    assert "ABrain CLI" in result.stdout

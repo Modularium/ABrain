@@ -5,7 +5,7 @@
 - lokaler Unix-Socket für AdminBot
 - Standardpfad: `/run/adminbot/adminbot.sock`
 - IPC-Framing: `u32` Length Prefix in Big-Endian plus JSON
-- stabile Adapter-Identität: `agentnn-adminbot-adapter`
+- stabile Adapter-Identität: `abrain-adminbot-adapter`
 - konfigurierbarer Timeout im Client
 - Wire-Request nutzt `params`, nicht `payload`
 - Wire-Request setzt `dry_run` fest auf `false`

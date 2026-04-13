@@ -23,7 +23,7 @@ Wenn erreichbar, soll er explizit ablehnen statt implizit weiterarbeiten.
 Beispiel:
 
 - frueherer Plugin-Agent-Proxy unter `mcp/plugin_agent_service/*`
-- frueherer MCP-Tool-Proxy unter `agentnn/mcp/*`
+- frueherer MCP-Tool-Proxy unter `legacy runtime/mcp/*`
 
 ## `historical / legacy (not active runtime path)`
 

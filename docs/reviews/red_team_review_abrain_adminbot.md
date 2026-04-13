@@ -11,7 +11,7 @@ Gezielt geprueft wurden:
 - `core/tools/*`
 - `core/models/*`
 - `adapters/adminbot/*`
-- angrenzende Nebenpfade unter `agentnn/mcp/*` und `mcp/plugin_agent_service/*`
+- angrenzende Nebenpfade unter `legacy runtime/mcp/*` und `mcp/plugin_agent_service/*`
 - zentrale Integrations- und Sicherheitsdoku
 
 ## Attack Surface Mapping
@@ -30,8 +30,8 @@ Fester Tool-Einstieg mit typisierten Inputs, fester Registry, hartem Unknown-Too
 
 ### Legacy (disabled) path
 
-- `agentnn/mcp/mcp_server.py:97`
-- `agentnn/mcp/mcp_gateway.py:28`
+- `legacy runtime/mcp/mcp_server.py:97`
+- `legacy runtime/mcp/mcp_gateway.py:28`
 - `mcp/plugin_agent_service/api.py:16`
 - `mcp/plugin_agent_service/service.py:24`
 
@@ -40,8 +40,8 @@ Historischer generischer Tool-/Plugin-Pfad ausserhalb des `canonical path`, jetz
 
 ### Externally reachable path
 
-- `agentnn/mcp/mcp_server.py:97`
-- `agentnn/mcp/mcp_gateway.py:28`
+- `legacy runtime/mcp/mcp_server.py:97`
+- `legacy runtime/mcp/mcp_gateway.py:28`
 - `mcp/plugin_agent_service/api.py:16`
 
 Eigenschaft:
@@ -61,20 +61,20 @@ Direkte Python-Callsites. Der kanonische Pfad bleibt erlaubt; der Legacy-Pfad wu
 
 - Kategorie: Dispatcher / Registry Bypass, Legacy Path Abuse, Trust Boundary Drift
 - Betroffener Pfad:
-  - `agentnn/mcp/mcp_server.py:97`
-  - `agentnn/mcp/mcp_gateway.py:28`
+  - `legacy runtime/mcp/mcp_server.py:97`
+  - `legacy runtime/mcp/mcp_gateway.py:28`
   - `mcp/plugin_agent_service/api.py:16`
   - `mcp/plugin_agent_service/service.py:24`
 - Reproduktion / Prüfweg:
-  1. `agentnn/mcp/mcp_server.py` nahm beliebige Nutzlasten auf `/v1/mcp/tool/use` an.
+  1. `legacy runtime/mcp/mcp_server.py` nahm beliebige Nutzlasten auf `/v1/mcp/tool/use` an.
   2. Der Pfad leitete an `plugin_agent_service:/execute_tool` weiter.
   3. `mcp/plugin_agent_service/service.py` fuehrte dynamisch geladene Plugins fuer beliebige `tool_name`- und Input-Werte aus.
   4. Die Doku bewarb diesen Pfad zusaetzlich mit Beispielen fuer `filesystem`-Nutzung.
 - Sicherheitsauswirkung:
   Der feste Dispatcher-/Registry-Pfad konnte umgangen werden. Damit existierte parallel zur gehärteten Tool-Oberfläche wieder ein generischer Tool-Proxy mit freier Payload.
 - Minimalfix:
-  - `agentnn/mcp/mcp_server.py:97` liefert jetzt `410 Gone`
-  - `agentnn/mcp/mcp_gateway.py:28` liefert jetzt ebenfalls `410 Gone`
+  - `legacy runtime/mcp/mcp_server.py:97` liefert jetzt `410 Gone`
+  - `legacy runtime/mcp/mcp_gateway.py:28` liefert jetzt ebenfalls `410 Gone`
   - `mcp/plugin_agent_service/api.py:16` liefert `410 Gone`
   - `mcp/plugin_agent_service/service.py:24` fuehrt keine Plugins mehr aus und gibt nur noch einen strukturierten Disable-Fehler zurueck
 - Status:
@@ -200,8 +200,8 @@ Zusaetzlich:
   adapters/adminbot/service.py \
   mcp/plugin_agent_service/service.py \
   mcp/plugin_agent_service/api.py \
-  agentnn/mcp/mcp_server.py \
-  agentnn/mcp/mcp_gateway.py
+  legacy runtime/mcp/mcp_server.py \
+  legacy runtime/mcp/mcp_gateway.py
 ```
 
 Ergebnis:

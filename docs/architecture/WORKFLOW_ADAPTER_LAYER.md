@@ -78,8 +78,8 @@ Diese IDs bleiben normale Capability-Strings im kanonischen Modell. Es wird kein
 
 Im Repository existieren weiterhin aeltere Integrationsreste wie:
 
-- `integrations/n8n-agentnn/*`
-- `integrations/flowise-agentnn/*`
+- `integrations/n8n-abrain/*`
+- `integrations/flowise-abrain/*`
 - `integrations/flowise-nodes/*`
 - aeltere Integrationsdokumente unter `docs/integrations/*`
 

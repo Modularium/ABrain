@@ -2,7 +2,7 @@
   "servers": {
     "abrain": {
       "type": "stdio",
-      "command": "/home/dev/Agent-NN/.venv/bin/abrain-mcp",
+      "command": "/home/dev/ABrain/.venv/bin/abrain-mcp",
       "args": []
     }
   }

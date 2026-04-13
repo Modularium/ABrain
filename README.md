@@ -5,6 +5,9 @@
 **ABrain is a deterministic, governance-first AI agent system.**  
 It doesn’t just *generate answers* — it **plans, controls and executes actions safely**.
 
+ABrain ist die Weiterentwicklung des früheren Projekts. Der alte Name wird
+nicht mehr verwendet.
+
 ---
 
 ## ⚡ Why ABrain exists
@@ -208,7 +211,7 @@ npm run build
 ./scripts/abrain health --json
 ```
 
-`./scripts/agentnn` remains only as a thin compatibility wrapper around the
+`./scripts/abrain` remains only as a thin compatibility wrapper around the
 canonical Bash CLI `./scripts/abrain`.
 
 ---

@@ -87,7 +87,7 @@ Positiv:
 - `python -m interfaces.mcp.server` mit `initialize` und `tools/list`
 - `scripts/abrain --version`
 - `scripts/abrain help`
-- `scripts/agentnn --version`
+- `scripts/abrain --version`
 - `frontend/agent-ui: npm ci`
 - `frontend/agent-ui: npm run type-check`
 - `frontend/agent-ui: npm run build`
@@ -157,7 +157,7 @@ Empfohlener kurzer Follow-up:
 printf '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"clientInfo":{"name":"codex"}}}\n{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}\n' | .venv/bin/python -m interfaces.mcp.server
 ./scripts/abrain --version
 ./scripts/abrain help
-./scripts/agentnn --version
+./scripts/abrain --version
 ./scripts/abrain setup
 ./scripts/setup.sh --help
 cd frontend/agent-ui && npm ci

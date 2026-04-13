@@ -13,7 +13,7 @@ Phase E stabilizes the current ABrain foundations stack as a releaseable baselin
 
 ## Repo And Naming Consolidation
 
-The visible product identity is now consistently documented as `ABrain` in the central entry points. Technical slugs such as `agentnn`, `agent-nn` and local filesystem paths remain where changing them would risk packaging or deployment regressions.
+The visible product identity is now consistently documented as `ABrain` in the central entry points. Technical slugs such as `legacy runtime`, `abrain` and local filesystem paths remain where changing them would risk packaging or deployment regressions.
 
 ## Release Artifacts Added
 

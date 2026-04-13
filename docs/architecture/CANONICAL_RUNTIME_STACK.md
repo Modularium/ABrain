@@ -37,7 +37,7 @@ Bewusst nicht zugelassen. Es gibt keinen gleichrangigen zweiten Runtime-Pfad meh
 Folgende Bereiche bleiben nur noch fuer Rueckverfolgbarkeit oder kontrollierte Abschaltung im Repo:
 
 - `mcp/*` -> `legacy (disabled)`
-- `agentnn/mcp/*` -> `legacy (disabled)`
+- `abrain/mcp/*` -> `legacy (disabled)`
 - `api/smolitux_integration.py` und die `/smolitux/*`-Routen -> `legacy (disabled)`
 
 Sie sind nicht Teil des produktiven Runtime-Vertrags.

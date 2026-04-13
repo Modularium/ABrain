@@ -19,12 +19,12 @@ Zusätzlich wurden alte GitHub-Links auf das neue Repository `Modularium/ABrain`
 
 Folgende Identifiers bleiben bewusst erhalten:
 
-- Poetry-Paketname `agentnn`
-- technische CLI- und Modulpfade mit `agentnn`
-- Docusaurus-/npm-Namen `agent-nn-docs`
-- Dateisystempfade wie `/home/dev/Agent-NN`
-- Container-, Helm- oder Image-Slugs mit `agent-nn`
-- ältere Nutzer-, Wiki- und Legacy-Dokumente mit historischem `Agent-NN`-Wortlaut
+- Poetry-Paketname `legacy runtime`
+- technische CLI- und Modulpfade mit `legacy runtime`
+- Docusaurus-/npm-Namen `abrain-docs`
+- Dateisystempfade wie `/home/dev/ABrain`
+- Container-, Helm- oder Image-Slugs mit `abrain`
+- ältere Nutzer-, Wiki- und Legacy-Dokumente mit historischem `ABrain`-Wortlaut
 
 ## Warum diese Reste bleiben
 

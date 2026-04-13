@@ -37,7 +37,7 @@ Das Skript wurde als kleiner, linearer Bootstrap auf den heutigen kanonischen Re
 - `scripts/abrain` delegiert `setup` jetzt direkt an `scripts/setup.sh`
 - der fruehere Blocker auf `scripts/lib` und `scripts/helpers` wurde entfernt
 - die Hilfe fuer `abrain setup` beschreibt jetzt die echten heutigen Schritte
-- `scripts/agentnn` blieb unangetastet als duenner Legacy-Wrapper
+- `scripts/abrain` blieb unangetastet als duenner Legacy-Wrapper
 
 ### Dependencies und Packaging
 
@@ -75,12 +75,12 @@ Kanonisch nach dieser Ueberarbeitung:
 
 ### Shell und CLI
 
-- `bash -n scripts/setup.sh scripts/abrain scripts/agentnn`
-- `shellcheck scripts/setup.sh scripts/abrain scripts/agentnn`
+- `bash -n scripts/setup.sh scripts/abrain scripts/abrain`
+- `shellcheck scripts/setup.sh scripts/abrain scripts/abrain`
 - `./scripts/abrain --version`
 - `./scripts/abrain help`
 - `./scripts/abrain help setup`
-- `./scripts/agentnn --version`
+- `./scripts/abrain --version`
 - `./scripts/setup.sh help`
 - `ABRAIN_VENV_DIR=/tmp/abrain-setup-smoke-20260412 ./scripts/abrain setup mcp`
 - `ABRAIN_VENV_DIR=/tmp/abrain-setup-smoke-20260412 ./scripts/abrain setup api`

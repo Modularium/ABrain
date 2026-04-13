@@ -20,7 +20,7 @@ Branch: `codex/setup-modernization-online-install`
 - `api_gateway/main.py`
 - `interfaces/mcp/server.py`
 - `scripts/abrain`
-- `scripts/agentnn`
+- `scripts/abrain`
 - `scripts/abrain_mcp.py`
 
 ## Ist-Zustand vor der Modernisierung
@@ -41,7 +41,7 @@ Branch: `codex/setup-modernization-online-install`
 Aktuell kanonisch im bereinigten Repo:
 
 - Bash-CLI: `scripts/abrain`
-- Legacy-Kompatibilitaet: `scripts/agentnn` als duenner Wrapper
+- Legacy-Kompatibilitaet: `scripts/abrain` als duenner Wrapper
 - MCP v2: `python -m interfaces.mcp.server`
 - MCP Console-Entry nach editable Install: `abrain-mcp`
 - REST API: `python -m uvicorn api_gateway.main:app --reload`

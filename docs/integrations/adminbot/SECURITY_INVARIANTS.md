@@ -6,7 +6,7 @@ Diese Bedingungen dürfen durch spätere Änderungen am AdminBot-Adapter nicht v
 2. Es gibt keine freie Action-Weitergabe aus Tool-Inputs oder Modell-Payloads.
 3. `requested_by` wird im Adapter hart gesetzt:
    `type = agent`
-   `id = agentnn-adminbot-adapter`
+   `id = abrain-adminbot-adapter`
 4. Aus `ToolExecutionRequest` werden nur `run_id` und `correlation_id` in den AdminBot-Request übernommen.
 5. Im erlaubten Default-Scope existieren nur diese read-only Tools:
    `adminbot_system_status`

@@ -53,7 +53,7 @@ def test_adminbot_system_status_maps_exact_action():
     assert fake_client.last_envelope.action == "system.status"
     assert fake_client.last_envelope.tool_name == "adminbot_system_status"
     assert fake_client.last_envelope.requested_by.type == "agent"
-    assert fake_client.last_envelope.requested_by.id == "agentnn-adminbot-adapter"
+    assert fake_client.last_envelope.requested_by.id == "abrain-adminbot-adapter"
     assert fake_client.last_envelope.agent_run_id == "run-123"
     assert fake_client.last_envelope.correlation_id == "corr-456"
     assert fake_client.last_envelope.params == {}
@@ -75,7 +75,7 @@ def test_adminbot_service_overrides_user_requested_by_identity():
     service.system_status(human_request, AdminBotSystemStatusInput())
 
     assert fake_client.last_envelope.requested_by.type == "agent"
-    assert fake_client.last_envelope.requested_by.id == "agentnn-adminbot-adapter"
+    assert fake_client.last_envelope.requested_by.id == "abrain-adminbot-adapter"
     assert fake_client.last_envelope.agent_run_id == "run-human"
     assert fake_client.last_envelope.correlation_id == "corr-human"
 

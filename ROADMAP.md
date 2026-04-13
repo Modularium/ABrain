@@ -5,7 +5,7 @@ steht in `docs/roadmap.md`. Historische Entwürfe finden sich in `Roadmap.md`.
 
 > Status: Historische Arbeits- und Planungsliste. Für den aktuellen gehärteten Stand von ABrain sind `README.md`, `docs/architecture/PROJECT_OVERVIEW.md` und die Review-Dokumente unter `docs/reviews/` maßgeblich.
 
-# TODO-Liste für Agent-NN Entwicklungsplan
+# TODO-Liste für ABrain Entwicklungsplan
 
 ## Phase 1: Codebase-Konsolidierung & Architektur-Refaktor
 
@@ -41,7 +41,7 @@ steht in `docs/roadmap.md`. Historische Entwürfe finden sich in `Roadmap.md`.
 
 ### 1.4 Entwickler-Tools & Release-Vorbereitung
 
-- [ ] **Developer-SDK und CLI bereitstellen**: Ein Entwickler-SDK (z.B. Python-Bibliothek unter `mcp/` Verzeichnis) erstellen, das grundlegende Funktionen zum Interagieren mit dem Agent-NN-System bietet. Ebenso ein CLI-Tool entwickeln, mit dem Admin-Aufgaben oder Tests (z.B. ModelContext erzeugen, Services ansteuern) ausgeführt werden können. Diese Tools sollen die Entwicklung und Nutzung des Systems erleichtern und auf der neuen Architektur aufsetzen.
+- [ ] **Developer-SDK und CLI bereitstellen**: Ein Entwickler-SDK (z.B. Python-Bibliothek unter `mcp/` Verzeichnis) erstellen, das grundlegende Funktionen zum Interagieren mit dem ABrain-System bietet. Ebenso ein CLI-Tool entwickeln, mit dem Admin-Aufgaben oder Tests (z.B. ModelContext erzeugen, Services ansteuern) ausgeführt werden können. Diese Tools sollen die Entwicklung und Nutzung des Systems erleichtern und auf der neuen Architektur aufsetzen.
 
 - [ ] **Erste Beta-Release vorbereiten**: Nachdem die obigen Schritte abgeschlossen sind, die Anwendung in einen ersten lauffähigen Zustand bringen und eine Beta-Version veröffentlichen. Dazu gehört, eine Versionsnummer zu vergeben, Changelog zu skizzieren und ggf. ein Release-Branch aufzusetzen. Der Beta-Release dient intern dazu, Feedback zur neuen Architektur einzuholen. Wichtig: Der alte Monolith oder bisherige Code soll bis hierhin weiterhin im `archive/` Verzeichnis existieren, aber die Beta-Version stützt sich vollständig auf die neue Microservice-Architektur.
 
@@ -127,5 +127,5 @@ steht in `docs/roadmap.md`. Historische Entwürfe finden sich in `Roadmap.md`.
 
 ## Referenzen
 
-- [Monitoring Directory](https://github.com/EcoSphereNetwork/Agent-NN/blob/904819970351796a2fda272015e499a703926007/monitoring/)
-- [AGENTS.md](https://github.com/EcoSphereNetwork/Agent-NN/blob/904819970351796a2fda272015e499a703926007/AGENTS.md)
+- [Monitoring Directory](https://github.com/EcoSphereNetwork/ABrain/blob/904819970351796a2fda272015e499a703926007/monitoring/)
+- [AGENTS.md](https://github.com/EcoSphereNetwork/ABrain/blob/904819970351796a2fda272015e499a703926007/AGENTS.md)

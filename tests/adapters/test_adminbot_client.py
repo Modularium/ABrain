@@ -36,7 +36,7 @@ def _envelope(
     return AdminBotRequestEnvelope(
         action=action,
         tool_name=tool_name,
-        requested_by={"type": "agent", "id": "agentnn-adminbot-adapter"},
+        requested_by={"type": "agent", "id": "abrain-adminbot-adapter"},
         params=params or {},
         agent_run_id="run-1",
         correlation_id="corr-1",

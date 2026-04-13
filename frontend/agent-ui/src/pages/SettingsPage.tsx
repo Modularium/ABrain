@@ -105,7 +105,7 @@ export default function ModernSettingsPage() {
 
   // Load settings from localStorage on mount
   useEffect(() => {
-    const savedSettings = localStorage.getItem('agent-nn-settings')
+    const savedSettings = localStorage.getItem('abrain-settings')
     if (savedSettings) {
       try {
         const parsed = JSON.parse(savedSettings)
@@ -150,7 +150,7 @@ export default function ModernSettingsPage() {
   const saveSettings = async () => {
     setSaving(true)
     try {
-      localStorage.setItem('agent-nn-settings', JSON.stringify(settings))
+      localStorage.setItem('abrain-settings', JSON.stringify(settings))
       updateAppSettings({
         api: {
           ...appSettings.api,
@@ -169,7 +169,7 @@ export default function ModernSettingsPage() {
   const resetSettings = () => {
     if (window.confirm('Are you sure you want to reset all settings to defaults?')) {
       setSettings(defaultSettings)
-      localStorage.removeItem('agent-nn-settings')
+      localStorage.removeItem('abrain-settings')
     }
   }
 

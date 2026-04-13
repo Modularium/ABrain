@@ -52,5 +52,5 @@ Der einzige erlaubte Pfad ist:
 
 - `run_id` und `correlation_id` werden aus `ToolExecutionRequest` übernommen
 - `requested_by` wird gegenüber AdminBot immer hart auf `type="agent"` gesetzt
-- Die Adapter-ID ist stabil: `agentnn-adminbot-adapter`
+- Die Adapter-ID ist stabil: `abrain-adminbot-adapter`
 - `audit_ref` und `warnings` aus AdminBot-Fehlern bleiben erhalten

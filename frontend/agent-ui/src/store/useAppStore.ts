@@ -182,7 +182,7 @@ export const useAppStore = create<AppStore>()(
         clearError: () => set((state) => { state.error = null })
       }),
       {
-        name: 'agent-nn-store',
+        name: 'abrain-store',
         storage: createJSONStorage(() => localStorage),
         partialize: (state): Partial<AppStore> => ({
           settings: state.settings,

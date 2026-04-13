@@ -7,7 +7,7 @@ Branch: `codex/setup-one-liner-bootstrap`
 
 - `scripts/setup.sh`
 - `scripts/abrain`
-- `scripts/agentnn`
+- `scripts/abrain`
 - `scripts/abrain_mcp.py`
 - `README.md`
 - `CONTRIBUTING.md`

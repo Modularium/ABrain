@@ -21,13 +21,13 @@ Wenn nur der MCP-/Entry-Point gezielt aufgefrischt werden soll, reicht auch:
 Direkt aus dem Repo-Checkout:
 
 ```bash
-/home/dev/Agent-NN/.venv/bin/python -m interfaces.mcp.server
+/home/dev/ABrain/.venv/bin/python -m interfaces.mcp.server
 ```
 
 Alternativ ueber den Console-Entry nach einem frischen Paket-Install:
 
 ```bash
-/home/dev/Agent-NN/.venv/bin/abrain-mcp
+/home/dev/ABrain/.venv/bin/abrain-mcp
 ```
 
 Der Wrapper `scripts/abrain_mcp.py` zeigt ebenfalls auf denselben v2-Server.

@@ -4,7 +4,6 @@ Dieses Verzeichnis enthaelt nur noch wenige kanonische Einstiegspunkte:
 
 - `abrain`: kanonische Bash-CLI fuer Setup, Diagnose, lokale Smokes sowie
   Developer-/Operator-Zugriffe auf Task, Plan, Approval, Trace und Agent-Katalog
-- `agentnn`: duerner Legacy-Wrapper, der direkt an `abrain` delegiert
 - `abrain_mcp.py`: Python-Wrapper fuer den MCP-v2-stdio-Server
 - `abrain_control.py`: interne Python-Bridge fuer die neuen Control-Plane-
   Subcommands von `abrain` (kein zweiter user-facing Einstiegspunkt)

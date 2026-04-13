@@ -20,7 +20,7 @@ Bootstrap-Skript.
 | Kanonische Testbasis | korrekt | `tests/state`, `tests/mcp`, `tests/approval`, `tests/orchestration`, `tests/execution`, `tests/decision`, `tests/adapters`, `tests/core`, `tests/services` existieren und liefen gruen |
 | UI-Pfad | korrekt | `frontend/agent-ui/` existiert, `npm ci`, `npm run type-check`, `npm run build`, `npm run lint` liefen |
 | MCP-v2-Codepfad | korrekt | `interfaces/mcp/server.py`, `interfaces/mcp/tool_registry.py`, `scripts/abrain_mcp.py` existieren |
-| Bash-CLI | korrekt | `scripts/abrain` ist kanonisch, `scripts/agentnn` ist nur Wrapper |
+| Bash-CLI | korrekt | `scripts/abrain` ist kanonisch, `scripts/abrain` ist nur Wrapper |
 
 ### B — leicht veraltet, klein korrigierbar
 
@@ -35,7 +35,7 @@ Bootstrap-Skript.
 
 | Bereich | Befund | Status |
 |---|---|---|
-| `README.md` | Quickstart und CLI-Beispiele waren nicht mehr repo-real: `agentnn ask`, Docker-Quickstart ohne `docker-compose.yml`, MCP nur als `abrain-mcp` beschrieben | korrigiert |
+| `README.md` | Quickstart und CLI-Beispiele waren nicht mehr repo-real: `legacy runtime ask`, Docker-Quickstart ohne `docker-compose.yml`, MCP nur als `abrain-mcp` beschrieben | korrigiert |
 | `CONTRIBUTING.md` | verwies auf nicht vorhandene Skripte und fehlende Dokumente (`./scripts/install.sh`, `docs/development/contributing.md`, `docs/architecture/PROJECT_OVERVIEW.md`) | korrigiert |
 | `scripts/README.md` | beschrieb nur geloeschte Shell- und Modell-Setup-Skripte | korrigiert |
 | `docs/architecture/PROJECT_OVERVIEW.md` | Datei fehlt komplett | offen |
@@ -46,7 +46,7 @@ Bootstrap-Skript.
 
 ### README / Einstieg
 
-- `README.md` zeigte `agentnn ask "Check system health"`, obwohl `scripts/abrain`
+- `README.md` zeigte `legacy runtime ask "Check system health"`, obwohl `scripts/abrain`
   kein `ask`-Kommando besitzt.
 - `README.md` warb mit `docker compose up --build`, obwohl im Repo aktuell weder
   `docker-compose.yml` noch `docker-compose.yaml` existieren.

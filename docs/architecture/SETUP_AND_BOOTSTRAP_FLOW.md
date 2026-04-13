@@ -10,7 +10,7 @@ Der bevorzugte Einstieg ist:
 ./scripts/abrain setup
 ```
 
-`./scripts/abrain` bleibt die kanonische Bash-CLI. `./scripts/agentnn` bleibt nur ein duenner Legacy-Wrapper.
+`./scripts/abrain` bleibt die kanonische Bash-CLI. `./scripts/abrain` bleibt nur ein duenner Legacy-Wrapper.
 
 ## Kanonische Bootstrap-Schritte
 
@@ -117,7 +117,7 @@ Dieses Setup ist bewusst klein und ehrlich:
 
 - keine versteckten Helper-Verzeichnisse
 - keine Docker-Orchestrierung als Voraussetzung
-- keine historische Agent-NN-Setup-Architektur
+- keine historische ABrain-Setup-Architektur
 - keine Duplikation von Runtime-Logik
 
 Der Bootstrap richtet nur die heute vorhandenen kanonischen Repo-Pfade aus:

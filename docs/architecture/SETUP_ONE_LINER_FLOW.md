@@ -86,7 +86,7 @@ Die One-Liner-Form ist kanonisch. Teil-Schritte bleiben nur fuer gezielte Wieder
 ## Nicht-Ziele
 
 - keine Wiederbelebung von `scripts/lib` oder `scripts/helpers`
-- keine historische Agent-NN-Setup-Logik
+- keine historische ABrain-Setup-Logik
 - keine zweite Runtime
 - keine verdeckte Docker-Orchestrierung
 - keine alternative CLI neben `scripts/abrain`

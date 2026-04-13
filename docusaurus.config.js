@@ -3,9 +3,9 @@
 const config = {
   title: 'ABrain Documentation',
   url: 'https://ecospheretwork.github.io',
-  baseUrl: '/Agent-NN/',
+  baseUrl: '/ABrain/',
   organizationName: 'EcoSphereNetwork',
-  projectName: 'Agent-NN',
+  projectName: 'ABrain',
   deploymentBranch: 'gh-pages',
   trailingSlash: false,
   favicon: 'img/favicon.ico',

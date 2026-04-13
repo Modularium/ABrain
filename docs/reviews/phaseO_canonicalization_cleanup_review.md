@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Phase O performed a comprehensive canonicalization sweep of the ABrain/Agent-NN repository, eliminating all legacy, parallel, and dead code paths in favor of a single canonical layer stack. The result is a lean, well-structured codebase with 161 tests passing and a clean UI build.
+Phase O performed a comprehensive canonicalization sweep of the ABrain/ABrain repository, eliminating all legacy, parallel, and dead code paths in favor of a single canonical layer stack. The result is a lean, well-structured codebase with 161 tests passing and a clean UI build.
 
 ---
 
@@ -36,7 +36,7 @@ Phase O performed a comprehensive canonicalization sweep of the ABrain/Agent-NN 
 ### Phase 4 — Deletions (Category C/D)
 
 **Top-level directories deleted:**
-`agents/`, `agentnn/`, `archive/`, `sdk/`, `training/`, `managers/`, `monitoring/`, `integrations/`, `benchmarks/`, `datastores/`, `security/`, `server/`, `tools/`, `api/`, `config/`, `mcp/`, `utils/`, `src/`, `deploy/`, `.agentnn/`, `.codex/`
+`agents/`, `legacy runtime/`, `archive/`, `sdk/`, `training/`, `managers/`, `monitoring/`, `integrations/`, `benchmarks/`, `datastores/`, `security/`, `server/`, `tools/`, `api/`, `config/`, `mcp/`, `utils/`, `src/`, `deploy/`, `.abrain/`, `.codex/`
 
 **Interface directories deleted:**
 `interfaces/mcp_v1/`
@@ -55,7 +55,7 @@ Phase O performed a comprehensive canonicalization sweep of the ABrain/Agent-NN 
 
 ### Phase 5 — pyproject.toml Cleanup
 - Removed heavy unused dependencies: `mlflow`, `openai`, `langchain*`, `transformers`, `torch`, `sqlalchemy`, `loguru`, `aiofiles`, `aiohttp`, `cryptography`, `typer`, `tqdm`
-- Removed legacy entry points (`agentnn`, `mcp_cli`)
+- Removed legacy entry points (`legacy runtime`, `mcp_cli`)
 - Retained single entry point: `abrain-mcp = "interfaces.mcp.server:main"`
 
 ### Phase 6 — Docs Radical Reduction

@@ -22,7 +22,7 @@ class AdminBotClientConfig:
 
     socket_path: str = "/run/adminbot/adminbot.sock"
     timeout_seconds: float = 5.0
-    adapter_id: str = "agentnn-adminbot-adapter"
+    adapter_id: str = "abrain-adminbot-adapter"
 
 
 class AdminBotTransport:

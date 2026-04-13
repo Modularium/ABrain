@@ -7,15 +7,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 CLI_NAME="abrain"
-LEGACY_CLI_NAME="agentnn"
 CLI_VERSION="$(tr -d '[:space:]' < "$REPO_ROOT/VERSION" 2>/dev/null || echo "1.0.0")"
 ABRAIN_STATE_DIR="$REPO_ROOT/.abrain"
-LEGACY_STATE_DIR="$REPO_ROOT/.agentnn"
 ABRAIN_CONFIG_FILE="$ABRAIN_STATE_DIR/config.json"
-LEGACY_CONFIG_FILE="$LEGACY_STATE_DIR/config.json"
 ABRAIN_STATUS_FILE="$ABRAIN_STATE_DIR/status.json"
-LEGACY_STATUS_FILE="$LEGACY_STATE_DIR/status.json"
-ABRAIN_CLI_ALIAS="${ABRAIN_CLI_ALIAS:-}"
 ABRAIN_OUTPUT_FORMAT="${ABRAIN_OUTPUT_FORMAT:-text}"
 
 source_if_exists() {
@@ -59,53 +54,20 @@ if ! declare -F log_ok >/dev/null 2>&1; then
     log_ok() { printf "[OK] %s\n" "$*"; }
 fi
 
-resolve_runtime_path() {
-    local abrain_path="$1"
-    local legacy_path="$2"
-
-    if [[ -f "$abrain_path" ]]; then
-        echo "$abrain_path"
-    elif [[ -f "$legacy_path" ]]; then
-        echo "$legacy_path"
-    else
-        echo "$abrain_path"
-    fi
-}
-
 resolve_runtime_dir() {
-    if [[ -d "$ABRAIN_STATE_DIR" || -f "$ABRAIN_CONFIG_FILE" || -f "$ABRAIN_STATUS_FILE" ]]; then
-        echo "$ABRAIN_STATE_DIR"
-    elif [[ -d "$LEGACY_STATE_DIR" || -f "$LEGACY_CONFIG_FILE" || -f "$LEGACY_STATUS_FILE" ]]; then
-        echo "$LEGACY_STATE_DIR"
-    else
-        echo "$ABRAIN_STATE_DIR"
-    fi
+    echo "$ABRAIN_STATE_DIR"
 }
 
 current_config_file() {
-    resolve_runtime_path "$ABRAIN_CONFIG_FILE" "$LEGACY_CONFIG_FILE"
+    echo "$ABRAIN_CONFIG_FILE"
 }
 
 current_status_file() {
-    resolve_runtime_path "$ABRAIN_STATUS_FILE" "$LEGACY_STATUS_FILE"
+    echo "$ABRAIN_STATUS_FILE"
 }
 
 ensure_abrain_state_dir() {
     mkdir -p "$ABRAIN_STATE_DIR"
-}
-
-migrate_legacy_state_if_needed() {
-    ensure_abrain_state_dir
-
-    if [[ -f "$LEGACY_CONFIG_FILE" && ! -f "$ABRAIN_CONFIG_FILE" ]]; then
-        cp "$LEGACY_CONFIG_FILE" "$ABRAIN_CONFIG_FILE"
-        log_ok "Legacy-Konfiguration nach .abrain/config.json kopiert"
-    fi
-
-    if [[ -f "$LEGACY_STATUS_FILE" && ! -f "$ABRAIN_STATUS_FILE" ]]; then
-        cp "$LEGACY_STATUS_FILE" "$ABRAIN_STATUS_FILE"
-        log_ok "Legacy-Status nach .abrain/status.json kopiert"
-    fi
 }
 
 has_command() {
@@ -278,14 +240,9 @@ BEISPIELE:
   ${CLI_NAME} start
 
 KONFIGURATION:
-  Primärer Runtime-Pfad: .abrain/
-  Legacy-Fallback:       .agentnn/
+  Runtime-Pfad:          .abrain/
 
 EOF
-    if [[ -n "$ABRAIN_CLI_ALIAS" ]]; then
-        echo "Kompatibilitätsalias aktiv: ${LEGACY_CLI_NAME} -> ${CLI_NAME}"
-        echo
-    fi
 }
 
 show_command_help() {
@@ -385,10 +342,10 @@ Usage: ${CLI_NAME} doctor [--fix]
 CHECKS:
   - Python-, Git- und optionale Tool-Verfügbarkeit
   - .env und Runtime-Konfiguration
-  - bevorzugter Runtime-Pfad .abrain mit Legacy-Fallback auf .agentnn
+  - kanonischer Runtime-Pfad .abrain
 
 OPTIONEN:
-  --fix                 .abrain anlegen und Legacy-Dateien übernehmen
+  --fix                 .abrain anlegen und Standardreparaturen anwenden
 
 BEISPIELE:
   ${CLI_NAME} doctor
@@ -402,8 +359,7 @@ ${CYAN}${CLI_NAME} config${NC} - Runtime-Konfiguration verwalten
 Usage: ${CLI_NAME} config <show|edit|reset|validate>
 
 VERHALTEN:
-  Die CLI liest bevorzugt .abrain/config.json und fällt ansonsten auf
-  .agentnn/config.json zurück.
+  Die CLI verwendet ausschliesslich .abrain/config.json.
 
 BEISPIELE:
   ${CLI_NAME} config show
@@ -518,9 +474,6 @@ show_version() {
     echo
     echo "Runtime:"
     echo "  Primärer CLI-Name: ${CLI_NAME}"
-    if [[ -n "$ABRAIN_CLI_ALIAS" ]]; then
-        echo "  Legacy-Alias: ${ABRAIN_CLI_ALIAS}"
-    fi
     echo "  Runtime-Verzeichnis: $(resolve_runtime_dir)"
     echo "  Konfigurationsdatei: $(current_config_file)"
     echo
@@ -561,10 +514,6 @@ print_status_snapshot() {
     printf "  %-10s %s\n" "docker" "$(tool_version docker)"
     printf "  %-10s %s\n" "poetry" "$(tool_version poetry)"
     echo
-    if [[ -n "$ABRAIN_CLI_ALIAS" ]]; then
-        echo "Alias-Modus:          ${ABRAIN_CLI_ALIAS} -> ${CLI_NAME}"
-        echo
-    fi
 }
 
 run_validation_checks() {
@@ -598,8 +547,6 @@ run_validation_checks() {
 
     if [[ -f "$ABRAIN_CONFIG_FILE" ]]; then
         [[ "$verbose" == "true" ]] && log_ok ".abrain/config.json vorhanden"
-    elif [[ -f "$LEGACY_CONFIG_FILE" ]]; then
-        log_warn "Nur Legacy-Konfiguration gefunden: $LEGACY_CONFIG_FILE"
     else
         log_warn "Keine Runtime-Konfiguration gefunden"
     fi
@@ -844,7 +791,7 @@ cmd_validate() {
 }
 
 cmd_repair() {
-    migrate_legacy_state_if_needed
+    ensure_abrain_state_dir
 
     if [[ ! -f "$REPO_ROOT/.env" && -f "$REPO_ROOT/.env.example" ]]; then
         cp "$REPO_ROOT/.env.example" "$REPO_ROOT/.env"
@@ -946,18 +893,11 @@ cmd_config() {
             else
                 echo "❌ Keine Runtime-Konfiguration gefunden"
                 echo "   Erwartet: $ABRAIN_CONFIG_FILE"
-                if [[ -f "$LEGACY_CONFIG_FILE" ]]; then
-                    echo "   Legacy-Fallback: $LEGACY_CONFIG_FILE"
-                fi
             fi
             ;;
         edit)
             ensure_abrain_state_dir
             local editor="${EDITOR:-nano}"
-            if [[ ! -f "$ABRAIN_CONFIG_FILE" && -f "$LEGACY_CONFIG_FILE" ]]; then
-                cp "$LEGACY_CONFIG_FILE" "$ABRAIN_CONFIG_FILE"
-                log_ok "Legacy-Konfiguration nach $ABRAIN_CONFIG_FILE kopiert"
-            fi
             touch "$ABRAIN_CONFIG_FILE"
             exec "$editor" "$ABRAIN_CONFIG_FILE"
             ;;

@@ -93,7 +93,7 @@ All flat files in `core/` that pre-date the canonical layer system. None are imp
 
 | Path | Classification | Notes |
 |------|----------------|-------|
-| `services/core.py` | **A** (needs cleanup) | 1409-line canonical service layer. Contains 5 legacy functions (`create_agent`, `evaluate_agent`, `load_model`, `train_model`, `dispatch_task`) that still import from old `agentnn/`, `managers/`, `training/`. These functions are **B** — remove them (they have no canonical callers, no api_gateway endpoint calls them). `run_task` and all canonical functions stay. |
+| `services/core.py` | **A** (needs cleanup) | 1409-line canonical service layer. Contains 5 legacy functions (`create_agent`, `evaluate_agent`, `load_model`, `train_model`, `dispatch_task`) that still import from old `legacy runtime/`, `managers/`, `training/`. These functions are **B** — remove them (they have no canonical callers, no api_gateway endpoint calls them). `run_task` and all canonical functions stay. |
 | `services/routing_agent/service.py` | **A** | Thin canonical wrapper around `core/decision` routing engine |
 | `services/routing_agent/` (rest) | **C** | `main.py`, `routes.py`, `config.py`, `rules.yaml`, `Dockerfile` — only needed if running as standalone microservice, which is obsolete. `service.py` is all that's needed. |
 | `services/federation_manager/service.py` | **A** | Federation dispatch, tested canonically |
@@ -167,7 +167,7 @@ Pre-canonical agent implementations: supervisor_agent, chatbot_agent, web_crawle
 
 ---
 
-## 10. `agentnn/` (C)
+## 10. `legacy runtime/` (C)
 
 Pre-ABrain CLI runtime: auth, catalog, context, deployment, integrations, mcp (old), prompting, reasoning, session, storage. Used only by old test_client_interaction.py and test_server_exposure.py (which test that it's disabled).
 
@@ -217,7 +217,7 @@ Old monitoring dashboard (Python + React/TSX). Not the active UI. Active UI is `
 
 ## 16. `integrations/` (C)
 
-Old Flowise/n8n plugins: flowise-agentnn, flowise-nodes, n8n-agentnn. All point to old API endpoints. Canonical Flowise integration is in `adapters/flowise/`.
+Old Flowise/n8n plugins: flowise-legacy runtime, flowise-nodes, n8n-legacy runtime. All point to old API endpoints. Canonical Flowise integration is in `adapters/flowise/`.
 
 **Decision: Delete entirely.**
 
@@ -327,7 +327,7 @@ Old llm_config.py, smolitux_config.py, services.yaml. Superseded by `core/config
 
 ### Delete (reference old code)
 - `tests/mcp/test_agent_external_tools.py` — uses `sdk.cli.main` (old SDK)
-- `tests/mcp/test_client_interaction.py` — uses `agentnn.mcp.mcp_client` (old, disabled)
+- `tests/mcp/test_client_interaction.py` — uses `legacy runtime.mcp.mcp_client` (old, disabled)
 - `tests/mcp/test_mcp_v1_server.py` — tests disabled MCP v1; auto-skips in CI
 - `tests/services/test_core.py` — tests old `create_agent`/`dispatch_task`/etc. from old services/core.py
 - All remaining `tests/` subdirectories and `tests/test_*.py` root files (test old code)
@@ -375,7 +375,7 @@ Old llm_config.py, smolitux_config.py, services.yaml. Superseded by `core/config
 - `INTEGRATION_GUIDE.md` — old integration guide
 - `FULLSTACK_README.md` — old fullstack guide
 - `Konsolidierung-und-Integration-redundanter-Implementierungen.md` — old planning doc
-- `Modernisierung-von-Agent-NN-zur-Modular- Control-Plane-Architektur.md` — old migration doc
+- `Modernisierung-von-ABrain-zur-Modular- Control-Plane-Architektur.md` — old migration doc
 - `start_fullstack.sh` — old start script
 - `status_check.sh` — old status script
 - `SETUP_FIXES.md` — old setup fixes
@@ -384,7 +384,7 @@ Old llm_config.py, smolitux_config.py, services.yaml. Superseded by `core/config
 - `codex-init.sh` — old codex init
 - `prepare_github_release.sh` — old release script
 - `sidebars.js` — Docusaurus (no longer using Docusaurus)
-- `agentnn_devplan_todo.md` — old devplan
+- `legacy-runtime_devplan_todo.md` — old devplan
 - `codex_research_notes.md` — old research notes
 - `codex.tasks.json` — old task tracking
 - `codex_progress.log` — session log
@@ -397,12 +397,12 @@ Old llm_config.py, smolitux_config.py, services.yaml. Superseded by `core/config
 - `setup.py` — old setuptools config
 - `package.json`, `package-lock.json` (root) — Docusaurus docs
 - `test-requirements.txt` — old test requirements
-- `.agentnn/`, `.agentnn_config` — old runtime state
+- `.abrain/`, `.abrain_config` — old runtime state
 - `.codex.json`, `.codex/` — old codex state
-- `TODO-Liste für Agent-NN Entwicklungsplan.md` — old planning
-- `TODO-Liste für Agent-NN Entwicklungsplan.pdf` — old planning PDF
+- `TODO-Liste für ABrain Entwicklungsplan.md` — old planning
+- `TODO-Liste für ABrain Entwicklungsplan.pdf` — old planning PDF
 - `Strategie und Konfigurationsdateien für den autonomen Codex-Agent.pdf` — old planning PDF
-- `Analyse der Agent-NN Codebasis.pdf` — old analysis PDF
+- `Analyse der ABrain Codebasis.pdf` — old analysis PDF
 - `agent_profiles/` — old agent profile YAML files
 - `README.plugin.md` — old plugin readme
 - `CHANGELOG.md` (docs/) — duplicate, keep only root CHANGELOG.md
@@ -441,5 +441,5 @@ Old llm_config.py, smolitux_config.py, services.yaml. Superseded by `core/config
 |----------|-------|--------|
 | A — Canonical, keep | ~25 dirs/modules | Keep as-is |
 | B — Migrate then delete | 1 item: api_route decorator; 5 legacy functions in services/core.py | Inline api_route into api_gateway, remove legacy functions |
-| C — Delete (code) | agents/, agentnn/, archive/, sdk/, training/, managers/, monitoring/, integrations/, benchmarks/, datastores/, security/, server/, tools/, api/, config/, mcp/, interfaces/mcp_v1/, ~40 core/*.py legacy files, ~9 services/ subdirs, ~30 old tests dirs, ~15 old scripts | Delete |
+| C — Delete (code) | agents/, legacy runtime/, archive/, sdk/, training/, managers/, monitoring/, integrations/, benchmarks/, datastores/, security/, server/, tools/, api/, config/, mcp/, interfaces/mcp_v1/, ~40 core/*.py legacy files, ~9 services/ subdirs, ~30 old tests dirs, ~15 old scripts | Delete |
 | D — Delete (docs/artefacts) | ~100+ old docs, PDFs, compose files, old CI workflows, root files | Delete |

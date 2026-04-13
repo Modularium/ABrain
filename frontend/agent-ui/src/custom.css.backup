@@ -1,4 +1,4 @@
-/* Custom styles for Agent-NN UI */
+/* Custom styles for ABrain UI */
 
 /* Tailwind CSS base imports */
 @tailwind base;

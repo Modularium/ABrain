@@ -15,9 +15,7 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_STATE_DIR = REPO_ROOT / ".abrain"
-LEGACY_STATE_DIR = REPO_ROOT / ".agentnn"
 DEFAULT_CONFIG_FILE = DEFAULT_STATE_DIR / "config.json"
-LEGACY_CONFIG_FILE = LEGACY_STATE_DIR / "config.json"
 
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -111,18 +109,10 @@ def _build_run_payload(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def _runtime_dir() -> Path:
-    if DEFAULT_STATE_DIR.exists() or DEFAULT_CONFIG_FILE.exists():
-        return DEFAULT_STATE_DIR
-    if LEGACY_STATE_DIR.exists() or LEGACY_CONFIG_FILE.exists():
-        return LEGACY_STATE_DIR
     return DEFAULT_STATE_DIR
 
 
 def _runtime_config_path() -> Path:
-    if DEFAULT_CONFIG_FILE.exists():
-        return DEFAULT_CONFIG_FILE
-    if LEGACY_CONFIG_FILE.exists():
-        return LEGACY_CONFIG_FILE
     return DEFAULT_CONFIG_FILE
 
 

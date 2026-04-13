@@ -7,7 +7,7 @@
 ### Kanonische Einstiegspunkte
 
 - `scripts/abrain` ist bereits die kanonische Bash-CLI.
-- `scripts/agentnn` ist nur ein duennes Kompatibilitaets-Wrapper-Skript, das
+- `scripts/abrain` ist nur ein duennes Kompatibilitaets-Wrapper-Skript, das
   direkt an `scripts/abrain` delegiert.
 - `scripts/setup.sh` ist der kanonische Bootstrap fuer `.venv`, Dependencies,
   editable Install, API-/MCP-Smokes und UI-Build.
@@ -102,7 +102,7 @@ aber bisher nicht schnell genug ueber die kanonische CLI.
 ## 4. Warum keine zweite CLI noetig ist
 
 - `scripts/abrain` existiert bereits als kanonischer Einstiegspunkt.
-- `scripts/agentnn` ist bewusst nur noch Kompatibilitaetsalias, kein zweites
+- `scripts/abrain` ist bewusst nur noch Kompatibilitaetsalias, kein zweites
   Produkt und keine zweite Runtime.
 - Die fehlende Funktionalitaet betrifft Subcommands, nicht eine fehlende
   Plattform.

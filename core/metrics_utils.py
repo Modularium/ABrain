@@ -60,40 +60,40 @@ except ModuleNotFoundError:  # pragma: no cover - fallback for slim test envs
             self.app = app
 
 TASKS_PROCESSED = Counter(
-    "agentnn_tasks_processed_total", "Total processed tasks", ["service"]
+    "abrain_tasks_processed_total", "Total processed tasks", ["service"]
 )
 ACTIVE_SESSIONS = Gauge(
-    "agentnn_active_sessions", "Active sessions", ["service"]
+    "abrain_active_sessions", "Active sessions", ["service"]
 )
-TOKENS_IN = Counter("agentnn_tokens_in_total", "Tokens received", ["service"])
-TOKENS_OUT = Counter("agentnn_tokens_out_total", "Tokens sent", ["service"])
+TOKENS_IN = Counter("abrain_tokens_in_total", "Tokens received", ["service"])
+TOKENS_OUT = Counter("abrain_tokens_out_total", "Tokens sent", ["service"])
 RESPONSE_TIME = Histogram(
-    "agentnn_response_seconds", "Response time in seconds", ["service", "path"]
+    "abrain_response_seconds", "Response time in seconds", ["service", "path"]
 )
 REQUEST_ERRORS = Counter(
-    "agentnn_request_errors_total",
+    "abrain_request_errors_total",
     "Total error responses",
     ["service", "path", "status"],
 )
 
 # additional metrics for feedback and routing
 FEEDBACK_POSITIVE = Counter(
-    "agentnn_feedback_positive_total",
+    "abrain_feedback_positive_total",
     "Positive feedback entries",
     ["agent"],
 )
 FEEDBACK_NEGATIVE = Counter(
-    "agentnn_feedback_negative_total",
+    "abrain_feedback_negative_total",
     "Negative feedback entries",
     ["agent"],
 )
 TASK_SUCCESS = Counter(
-    "agentnn_task_success_total",
+    "abrain_task_success_total",
     "Successful tasks per type",
     ["task_type"],
 )
 ROUTING_DECISIONS = Counter(
-    "agentnn_routing_decisions_total",
+    "abrain_routing_decisions_total",
     "Routing decisions",
     ["task_type", "worker"],
 )

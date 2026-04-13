@@ -27,10 +27,10 @@ keys/
 .codex/
 .ipynb_checkpoints/
 /frontend/node_modules/
-integrations/n8n-agentnn/node_modules/
-integrations/n8n-agentnn/dist/
-integrations/flowise-agentnn/node_modules/
-integrations/flowise-agentnn/dist/
+integrations/n8n-abrain/node_modules/
+integrations/n8n-abrain/dist/
+integrations/flowise-abrain/node_modules/
+integrations/flowise-abrain/dist/
 integrations/flowise-nodes/node_modules/
 *.env
 frontend/agent-ui/dist/

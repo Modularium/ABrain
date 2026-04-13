@@ -1,6 +1,6 @@
 site_name: ABrain
 site_description: Hardened multi-agent execution stack with typed tool dispatch and secure adapter boundaries
-repo_url: https://github.com/EcoSphereNetwork/Agent-NN
+repo_url: https://github.com/EcoSphereNetwork/ABrain
 theme:
   name: material
   features:

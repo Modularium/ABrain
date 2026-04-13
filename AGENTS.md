@@ -1,11 +1,11 @@
 # AGENTEN-Konfiguration: Rollen, Fähigkeiten und Richtlinien
 
-Dieses Dokument definiert die Rollen und Verhaltensregeln für den autonomen Codex-Agenten im Projekt **Agent-NN**. Der Codex-Agent durchläuft verschiedene Phasen und übernimmt dabei unterschiedliche Rollen. Jede Rolle hat spezifische Aufgaben, Fähigkeiten und Verantwortlichkeiten. Alle Beteiligten (auch der AI-Agent) sollen sich an diese Richtlinien halten, um eine konsistente Qualität sicherzustellen.
+Dieses Dokument definiert die Rollen und Verhaltensregeln für den autonomen Codex-Agenten im Projekt **ABrain**. Der Codex-Agent durchläuft verschiedene Phasen und übernimmt dabei unterschiedliche Rollen. Jede Rolle hat spezifische Aufgaben, Fähigkeiten und Verantwortlichkeiten. Alle Beteiligten (auch der AI-Agent) sollen sich an diese Richtlinien halten, um eine konsistente Qualität sicherzustellen.
 
 ## Entwicklungsphasen nach MCP-Plan
-Der begleitende *Entwicklungsplan für das Agent-NN Framework* beschreibt vier aufeinanderfolgende Phasen:
+Der begleitende *Entwicklungsplan für das ABrain Framework* beschreibt vier aufeinanderfolgende Phasen:
 1. **Phase 1 – MCP-Grundlagen**: Einführung des `ModelContext` und Aufteilung in Microservices (Dispatcher, Registry, Session-Manager, Vector-Store, LLM-Gateway, Worker-Services).
-2. **Phase 2 – Agent-NN & Lernmechanismen**: Aktivierung des MetaLearner und agenteninternes Modell-Routing.
+2. **Phase 2 – ABrain & Lernmechanismen**: Aktivierung des MetaLearner und agenteninternes Modell-Routing.
 3. **Phase 3 – SDK & Provider-System**: Entwicklung eines LLM-SDKs mit verschiedenen Providern und dynamischer Modellkonfiguration.
 4. **Phase 4 – Testing und Produktreife**: Vollständige Testabdeckung, CI/CD-Workflows sowie aktualisierte Dokumentation und Container-Deployments.
 

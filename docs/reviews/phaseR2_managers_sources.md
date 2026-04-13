@@ -105,7 +105,7 @@ Der Vorgänger-Snapshot `157b6bbf^` enthält den vollständigen Stand unmittelba
 ### Ebenfalls gelöschte Manager-ähnliche Dateien (aus anderen Verzeichnissen)
 | Datei | Beschreibung |
 |---|---|
-| `agentnn/session/session_manager.py` | Session-Verwaltung |
+| `legacy runtime/session/session_manager.py` | Session-Verwaltung |
 | `core/llm_providers/manager.py` | LLM-Provider-Manager |
 | `mcp/session_manager/{__init__,api,main,service}.py` | MCP-Session-Service |
 | `monitoring/monitoring/api/data_manager.py` | Monitoring-API-Datamanager |

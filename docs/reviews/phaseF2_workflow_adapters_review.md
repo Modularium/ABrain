@@ -55,8 +55,8 @@ Die neuen Adapter liefern dieselbe `ExecutionResult`-Struktur wie andere Adapter
 
 Im Repository verbleiben aeltere Integrationsartefakte, unter anderem:
 
-- `integrations/n8n-agentnn/*`
-- `integrations/flowise-agentnn/*`
+- `integrations/n8n-legacy runtime/*`
+- `integrations/flowise-legacy runtime/*`
 - `integrations/flowise-nodes/*`
 - aeltere Integrationsdokumente unter `docs/integrations/*`
 

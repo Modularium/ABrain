@@ -22,7 +22,7 @@ All notable changes to this project are documented in this file.
 
 ### Naming And Identity
 - visible product identity is now consistently documented as `ABrain`
-- technical slugs such as `agentnn` and `agent-nn` remain where changing them would risk packaging or deployment regressions
+- technical slugs such as `abrain` and `abrain` remain where changing them would risk packaging or deployment regressions
 
 ## v1.0.0 - 2025-07-21 🚀 **Full-Stack Release**
 
@@ -81,8 +81,8 @@ All notable changes to this project are documented in this file.
 
 ### ⚡ Quick Start
 ```bash
-git clone https://github.com/EcoSphereNetwork/Agent-NN.git
-cd Agent-NN
+git clone https://github.com/EcoSphereNetwork/ABrain.git
+cd ABrain
 bash start_fullstack.sh
 # Access: http://localhost:3001
 ```
