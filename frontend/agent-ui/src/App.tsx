@@ -8,6 +8,7 @@ import PlansPage from './pages/PlansPage'
 import SettingsPage from './pages/SettingsPage'
 import DashboardPage from './pages/Dashboard'
 import TracesPage from './pages/TracesPage'
+import SystemHealthPage from './pages/SystemHealthPage'
 import { LoadingSpinner } from './components/ui/LoadingSpinner'
 import Toast from './components/ui/Toast'
 
@@ -175,6 +176,7 @@ export default function App() {
           <main className="flex-1 overflow-y-auto">
             <Routes>
               <Route path="/" element={<DashboardPage />} />
+              <Route path="/health" element={<SystemHealthPage />} />
               <Route path="/traces" element={<TracesPage />} />
               <Route path="/approvals" element={<ApprovalsPage />} />
               <Route path="/plans" element={<PlansPage />} />

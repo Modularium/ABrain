@@ -10,6 +10,7 @@ interface SidebarProps {
 
 const navigationItems = [
   { path: '/', name: 'Overview', icon: 'O', end: true },
+  { path: '/health', name: 'Health', icon: 'H' },
   { path: '/traces', name: 'Traces', icon: 'T' },
   { path: '/approvals', name: 'Approvals', icon: 'A' },
   { path: '/plans', name: 'Plans', icon: 'P' },

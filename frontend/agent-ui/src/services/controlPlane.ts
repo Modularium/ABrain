@@ -5,6 +5,23 @@ export interface ControlPlaneLayer {
   status: string
 }
 
+export interface HealthAttentionItem {
+  level: 'warning' | 'info'
+  label: string
+  detail: string
+}
+
+export interface HealthSummary {
+  overall: 'healthy' | 'attention' | 'degraded'
+  degraded_agent_count: number
+  offline_agent_count: number
+  paused_plan_count: number
+  failed_plan_count: number
+  pending_approval_count: number
+  has_warnings: boolean
+  attention_items: HealthAttentionItem[]
+}
+
 export interface ControlPlaneOverview {
   system: {
     name: string
@@ -19,6 +36,7 @@ export interface ControlPlaneOverview {
     recent_plans: number
     recent_governance_events: number
   }
+  health: HealthSummary
   agents: ControlPlaneAgent[]
   pending_approvals: ApprovalRequest[]
   recent_traces: TraceRecord[]

@@ -866,6 +866,113 @@ def list_agent_catalog() -> Dict[str, Any]:
     return {"agents": catalog}
 
 
+def _compute_health_summary(
+    agents: list,
+    approvals: list,
+    plans: list,
+    warnings: list[str],
+    layers: list[dict],
+) -> Dict[str, Any]:
+    """Derive a health summary from the already-collected canonical signals.
+
+    This function contains no IO.  It derives operator-relevant health signals
+    from the lists already gathered by ``get_control_plane_overview``.
+
+    Returns a dict with:
+    - ``overall``: "healthy" | "attention" | "degraded"
+    - ``degraded_agent_count``, ``offline_agent_count``
+    - ``paused_plan_count``, ``failed_plan_count``
+    - ``pending_approval_count``
+    - ``has_warnings``
+    - ``attention_items``: prioritised list for the health view
+    """
+    # Agent availability counts
+    degraded_agents = [a for a in agents if str(a.get("availability") or "").lower() == "degraded"]
+    offline_agents = [a for a in agents if str(a.get("availability") or "").lower() == "offline"]
+    degraded_agent_count = len(degraded_agents)
+    offline_agent_count = len(offline_agents)
+
+    # Plan status breakdown
+    paused_plans = [p for p in plans if str(p.get("status") or "").lower() == "paused"]
+    failed_plans = [p for p in plans if str(p.get("status") or "").lower() in {"failed", "rejected"}]
+    paused_plan_count = len(paused_plans)
+    failed_plan_count = len(failed_plans)
+
+    pending_approval_count = len(approvals)
+    has_warnings = bool(warnings)
+
+    # Layer health
+    unavailable_layers = [l["name"] for l in layers if l.get("status") == "unavailable"]
+
+    # Build attention items list (ordered by severity)
+    attention_items: list[dict[str, str]] = []
+
+    for layer_name in unavailable_layers:
+        attention_items.append({
+            "level": "warning",
+            "label": f"{layer_name} layer unavailable",
+            "detail": "Read from this layer failed during overview assembly.",
+        })
+
+    for agent in offline_agents[:3]:
+        attention_items.append({
+            "level": "warning",
+            "label": f"Agent offline: {agent.get('display_name') or agent.get('agent_id', '?')}",
+            "detail": f"Availability: offline — this agent will not be selected for routing.",
+        })
+
+    if pending_approval_count > 0:
+        attention_items.append({
+            "level": "warning",
+            "label": f"{pending_approval_count} pending approval{'s' if pending_approval_count > 1 else ''}",
+            "detail": "Plans are paused waiting for human approval.",
+        })
+
+    for plan in paused_plans[:3]:
+        attention_items.append({
+            "level": "info",
+            "label": f"Plan paused: {plan.get('workflow_name') or plan.get('plan_id', '?')}",
+            "detail": f"Plan {plan.get('plan_id', '?')} is paused — may be waiting for approval.",
+        })
+
+    for plan in failed_plans[:3]:
+        attention_items.append({
+            "level": "warning",
+            "label": f"Plan failed: {plan.get('workflow_name') or plan.get('plan_id', '?')}",
+            "detail": f"Plan {plan.get('plan_id', '?')} ended with status {plan.get('status', 'failed')!r}.",
+        })
+
+    for agent in degraded_agents[:3]:
+        attention_items.append({
+            "level": "info",
+            "label": f"Agent degraded: {agent.get('display_name') or agent.get('agent_id', '?')}",
+            "detail": "This agent is available but may have reduced capacity or reliability.",
+        })
+
+    if has_warnings:
+        for warning in warnings[:3]:
+            attention_items.append({"level": "info", "label": "System warning", "detail": warning})
+
+    # Overall status
+    if unavailable_layers or offline_agent_count > 0:
+        overall = "degraded"
+    elif pending_approval_count > 0 or paused_plan_count > 0 or failed_plan_count > 0 or degraded_agent_count > 0 or has_warnings:
+        overall = "attention"
+    else:
+        overall = "healthy"
+
+    return {
+        "overall": overall,
+        "degraded_agent_count": degraded_agent_count,
+        "offline_agent_count": offline_agent_count,
+        "paused_plan_count": paused_plan_count,
+        "failed_plan_count": failed_plan_count,
+        "pending_approval_count": pending_approval_count,
+        "has_warnings": has_warnings,
+        "attention_items": attention_items,
+    }
+
+
 def get_control_plane_overview(
     *,
     agent_limit: int = 5,
@@ -919,19 +1026,34 @@ def get_control_plane_overview(
     plans = list(plans_result or [])
     governance = list(governance_result or [])
 
+    # S7: derive layer statuses from read success/failure flags
+    # A layer is "unavailable" if its canonical read failed (captured in warnings).
+    layer_status_map: dict[str, str] = {
+        "Decision": "available",
+        "Execution": "available",
+        "Learning": "available",
+        "Orchestration": "available",
+        "Approval": "available" if agents_result is not None else "unavailable",
+        "Governance": "available" if governance_state is not None else "unavailable",
+        "Audit/Trace": "available" if traces_result is not None else "unavailable",
+        "MCP v2": "available",
+    }
+    # Override Approval layer if approval read failed
+    if approvals_result is None:
+        layer_status_map["Approval"] = "unavailable"
+    # Override Orchestration if plan read failed
+    if plans_result is None:
+        layer_status_map["Orchestration"] = "unavailable"
+
+    layers = [{"name": name, "status": status} for name, status in layer_status_map.items()]
+
+    # S7: compute health summary from canonical signals
+    health = _compute_health_summary(agents, approvals, plans, warnings, layers)
+
     return {
         "system": {
             "name": "ABrain Control Plane",
-            "layers": [
-                {"name": "Decision", "status": "available"},
-                {"name": "Execution", "status": "available"},
-                {"name": "Learning", "status": "available"},
-                {"name": "Orchestration", "status": "available"},
-                {"name": "Approval", "status": "available"},
-                {"name": "Governance", "status": "available"},
-                {"name": "Audit/Trace", "status": "available"},
-                {"name": "MCP v2", "status": "available"},
-            ],
+            "layers": layers,
             "governance": governance_state or {},
             "warnings": warnings,
         },
@@ -942,6 +1064,7 @@ def get_control_plane_overview(
             "recent_plans": len(plans),
             "recent_governance_events": len(governance),
         },
+        "health": health,
         "agents": agents,
         "pending_approvals": approvals,
         "recent_traces": traces,

@@ -98,6 +98,17 @@ def test_control_plane_overview_http_route_uses_canonical_core(monkeypatch):
                 "governance": {"engine": "PolicyEngine", "registry": "PolicyRegistry", "policy_path": None},
                 "warnings": [],
             },
+            # S7: health summary field required by ControlPlaneOverviewResponse
+            "health": {
+                "overall": "healthy",
+                "degraded_agent_count": 0,
+                "offline_agent_count": 0,
+                "paused_plan_count": 0,
+                "failed_plan_count": 0,
+                "pending_approval_count": 0,
+                "has_warnings": False,
+                "attention_items": [],
+            },
             "agents": [
                 {
                     "agent_id": "agent-1",
