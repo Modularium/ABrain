@@ -27,6 +27,7 @@ jobs:
       - name: Run foundations test suite
         run: |
           python -m pytest -o python_files='test_*.py' \
+            tests/state \
             tests/mcp \
             tests/approval \
             tests/orchestration \
@@ -34,6 +35,7 @@ jobs:
             tests/decision \
             tests/adapters \
             tests/core \
+            tests/governance \
             tests/services \
             tests/integration/test_node_export.py
 
@@ -77,6 +79,9 @@ jobs:
             core/audit/trace_models.py \
             core/audit/trace_store.py \
             core/audit/context.py \
+            core/evaluation/__init__.py \
+            core/evaluation/models.py \
+            core/evaluation/harness.py \
             core/execution/__init__.py \
             core/execution/dispatcher.py \
             core/execution/execution_engine.py \
