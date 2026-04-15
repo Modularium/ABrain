@@ -249,4 +249,27 @@ class BatchEvaluationReport(BaseModel):
     traces_with_regression: int = 0
     """Traces where has_any_regression=True."""
 
+    # ── Routing KPIs ──────────────────────────────────────────────────────────
+
+    trace_success_count: int = 0
+    """Traces with status='completed'."""
+
+    trace_failed_count: int = 0
+    """Traces with status='failed'."""
+
+    trace_success_rate: float | None = None
+    """success_count / (success_count + failed_count); None if no terminal traces."""
+
+    avg_duration_ms: float | None = None
+    """Mean trace duration in milliseconds across completed traces."""
+
+    p95_duration_ms: float | None = None
+    """95th-percentile trace duration in milliseconds across completed traces."""
+
+    # ── Safety metrics ────────────────────────────────────────────────────────
+
+    approval_bypass_count: int = 0
+    """Steps where approval_required=True but no approval_id was recorded.
+    Indicates an approval gate that was not followed up — a safety signal."""
+
     baseline_metadata: dict[str, Any] = Field(default_factory=dict)

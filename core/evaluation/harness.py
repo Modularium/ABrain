@@ -107,6 +107,7 @@ class TraceEvaluator:
         )
 
         confidences: list[float] = []
+        durations_ms: list[float] = []
 
         for trace_record in traces:
             snapshot = self._trace_store.get_trace(trace_record.trace_id)
@@ -115,6 +116,30 @@ class TraceEvaluator:
             result = self._evaluate_snapshot(snapshot)
 
             report.trace_count += 1
+
+            # ── Routing KPIs: success rate + latency ──────────────────────
+            trace_status = snapshot.trace.status.lower() if snapshot.trace.status else ""
+            if trace_status == "completed":
+                report.trace_success_count += 1
+            elif trace_status == "failed":
+                report.trace_failed_count += 1
+
+            if (
+                snapshot.trace.ended_at is not None
+                and snapshot.trace.started_at is not None
+                and trace_status == "completed"
+            ):
+                delta = (
+                    snapshot.trace.ended_at - snapshot.trace.started_at
+                ).total_seconds() * 1000.0
+                if delta >= 0.0:
+                    durations_ms.append(delta)
+
+            # ── Safety metrics: approval bypass ───────────────────────────
+            for exp in snapshot.explainability:
+                if exp.approval_required and not exp.approval_id:
+                    report.approval_bypass_count += 1
+
             if result.can_replay:
                 report.replayable_count += 1
             if result.has_any_regression:
@@ -180,6 +205,18 @@ class TraceEvaluator:
 
         if confidences:
             report.avg_routing_confidence = sum(confidences) / len(confidences)
+
+        # ── Routing KPIs: derived rates ────────────────────────────────────
+        terminal_count = report.trace_success_count + report.trace_failed_count
+        if terminal_count > 0:
+            report.trace_success_rate = report.trace_success_count / terminal_count
+
+        if durations_ms:
+            report.avg_duration_ms = sum(durations_ms) / len(durations_ms)
+            sorted_d = sorted(durations_ms)
+            # 95th percentile: index = min(floor(0.95 * N), N-1)
+            p95_idx = min(int(0.95 * len(sorted_d)), len(sorted_d) - 1)
+            report.p95_duration_ms = sorted_d[p95_idx]
 
         return report
 

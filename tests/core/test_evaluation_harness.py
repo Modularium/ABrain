@@ -127,7 +127,9 @@ def _store_trace_with_explainability(
     score_gap: float | None = 0.15,
     policy_effect: str | None = "allow",
     approval_required: bool = False,
+    approval_id: str | None = None,
     matched_policy_ids: list[str] | None = None,
+    status: str = "completed",
 ) -> str:
     """Store a minimal trace with one explainability record, return trace_id."""
     trace = store.create_trace("test-workflow", metadata={"task_type": task_type})
@@ -141,6 +143,7 @@ def _store_trace_with_explainability(
             routing_reason_summary=f"selected {selected_agent_id}",
             matched_policy_ids=matched_policy_ids or [],
             approval_required=approval_required,
+            approval_id=approval_id,
             routing_confidence=routing_confidence,
             score_gap=score_gap,
             confidence_band=confidence_band,
@@ -156,7 +159,7 @@ def _store_trace_with_explainability(
             },
         )
     )
-    store.finish_trace(trace.trace_id, status="completed")
+    store.finish_trace(trace.trace_id, status=status)
     return trace.trace_id
 
 
@@ -749,3 +752,253 @@ def test_batch_evaluation_report_model():
     assert report.trace_count == 0
     assert report.routing_match_rate is None
     assert report.confidence_band_distribution == {}
+
+
+# ---------------------------------------------------------------------------
+# S14 — Safety Metrics + Routing KPIs
+# ---------------------------------------------------------------------------
+
+
+def test_batch_report_new_safety_and_kpi_fields_default():
+    """New S14 fields have correct zero/None defaults."""
+    report = BatchEvaluationReport()
+    assert report.trace_success_count == 0
+    assert report.trace_failed_count == 0
+    assert report.trace_success_rate is None
+    assert report.avg_duration_ms is None
+    assert report.p95_duration_ms is None
+    assert report.approval_bypass_count == 0
+
+
+def test_compute_baselines_trace_success_rate_all_completed(tmp_path: Path):
+    store = _make_trace_store(tmp_path)
+    routing_stub = _make_routing_engine_stub(selected_agent_id="agent-alpha")
+    policy_stub = _make_policy_engine_stub(effect="allow")
+
+    for _ in range(3):
+        _store_trace_with_explainability(store, status="completed")
+
+    evaluator = TraceEvaluator(
+        store, routing_stub, policy_stub, agent_descriptors=[_make_descriptor()]
+    )
+    report = evaluator.compute_baselines(limit=10)
+
+    assert report.trace_success_count == 3
+    assert report.trace_failed_count == 0
+    assert report.trace_success_rate == pytest.approx(1.0)
+
+
+def test_compute_baselines_trace_success_rate_all_failed(tmp_path: Path):
+    store = _make_trace_store(tmp_path)
+    routing_stub = _make_routing_engine_stub(selected_agent_id="agent-alpha")
+    policy_stub = _make_policy_engine_stub(effect="allow")
+
+    for _ in range(2):
+        _store_trace_with_explainability(store, status="failed")
+
+    evaluator = TraceEvaluator(
+        store, routing_stub, policy_stub, agent_descriptors=[_make_descriptor()]
+    )
+    report = evaluator.compute_baselines(limit=10)
+
+    assert report.trace_success_count == 0
+    assert report.trace_failed_count == 2
+    assert report.trace_success_rate == pytest.approx(0.0)
+
+
+def test_compute_baselines_trace_success_rate_mixed(tmp_path: Path):
+    store = _make_trace_store(tmp_path)
+    routing_stub = _make_routing_engine_stub(selected_agent_id="agent-alpha")
+    policy_stub = _make_policy_engine_stub(effect="allow")
+
+    _store_trace_with_explainability(store, status="completed")
+    _store_trace_with_explainability(store, status="completed")
+    _store_trace_with_explainability(store, status="failed")
+
+    evaluator = TraceEvaluator(
+        store, routing_stub, policy_stub, agent_descriptors=[_make_descriptor()]
+    )
+    report = evaluator.compute_baselines(limit=10)
+
+    assert report.trace_success_count == 2
+    assert report.trace_failed_count == 1
+    assert report.trace_success_rate == pytest.approx(2 / 3)
+
+
+def test_compute_baselines_running_traces_excluded_from_success_rate(tmp_path: Path):
+    """Traces still in 'running' state are not terminal — not counted in success_rate."""
+    store = _make_trace_store(tmp_path)
+    routing_stub = _make_routing_engine_stub(selected_agent_id="agent-alpha")
+    policy_stub = _make_policy_engine_stub(effect="allow")
+
+    # Create a completed trace
+    _store_trace_with_explainability(store, status="completed")
+    # Create a trace that never gets finished (status stays "running")
+    trace = store.create_trace("test-workflow", metadata={"task_type": "analysis"})
+    store.store_explainability(
+        ExplainabilityRecord(
+            trace_id=trace.trace_id,
+            step_id="execute",
+            selected_agent_id="agent-alpha",
+            candidate_agent_ids=["agent-alpha"],
+            selected_score=0.9,
+            routing_reason_summary="still running",
+            metadata={"task_type": "analysis", "required_capabilities": []},
+        )
+    )
+    # NOTE: trace is NOT finished — status remains "running"
+
+    evaluator = TraceEvaluator(
+        store, routing_stub, policy_stub, agent_descriptors=[_make_descriptor()]
+    )
+    report = evaluator.compute_baselines(limit=10)
+
+    assert report.trace_count == 2
+    assert report.trace_success_count == 1
+    assert report.trace_failed_count == 0
+    # success_rate = 1 / (1+0) = 1.0 (only terminal traces counted)
+    assert report.trace_success_rate == pytest.approx(1.0)
+
+
+def test_compute_baselines_duration_computed_for_completed_traces(tmp_path: Path):
+    """avg_duration_ms and p95_duration_ms are computed for completed traces."""
+    store = _make_trace_store(tmp_path)
+    routing_stub = _make_routing_engine_stub(selected_agent_id="agent-alpha")
+    policy_stub = _make_policy_engine_stub(effect="allow")
+
+    for _ in range(3):
+        _store_trace_with_explainability(store, status="completed")
+
+    evaluator = TraceEvaluator(
+        store, routing_stub, policy_stub, agent_descriptors=[_make_descriptor()]
+    )
+    report = evaluator.compute_baselines(limit=10)
+
+    assert report.avg_duration_ms is not None
+    assert report.p95_duration_ms is not None
+    assert report.avg_duration_ms >= 0.0
+    assert report.p95_duration_ms >= 0.0
+
+
+def test_compute_baselines_duration_none_when_no_completed_traces(tmp_path: Path):
+    """Duration metrics are None when there are no completed traces."""
+    store = _make_trace_store(tmp_path)
+    routing_stub = _make_routing_engine_stub(selected_agent_id="agent-alpha")
+    policy_stub = _make_policy_engine_stub(effect="allow")
+
+    # Only failed traces — finish_trace with "failed" still sets ended_at but
+    # we skip non-completed traces in duration tracking
+    _store_trace_with_explainability(store, status="failed")
+
+    evaluator = TraceEvaluator(
+        store, routing_stub, policy_stub, agent_descriptors=[_make_descriptor()]
+    )
+    report = evaluator.compute_baselines(limit=10)
+
+    assert report.avg_duration_ms is None
+    assert report.p95_duration_ms is None
+
+
+def test_compute_baselines_empty_store_duration_none(tmp_path: Path):
+    """Empty store produces None for all optional metrics."""
+    store = _make_trace_store(tmp_path)
+    routing_stub = _make_routing_engine_stub()
+    policy_stub = _make_policy_engine_stub()
+
+    evaluator = TraceEvaluator(
+        store, routing_stub, policy_stub, agent_descriptors=[]
+    )
+    report = evaluator.compute_baselines(limit=10)
+
+    assert report.trace_success_rate is None
+    assert report.avg_duration_ms is None
+    assert report.p95_duration_ms is None
+    assert report.approval_bypass_count == 0
+
+
+def test_compute_baselines_approval_bypass_counted(tmp_path: Path):
+    """Steps with approval_required=True and no approval_id are counted as bypasses."""
+    store = _make_trace_store(tmp_path)
+    routing_stub = _make_routing_engine_stub(selected_agent_id="agent-alpha")
+    policy_stub = _make_policy_engine_stub(effect="require_approval")
+
+    # This step required approval but has no approval_id → bypass
+    _store_trace_with_explainability(
+        store,
+        approval_required=True,
+        approval_id=None,
+        policy_effect="require_approval",
+    )
+
+    evaluator = TraceEvaluator(
+        store, routing_stub, policy_stub, agent_descriptors=[_make_descriptor()]
+    )
+    report = evaluator.compute_baselines(limit=10)
+
+    assert report.approval_bypass_count == 1
+
+
+def test_compute_baselines_approval_no_bypass_when_id_present(tmp_path: Path):
+    """Steps with approval_required=True AND an approval_id are NOT bypasses."""
+    store = _make_trace_store(tmp_path)
+    routing_stub = _make_routing_engine_stub(selected_agent_id="agent-alpha")
+    policy_stub = _make_policy_engine_stub(effect="require_approval")
+
+    _store_trace_with_explainability(
+        store,
+        approval_required=True,
+        approval_id="approval-abc123",
+        policy_effect="require_approval",
+    )
+
+    evaluator = TraceEvaluator(
+        store, routing_stub, policy_stub, agent_descriptors=[_make_descriptor()]
+    )
+    report = evaluator.compute_baselines(limit=10)
+
+    assert report.approval_bypass_count == 0
+
+
+def test_compute_baselines_approval_no_bypass_when_not_required(tmp_path: Path):
+    """Steps that don't require approval are never bypass candidates."""
+    store = _make_trace_store(tmp_path)
+    routing_stub = _make_routing_engine_stub(selected_agent_id="agent-alpha")
+    policy_stub = _make_policy_engine_stub(effect="allow")
+
+    _store_trace_with_explainability(
+        store,
+        approval_required=False,
+        approval_id=None,
+    )
+
+    evaluator = TraceEvaluator(
+        store, routing_stub, policy_stub, agent_descriptors=[_make_descriptor()]
+    )
+    report = evaluator.compute_baselines(limit=10)
+
+    assert report.approval_bypass_count == 0
+
+
+def test_compute_baselines_approval_bypass_count_accumulates(tmp_path: Path):
+    """Bypass count accumulates across multiple steps across multiple traces."""
+    store = _make_trace_store(tmp_path)
+    routing_stub = _make_routing_engine_stub(selected_agent_id="agent-alpha")
+    policy_stub = _make_policy_engine_stub(effect="require_approval")
+
+    # 2 traces with bypass, 1 without
+    _store_trace_with_explainability(
+        store, approval_required=True, approval_id=None, policy_effect="require_approval"
+    )
+    _store_trace_with_explainability(
+        store, approval_required=True, approval_id=None, policy_effect="require_approval"
+    )
+    _store_trace_with_explainability(
+        store, approval_required=True, approval_id="approval-xyz", policy_effect="require_approval"
+    )
+
+    evaluator = TraceEvaluator(
+        store, routing_stub, policy_stub, agent_descriptors=[_make_descriptor()]
+    )
+    report = evaluator.compute_baselines(limit=10)
+
+    assert report.approval_bypass_count == 2
