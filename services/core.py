@@ -17,6 +17,8 @@ from core.tools import build_default_registry
 
 __all__ = [
     "approve_plan_step",
+    "compute_evaluation_baselines",
+    "evaluate_trace",
     "execute_tool",
     "get_control_plane_overview",
     "get_explainability",
@@ -1660,3 +1662,69 @@ def _store_trace_explainability(
             },
         )
     )
+
+
+def evaluate_trace(trace_id: str) -> Dict[str, Any] | None:
+    """Dry-run replay and compliance check for a single stored trace.
+
+    Runs a read-only evaluation of the stored trace against the current routing
+    and governance engines.  No execution is triggered and no data is written.
+
+    Returns ``None`` when the trace_id is not found in the store.
+    Returns a serializable ``TraceEvaluationResult.model_dump()`` dict otherwise.
+    """
+    from core.decision import AgentRegistry, RoutingEngine
+    from core.evaluation import TraceEvaluator
+    from core.governance import PolicyEngine
+
+    trace_state = _get_trace_state()
+    trace_store = trace_state["store"]
+    governance_state = _get_governance_state()
+    policy_engine = governance_state["engine"]
+
+    routing_engine = RoutingEngine()
+    registry = AgentRegistry()
+    descriptors = registry.list_descriptors()
+
+    evaluator = TraceEvaluator(
+        trace_store,
+        routing_engine,
+        policy_engine,
+        agent_descriptors=descriptors,
+    )
+    result = evaluator.evaluate_trace(trace_id)
+    if result is None:
+        return None
+    return result.model_dump(mode="json")
+
+
+def compute_evaluation_baselines(*, limit: int = 100) -> Dict[str, Any]:
+    """Compute baseline evaluation metrics across recent stored traces.
+
+    Reads up to *limit* recent traces from the canonical TraceStore, runs
+    dry-run routing and policy comparisons for each, and returns a
+    ``BatchEvaluationReport.model_dump()`` dict with aggregated metrics.
+
+    No execution is triggered and no data is written.
+    """
+    from core.decision import AgentRegistry, RoutingEngine
+    from core.evaluation import TraceEvaluator
+    from core.governance import PolicyEngine
+
+    trace_state = _get_trace_state()
+    trace_store = trace_state["store"]
+    governance_state = _get_governance_state()
+    policy_engine = governance_state["engine"]
+
+    routing_engine = RoutingEngine()
+    registry = AgentRegistry()
+    descriptors = registry.list_descriptors()
+
+    evaluator = TraceEvaluator(
+        trace_store,
+        routing_engine,
+        policy_engine,
+        agent_descriptors=descriptors,
+    )
+    report = evaluator.compute_baselines(limit=limit)
+    return report.model_dump(mode="json")

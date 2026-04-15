@@ -501,6 +501,112 @@ def _render_trace_drilldown(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_trace_replay(payload: dict[str, Any] | None) -> str:
+    """Render a TraceEvaluationResult as a human-readable replay report."""
+    if payload is None:
+        return "Trace not found."
+
+    trace_id = payload.get("trace_id", "n/a")
+    workflow = payload.get("workflow_name", "n/a")
+    can_replay = payload.get("can_replay", False)
+    has_regression = payload.get("has_any_regression", False)
+
+    lines = [
+        "=== Trace Replay Report ===",
+        f"Trace ID:   {trace_id}",
+        f"Workflow:   {workflow}",
+        f"Replayable: {'yes' if can_replay else 'no'}",
+        f"Regression: {'YES' if has_regression else 'none'}",
+        "",
+    ]
+
+    step_results = payload.get("step_results") or []
+    if not step_results:
+        lines.append("No decision steps to evaluate.")
+    else:
+        lines.append(f"Step results ({len(step_results)}):")
+        for step in step_results:
+            step_id = step.get("step_id", "?")
+            regression_flag = "  [REGRESSION]" if step.get("has_regression") else ""
+            lines.append(f"  Step [{step_id}]{regression_flag}")
+
+            r = step.get("routing") or {}
+            verdict = r.get("verdict", "n/a")
+            stored = r.get("stored_agent_id") or "-"
+            current = r.get("current_agent_id") or "-"
+            reason = r.get("reason") or r.get("non_replayable_reason") or ""
+            lines.append(f"    Routing:  {verdict}  {stored!r} → {current!r}")
+            if reason:
+                lines.append(f"             {reason}")
+
+            p = step.get("policy")
+            if p:
+                pv = p.get("verdict", "n/a")
+                se = p.get("stored_effect") or "-"
+                ce = p.get("current_effect") or "-"
+                ap = "approval changed" if not p.get("approval_consistency", True) else ""
+                lines.append(f"    Policy:   {pv}  {se!r} → {ce!r}  {ap}".rstrip())
+
+            lines.append("")
+
+    summary = payload.get("summary") or {}
+    lines.append(
+        f"Summary: steps={summary.get('step_count', 0)}  "
+        f"routing_match={payload.get('routing_match_count', 0)}  "
+        f"routing_regression={payload.get('routing_regression_count', 0)}  "
+        f"policy_compliant={payload.get('policy_compliant_count', 0)}  "
+        f"policy_regression={payload.get('policy_regression_count', 0)}"
+    )
+    return "\n".join(lines)
+
+
+def _render_compliance_baselines(payload: dict[str, Any]) -> str:
+    """Render a BatchEvaluationReport as a human-readable baseline summary."""
+    lines = [
+        "=== Evaluation Baselines ===",
+        f"Computed at:        {payload.get('computed_at', '-')}",
+        f"Traces examined:    {payload.get('trace_count', 0)}",
+        f"Replayable traces:  {payload.get('replayable_count', 0)}",
+        f"Total steps:        {payload.get('evaluated_step_count', 0)}",
+        f"Non-replayable:     {payload.get('non_replayable_step_count', 0)}",
+        "",
+        "Routing:",
+    ]
+
+    rmr = payload.get("routing_match_rate")
+    lines.append(
+        f"  Match rate:        {f'{rmr:.1%}' if rmr is not None else 'n/a'}"
+        f"  (exact={payload.get('routing_exact_match_count', 0)}"
+        f"  variation={payload.get('routing_acceptable_variation_count', 0)}"
+        f"  regression={payload.get('routing_regression_count', 0)})"
+    )
+    avg_conf = payload.get("avg_routing_confidence")
+    lines.append(f"  Avg confidence:    {f'{avg_conf:.3f}' if avg_conf is not None else 'n/a'}")
+
+    band_dist = payload.get("confidence_band_distribution") or {}
+    if band_dist:
+        dist_str = "  ".join(f"{k}={v}" for k, v in sorted(band_dist.items()))
+        lines.append(f"  Band distribution: {dist_str}")
+
+    lines.append("")
+    lines.append("Policy compliance:")
+    pcr = payload.get("policy_compliance_rate")
+    lines.append(
+        f"  Compliance rate:   {f'{pcr:.1%}' if pcr is not None else 'n/a'}"
+        f"  (compliant={payload.get('policy_compliant_count', 0)}"
+        f"  tightened={payload.get('policy_tightened_count', 0)}"
+        f"  regression={payload.get('policy_regression_count', 0)})"
+    )
+    acr = payload.get("approval_consistency_rate")
+    lines.append(f"  Approval consistency: {f'{acr:.1%}' if acr is not None else 'n/a'}")
+
+    reg = payload.get("traces_with_regression", 0)
+    lines.append("")
+    lines.append(f"Traces with any regression: {reg}")
+
+    return "\n".join(lines)
+
+
 def _render_plan_list(payload: dict[str, Any]) -> str:
     plans = payload.get("plans", [])
     if not plans:
@@ -672,6 +778,25 @@ def _handle_trace_drilldown(args: argparse.Namespace) -> int:
     return _emit(payload, _render_trace_drilldown, json_mode=_json_mode(args))
 
 
+def _handle_trace_replay(args: argparse.Namespace) -> int:
+    core = _load_core()
+    payload = core.evaluate_trace(args.trace_id)
+    return _emit(payload, _render_trace_replay, json_mode=_json_mode(args))
+
+
+def _handle_compliance_check(args: argparse.Namespace) -> int:
+    core = _load_core()
+    payload = core.evaluate_trace(args.trace_id)
+    return _emit(payload, _render_trace_replay, json_mode=_json_mode(args))
+
+
+def _handle_compliance_baselines(args: argparse.Namespace) -> int:
+    core = _load_core()
+    limit = max(1, getattr(args, "limit", 100))
+    payload = core.compute_evaluation_baselines(limit=limit)
+    return _emit(payload, _render_compliance_baselines, json_mode=_json_mode(args))
+
+
 def _handle_agent_list(args: argparse.Namespace) -> int:
     core = _load_core()
     payload = core.list_agent_catalog()
@@ -792,6 +917,38 @@ def build_parser() -> argparse.ArgumentParser:
     trace_drilldown.add_argument("trace_id", help="Trace-ID")
     trace_drilldown.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     trace_drilldown.set_defaults(handler=_handle_trace_drilldown)
+    trace_replay = trace_subparsers.add_parser(
+        "replay",
+        help="Dry-run Routing-Replay: gespeicherten Trace gegen aktuelle Logik pruefen",
+    )
+    trace_replay.add_argument("trace_id", help="Trace-ID")
+    trace_replay.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    trace_replay.set_defaults(handler=_handle_trace_replay)
+
+    compliance_parser = subparsers.add_parser(
+        "compliance",
+        help="Policy-Compliance-Pruefungen und Baselines",
+    )
+    compliance_subparsers = compliance_parser.add_subparsers(dest="action", required=True)
+    compliance_check = compliance_subparsers.add_parser(
+        "check",
+        help="Policy-Compliance eines einzelnen Trace pruefen",
+    )
+    compliance_check.add_argument("trace_id", help="Trace-ID")
+    compliance_check.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    compliance_check.set_defaults(handler=_handle_compliance_check)
+    compliance_baselines = compliance_subparsers.add_parser(
+        "baselines",
+        help="Baseline-Metriken ueber zuletzt gespeicherte Traces berechnen",
+    )
+    compliance_baselines.add_argument(
+        "--limit",
+        type=int,
+        default=100,
+        help="Maximale Anzahl Traces fuer Baseline-Berechnung",
+    )
+    compliance_baselines.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    compliance_baselines.set_defaults(handler=_handle_compliance_baselines)
 
     explain_parser = subparsers.add_parser(
         "explain",
