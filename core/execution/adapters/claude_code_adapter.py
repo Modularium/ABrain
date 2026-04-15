@@ -12,6 +12,7 @@ from typing import Any
 from core.decision.agent_descriptor import AgentDescriptor, AgentExecutionKind, AgentSourceType
 from core.models.errors import StructuredError
 from core.execution.provider_capabilities import ExecutionCapabilities
+from core.execution.adapters.manifest import AdapterManifest, RiskTier
 
 from .base import BaseExecutionAdapter, ExecutionResult
 
@@ -28,6 +29,27 @@ class ClaudeCodeExecutionAdapter(BaseExecutionAdapter):
         supports_cost_reporting=True,
         supports_token_reporting=True,
         runtime_constraints=["requires_claude_cli"],
+    )
+
+    manifest = AdapterManifest(
+        adapter_name="claude_code",
+        description=(
+            "Headless Claude Code CLI adapter. Spawns a local ``claude -p`` "
+            "subprocess with full filesystem access in the configured working "
+            "directory."
+        ),
+        capabilities=ExecutionCapabilities(
+            execution_protocol="cli_process",
+            requires_network=False,
+            requires_local_process=True,
+            supports_cost_reporting=True,
+            supports_token_reporting=True,
+            runtime_constraints=["requires_claude_cli"],
+        ),
+        risk_tier=RiskTier.HIGH,
+        required_metadata_keys=[],
+        optional_metadata_keys=["command", "cwd", "allowed_tools", "permission_mode"],
+        recommended_policy_scope="code_execution",
     )
 
     def __init__(self, *, timeout_seconds: float = 30.0) -> None:

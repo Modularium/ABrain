@@ -11,6 +11,7 @@ from core.decision.agent_descriptor import AgentDescriptor
 from core.models.errors import StructuredError
 from core.model_context import ModelContext, TaskContext
 from core.execution.provider_capabilities import ExecutionCapabilities
+from core.execution.adapters.manifest import AdapterManifest, RiskTier
 
 
 class ExecutionResult(BaseModel):
@@ -62,6 +63,20 @@ class BaseExecutionAdapter:
         requires_local_process=False,
         supports_cost_reporting=False,
         supports_token_reporting=False,
+    )
+
+    # Subclasses override this with their full governance declaration.
+    manifest: AdapterManifest = AdapterManifest(
+        adapter_name="base",
+        description="Abstract base adapter — not for direct use.",
+        capabilities=ExecutionCapabilities(
+            execution_protocol="http_api",
+            requires_network=False,
+            requires_local_process=False,
+            supports_cost_reporting=False,
+            supports_token_reporting=False,
+        ),
+        risk_tier=RiskTier.LOW,
     )
 
     def validate(self, task: TaskContext | ModelContext | Mapping[str, Any], agent_descriptor: AgentDescriptor) -> None:

@@ -8,6 +8,7 @@ from typing import Any
 from core.decision.agent_descriptor import AgentDescriptor
 from core.models.errors import CoreExecutionError, StructuredError
 from core.execution.provider_capabilities import ExecutionCapabilities
+from core.execution.adapters.manifest import AdapterManifest, RiskTier
 
 from .base import BaseExecutionAdapter, ExecutionResult
 
@@ -24,6 +25,26 @@ class AdminBotExecutionAdapter(BaseExecutionAdapter):
         supports_cost_reporting=False,
         supports_token_reporting=False,
         runtime_constraints=["requires_adminbot_tools"],
+    )
+
+    manifest = AdapterManifest(
+        adapter_name="adminbot",
+        description=(
+            "Internal tool-dispatch adapter. Routes tasks to hardened AdminBot "
+            "system tools without network or subprocess calls."
+        ),
+        capabilities=ExecutionCapabilities(
+            execution_protocol="tool_dispatch",
+            requires_network=False,
+            requires_local_process=False,
+            supports_cost_reporting=False,
+            supports_token_reporting=False,
+            runtime_constraints=["requires_adminbot_tools"],
+        ),
+        risk_tier=RiskTier.LOW,
+        required_metadata_keys=[],
+        optional_metadata_keys=["service_name"],
+        recommended_policy_scope="system_ops",
     )
 
     _TASK_TO_TOOL = {

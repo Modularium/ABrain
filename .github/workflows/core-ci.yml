@@ -87,6 +87,7 @@ jobs:
             core/execution/execution_engine.py \
             core/execution/adapters/__init__.py \
             core/execution/adapters/base.py \
+            core/execution/adapters/manifest.py \
             core/execution/adapters/registry.py \
             core/execution/adapters/adminbot_adapter.py \
             core/execution/adapters/openhands_adapter.py \

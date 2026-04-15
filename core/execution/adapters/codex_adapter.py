@@ -12,6 +12,7 @@ from typing import Any
 from core.decision.agent_descriptor import AgentDescriptor, AgentExecutionKind, AgentSourceType
 from core.models.errors import StructuredError
 from core.execution.provider_capabilities import ExecutionCapabilities
+from core.execution.adapters.manifest import AdapterManifest, RiskTier
 
 from .base import BaseExecutionAdapter, ExecutionResult
 
@@ -28,6 +29,26 @@ class CodexExecutionAdapter(BaseExecutionAdapter):
         supports_cost_reporting=True,
         supports_token_reporting=True,
         runtime_constraints=["requires_codex_cli"],
+    )
+
+    manifest = AdapterManifest(
+        adapter_name="codex",
+        description=(
+            "Codex CLI adapter. Spawns a local ``codex exec`` subprocess and "
+            "parses JSON output for cost and token reporting."
+        ),
+        capabilities=ExecutionCapabilities(
+            execution_protocol="cli_process",
+            requires_network=False,
+            requires_local_process=True,
+            supports_cost_reporting=True,
+            supports_token_reporting=True,
+            runtime_constraints=["requires_codex_cli"],
+        ),
+        risk_tier=RiskTier.HIGH,
+        required_metadata_keys=[],
+        optional_metadata_keys=["command", "cwd", "model", "sandbox_mode", "approval_mode"],
+        recommended_policy_scope="code_execution",
     )
 
     def __init__(self, *, timeout_seconds: float = 30.0) -> None:

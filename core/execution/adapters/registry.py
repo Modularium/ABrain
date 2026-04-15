@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from core.decision.agent_descriptor import AgentDescriptor, AgentExecutionKind, AgentSourceType
 from core.execution.provider_capabilities import ExecutionCapabilities
+from core.execution.adapters.manifest import AdapterManifest
 
 from .adminbot_adapter import AdminBotExecutionAdapter
 from .base import BaseExecutionAdapter
@@ -52,3 +53,16 @@ class ExecutionAdapterRegistry:
         if adapter is None:
             return None
         return getattr(adapter, "capabilities", None)
+
+    def get_manifest_for(
+        self, execution_kind: str, source_type: str
+    ) -> AdapterManifest | None:
+        """Return the governance manifest for a given (execution_kind, source_type) pair.
+
+        Returns ``None`` when no adapter is registered for the combination.
+        Both arguments are matched as string values (the ``.value`` of the enums).
+        """
+        adapter = self._adapters.get((execution_kind, source_type))
+        if adapter is None:
+            return None
+        return getattr(adapter, "manifest", None)

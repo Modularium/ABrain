@@ -12,6 +12,7 @@ from core.decision.agent_descriptor import AgentDescriptor, AgentExecutionKind, 
 from core.models.errors import StructuredError
 from core.model_context import ModelContext, TaskContext
 from core.execution.provider_capabilities import ExecutionCapabilities
+from core.execution.adapters.manifest import AdapterManifest, RiskTier
 
 from .base import BaseExecutionAdapter, ExecutionResult
 
@@ -28,6 +29,26 @@ class FlowiseExecutionAdapter(BaseExecutionAdapter):
         supports_cost_reporting=True,
         supports_token_reporting=False,
         runtime_constraints=["requires_service_endpoint", "requires_chatflow_id"],
+    )
+
+    manifest = AdapterManifest(
+        adapter_name="flowise",
+        description=(
+            "Flowise workflow-engine adapter. POSTs tasks to the Flowise prediction "
+            "API endpoint identified by base_url + chatflow_id."
+        ),
+        capabilities=ExecutionCapabilities(
+            execution_protocol="http_api",
+            requires_network=True,
+            requires_local_process=False,
+            supports_cost_reporting=True,
+            supports_token_reporting=False,
+            runtime_constraints=["requires_service_endpoint", "requires_chatflow_id"],
+        ),
+        risk_tier=RiskTier.MEDIUM,
+        required_metadata_keys=["base_url", "chatflow_id"],
+        optional_metadata_keys=["api_key", "headers", "fixed_config", "prediction_url"],
+        recommended_policy_scope="workflow_execution",
     )
 
     def __init__(self, *, timeout_seconds: float = 15.0) -> None:

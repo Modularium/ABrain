@@ -11,6 +11,7 @@ import httpx
 from core.decision.agent_descriptor import AgentDescriptor, AgentExecutionKind, AgentSourceType
 from core.models.errors import StructuredError
 from core.execution.provider_capabilities import ExecutionCapabilities
+from core.execution.adapters.manifest import AdapterManifest, RiskTier
 
 from .base import BaseExecutionAdapter, ExecutionResult
 
@@ -28,6 +29,27 @@ class OpenHandsExecutionAdapter(BaseExecutionAdapter):
         supports_cost_reporting=True,
         supports_token_reporting=False,
         runtime_constraints=["requires_service_endpoint"],
+    )
+
+    manifest = AdapterManifest(
+        adapter_name="openhands",
+        description=(
+            "Code-execution adapter for the OpenHands service. Submits tasks via "
+            "the V1 conversation API; the remote service has full filesystem and "
+            "tool access."
+        ),
+        capabilities=ExecutionCapabilities(
+            execution_protocol="http_api",
+            requires_network=True,
+            requires_local_process=False,
+            supports_cost_reporting=True,
+            supports_token_reporting=False,
+            runtime_constraints=["requires_service_endpoint"],
+        ),
+        risk_tier=RiskTier.HIGH,
+        required_metadata_keys=[],
+        optional_metadata_keys=["endpoint_url", "api_key", "selected_repository", "branch"],
+        recommended_policy_scope="code_execution",
     )
 
     def __init__(self, *, timeout_seconds: float = 10.0) -> None:

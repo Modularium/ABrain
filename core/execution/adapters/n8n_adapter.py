@@ -13,6 +13,7 @@ from core.decision.agent_descriptor import AgentDescriptor, AgentExecutionKind, 
 from core.models.errors import StructuredError
 from core.model_context import ModelContext, TaskContext
 from core.execution.provider_capabilities import ExecutionCapabilities
+from core.execution.adapters.manifest import AdapterManifest, RiskTier
 
 from .base import BaseExecutionAdapter, ExecutionResult
 
@@ -29,6 +30,30 @@ class N8NExecutionAdapter(BaseExecutionAdapter):
         supports_cost_reporting=True,
         supports_token_reporting=False,
         runtime_constraints=["requires_webhook_url"],
+    )
+
+    manifest = AdapterManifest(
+        adapter_name="n8n",
+        description=(
+            "n8n workflow-engine adapter. Dispatches tasks via a fixed webhook "
+            "URL using the abrain.n8n.workflow.v1 JSON contract."
+        ),
+        capabilities=ExecutionCapabilities(
+            execution_protocol="webhook_json",
+            requires_network=True,
+            requires_local_process=False,
+            supports_cost_reporting=True,
+            supports_token_reporting=False,
+            runtime_constraints=["requires_webhook_url"],
+        ),
+        risk_tier=RiskTier.MEDIUM,
+        required_metadata_keys=["webhook_url"],
+        optional_metadata_keys=[
+            "base_url", "webhook_path",
+            "api_key", "auth_header", "headers",
+            "workflow_id", "fixed_payload",
+        ],
+        recommended_policy_scope="workflow_execution",
     )
 
     def __init__(self, *, timeout_seconds: float = 15.0) -> None:
