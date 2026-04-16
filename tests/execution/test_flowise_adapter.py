@@ -68,7 +68,8 @@ def test_flowise_adapter_maps_prediction_request(monkeypatch):
             "preferences": {"execution_hints": {"editable_in_ui": True}},
         },
         build_flowise_descriptor(
-            prediction_url="http://flowise.local/api/v1/prediction/chatflow-123",
+            base_url="http://flowise.local",
+            chatflow_id="chatflow-123",
             fixed_config={"temperature": 0},
         ),
     )
@@ -89,7 +90,10 @@ def test_flowise_adapter_handles_transport_errors(monkeypatch):
 
     result = adapter.execute(
         {"task_type": "visual_agent_editable", "description": "Edit this chatflow"},
-        build_flowise_descriptor(prediction_url="http://flowise.local/api/v1/prediction/chatflow-123"),
+        build_flowise_descriptor(
+            base_url="http://flowise.local",
+            chatflow_id="chatflow-123",
+        ),
     )
 
     assert result.success is False

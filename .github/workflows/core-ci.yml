@@ -90,6 +90,7 @@ jobs:
             core/execution/adapters/manifest.py \
             core/execution/adapters/policy_bindings.py \
             core/execution/adapters/registry.py \
+            core/execution/adapters/validation.py \
             core/execution/adapters/adminbot_adapter.py \
             core/execution/adapters/openhands_adapter.py \
             core/execution/adapters/claude_code_adapter.py \

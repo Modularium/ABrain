@@ -37,3 +37,6 @@ frontend/agent-ui/dist/
 frontend/dist/
 .docusaurus/
 node_modules/
+
+# Dev
+MASTER-PROMPT.md

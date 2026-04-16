@@ -12,6 +12,7 @@ from core.models.errors import StructuredError
 from core.model_context import ModelContext, TaskContext
 from core.execution.provider_capabilities import ExecutionCapabilities
 from core.execution.adapters.manifest import AdapterManifest, RiskTier
+from core.execution.adapters.validation import validate_required_metadata
 
 
 class ExecutionResult(BaseModel):
@@ -80,9 +81,15 @@ class BaseExecutionAdapter:
     )
 
     def validate(self, task: TaskContext | ModelContext | Mapping[str, Any], agent_descriptor: AgentDescriptor) -> None:
-        """Validate that the adapter can execute the given task for the descriptor."""
-        del task
-        del agent_descriptor
+        """Validate that the adapter can execute the given task for the descriptor.
+
+        Enforces ``manifest.required_metadata_keys`` against
+        ``agent_descriptor.metadata``.  Subclasses that override this method
+        must call ``super().validate(task, agent_descriptor)`` to retain the
+        manifest-driven metadata check.
+        """
+        del task  # task-level checks are adapter-specific; base has none
+        validate_required_metadata(self.manifest, agent_descriptor)
 
     def execute(
         self,

@@ -8,6 +8,7 @@ from .flowise_adapter import FlowiseExecutionAdapter
 from .manifest import AdapterManifest, RiskTier
 from .n8n_adapter import N8NExecutionAdapter
 from .policy_bindings import build_default_rules_for_manifest, get_all_adapter_default_rules
+from .validation import missing_metadata_keys, validate_required_metadata
 from .openhands_adapter import OpenHandsExecutionAdapter
 from .registry import ExecutionAdapterRegistry
 
@@ -24,4 +25,6 @@ __all__ = [
     "RiskTier",
     "build_default_rules_for_manifest",
     "get_all_adapter_default_rules",
+    "missing_metadata_keys",
+    "validate_required_metadata",
 ]
