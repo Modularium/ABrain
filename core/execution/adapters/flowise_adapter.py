@@ -48,6 +48,7 @@ class FlowiseExecutionAdapter(BaseExecutionAdapter):
         risk_tier=RiskTier.MEDIUM,
         required_metadata_keys=["base_url", "chatflow_id"],
         optional_metadata_keys=["api_key", "headers", "fixed_config", "prediction_url"],
+        required_result_metadata_keys=["runtime_contract"],
         recommended_policy_scope="workflow_execution",
     )
 

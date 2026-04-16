@@ -12,7 +12,7 @@ from core.models.errors import StructuredError
 from core.model_context import ModelContext, TaskContext
 from core.execution.provider_capabilities import ExecutionCapabilities
 from core.execution.adapters.manifest import AdapterManifest, RiskTier
-from core.execution.adapters.validation import validate_required_metadata
+from core.execution.adapters.validation import validate_required_metadata, validate_result as _validate_result
 
 
 class ExecutionResult(BaseModel):
@@ -90,6 +90,20 @@ class BaseExecutionAdapter:
         """
         del task  # task-level checks are adapter-specific; base has none
         validate_required_metadata(self.manifest, agent_descriptor)
+
+    def validate_result(self, result: ExecutionResult) -> None:
+        """Validate structural contracts on a completed ``ExecutionResult``.
+
+        Enforces:
+        - ``agent_id`` is non-empty
+        - ``error`` is None when ``success=True``, present when ``success=False``
+        - ``manifest.required_result_metadata_keys`` are present on success
+
+        Subclasses may call this at the end of ``execute()`` before returning
+        to surface contract violations early.  Raises ``ValueError`` on any
+        violation.
+        """
+        _validate_result(self.manifest, result)
 
     def execute(
         self,

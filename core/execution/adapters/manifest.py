@@ -97,5 +97,13 @@ class AdapterManifest(BaseModel):
     optional_metadata_keys: list[str] = Field(default_factory=list)
     """Metadata keys the adapter recognises but does not require."""
 
+    required_result_metadata_keys: list[str] = Field(default_factory=list)
+    """``result.metadata`` keys the adapter guarantees on a successful result.
+
+    ``validate_result()`` raises ``ValueError`` when any of these are absent
+    from a ``success=True`` ``ExecutionResult``.  Error results are exempt
+    because error paths may short-circuit before populating metadata.
+    """
+
     recommended_policy_scope: str | None = None
     """Policy scope tag recommended for agents using this adapter."""
