@@ -11,6 +11,7 @@ from core.model_context import ModelContext, TaskContext
 
 from .adapters import ExecutionAdapterRegistry
 from .adapters.base import ExecutionResult
+from .adapters.validation import result_warnings
 
 
 class ExecutionEngine:
@@ -45,6 +46,10 @@ class ExecutionEngine:
         result.metadata.setdefault("source_type", descriptor.source_type.value)
         result.metadata.setdefault("execution_kind", descriptor.execution_kind.value)
         result.metadata.setdefault("adapter_name", getattr(adapter, "adapter_name", adapter.__class__.__name__))
+        result.metadata.setdefault("risk_tier", adapter.manifest.risk_tier.value)
+        caps_warnings = result_warnings(adapter.manifest, result)
+        if caps_warnings:
+            result.warnings.extend(caps_warnings)
         return result
 
     def _resolve_descriptor(

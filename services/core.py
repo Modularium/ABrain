@@ -333,18 +333,17 @@ def run_task(
         attributes={"selected_agent_id": decision.selected_agent_id},
     )
     try:
+        from core.execution.audit import canonical_execution_span_attributes
         execution = execution_engine.execute(task, decision, registry)
         finish_span(
             trace_context,
             execution_span,
             status="completed" if execution.success else "failed",
-            attributes={
-                "success": execution.success,
-                "duration_ms": execution.duration_ms,
-                "cost": execution.cost,
-                "warning_count": len(execution.warnings),
-                "adapter_name": execution.metadata.get("adapter_name"),
-            },
+            attributes=canonical_execution_span_attributes(
+                execution,
+                task_type=str(task_mapping.get("task_type") or ""),
+                policy_effect=policy_decision.effect,
+            ),
             error=execution.error.model_dump(mode="json") if execution.error is not None else None,
         )
     except Exception as exc:

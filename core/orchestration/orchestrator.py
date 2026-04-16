@@ -15,6 +15,7 @@ from core.decision import AgentCreationEngine, AgentDescriptor, AgentRegistry, F
 from core.decision.plan_models import ExecutionPlan, PlanStep, PlanStrategy
 from core.decision.task_intent import TaskIntent
 from core.execution.adapters.base import is_fallback_eligible
+from core.execution.audit import canonical_execution_span_attributes
 from core.execution.execution_engine import ExecutionEngine
 from core.governance import PolicyEngine, PolicyViolationError, enforce_policy
 
@@ -686,14 +687,11 @@ class PlanExecutionOrchestrator:
             trace_context,
             execution_span,
             status="completed" if execution.success else "failed",
-            attributes={
-                "success": execution.success,
-                "duration_ms": execution.duration_ms,
-                "cost": execution.cost,
-                "token_count": execution.token_count,
-                "warning_count": len(execution.warnings),
-                "adapter_name": execution.metadata.get("adapter_name"),
-            },
+            attributes=canonical_execution_span_attributes(
+                execution,
+                task_type=str(step_task.get("task_type") if isinstance(step_task, Mapping) else ""),
+                policy_effect=policy_decision.effect,
+            ),
             error=execution.error.model_dump(mode="json") if execution.error is not None else None,
         )
         # S4: Controlled provider fallback — single bounded attempt on infrastructure errors
@@ -1136,14 +1134,11 @@ class PlanExecutionOrchestrator:
             trace_context,
             fallback_execution_span,
             status="completed" if fallback_execution.success else "failed",
-            attributes={
-                "success": fallback_execution.success,
-                "duration_ms": fallback_execution.duration_ms,
-                "cost": fallback_execution.cost,
-                "token_count": fallback_execution.token_count,
-                "warning_count": len(fallback_execution.warnings),
-                "adapter_name": fallback_execution.metadata.get("adapter_name"),
-            },
+            attributes=canonical_execution_span_attributes(
+                fallback_execution,
+                task_type=str(step_task.get("task_type") if isinstance(step_task, Mapping) else ""),
+                policy_effect=fallback_policy_decision.effect,
+            ),
             error=(
                 fallback_execution.error.model_dump(mode="json")
                 if fallback_execution.error is not None
