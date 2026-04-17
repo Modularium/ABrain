@@ -14,6 +14,7 @@ Public surface:
         RegistrationError,
         RetrievalPort,
         InMemoryRetriever,
+        SQLiteRetriever,
         DocumentStore,
         SQLiteDocumentStore,
         IngestionRequest,
@@ -33,7 +34,7 @@ from .models import (
     SourceTrust,
 )
 from .registry import KnowledgeSourceRegistry, RegistrationError
-from .retriever import InMemoryRetriever, RetrievalPort
+from .retriever import InMemoryRetriever, RetrievalPort, SQLiteRetriever
 
 __all__ = [
     "SourceTrust",
@@ -47,6 +48,7 @@ __all__ = [
     "RegistrationError",
     "RetrievalPort",
     "InMemoryRetriever",
+    "SQLiteRetriever",
     "DocumentStore",
     "SQLiteDocumentStore",
     "IngestionRequest",

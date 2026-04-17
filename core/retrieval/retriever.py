@@ -1,27 +1,32 @@
-"""Retrieval port and in-memory reference implementation.
+"""Retrieval port, in-memory reference implementation, and SQLite backend.
 
-Phase 3 — "Retrieval- und Wissensschicht", Step R2.
+Phase 3 — "Retrieval- und Wissensschicht", Step R2 / R4.
 
 ``RetrievalPort`` is the abstract interface every backend must satisfy.
 ``InMemoryRetriever`` is a lightweight keyword-overlap implementation used in
 tests and local development — it requires no external dependencies.
+``SQLiteRetriever`` is the production backend: it queries ``SQLiteDocumentStore``
+so that content ingested via ``IngestionPipeline`` is immediately retrievable.
 
 Design invariants
 -----------------
 - ``RetrievalPort`` is a ``typing.Protocol`` — structural typing, no ABC.
-- ``InMemoryRetriever`` applies trust-level filtering from the registry,
-  scores by word-overlap, respects ``query.max_results``, and calls
-  ``RetrievalBoundary.annotate_results()`` before returning.
+- Both retrievers apply identical trust-level filtering, keyword-overlap scoring,
+  ``max_results`` capping, and ``RetrievalBoundary.annotate_results()`` annotation.
+- ``_tokenize`` and ``_overlap_score`` are shared module-level helpers.
 - No heavy dependencies (no numpy, no vector store, no LLM calls).
 """
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from .boundaries import RetrievalBoundary
 from .models import KnowledgeSource, RetrievalQuery, RetrievalResult, SourceTrust
 from .registry import KnowledgeSourceRegistry
+
+if TYPE_CHECKING:
+    from .document_store import SQLiteDocumentStore
 
 
 @runtime_checkable
@@ -143,6 +148,81 @@ class InMemoryRetriever:
 
 
 # ---------------------------------------------------------------------------
+# SQLite-backed retriever (R4)
+# ---------------------------------------------------------------------------
+
+
+class SQLiteRetriever:
+    """Keyword-overlap retriever backed by ``SQLiteDocumentStore``.
+
+    Intended for production and integration use.  Content must first be
+    ingested via ``IngestionPipeline``; this retriever then reads from the
+    same SQLite store, applies the same governance filtering and scoring
+    as ``InMemoryRetriever``, and delegates boundary annotation to
+    ``RetrievalBoundary``.
+
+    The retriever iterates over all *registered* sources (from the registry),
+    fetches their chunks from the store, and scores by keyword overlap.
+    Sources that are registered but have no stored chunks produce no results.
+
+    Usage
+    -----
+    >>> store = SQLiteDocumentStore("runtime/abrain_documents.sqlite3")
+    >>> retriever = SQLiteRetriever(store)
+    >>> results = retriever.retrieve(query, registry)
+    """
+
+    def __init__(self, store: SQLiteDocumentStore) -> None:
+        # Import at runtime to avoid circular import at module level;
+        # TYPE_CHECKING import above covers static analysis.
+        from .document_store import SQLiteDocumentStore as _SQLiteDocumentStore  # noqa: F401
+        self._store = store
+        self._boundary = RetrievalBoundary()
+
+    def retrieve(
+        self,
+        query: RetrievalQuery,
+        registry: KnowledgeSourceRegistry,
+    ) -> list[RetrievalResult]:
+        """Return annotated results scored by keyword overlap.
+
+        Only sources registered in *registry* are considered.
+        If ``query.allowed_trust_levels`` is non-empty, sources whose trust
+        level is not in the list are skipped.  Sources with no stored chunks
+        produce no candidates.
+        """
+        query_tokens = _tokenize(query.query_text)
+        allowed = set(query.allowed_trust_levels)
+
+        candidates: list[tuple[float, str, str, KnowledgeSource]] = []
+
+        for source in registry.list_all():
+            if allowed and source.trust not in allowed:
+                continue
+            chunks = self._store.get_chunks(source.source_id)
+            for chunk in chunks:
+                score = _overlap_score(query_tokens, _tokenize(chunk))
+                if score > 0.0:
+                    candidates.append((score, source.source_id, chunk, source))
+
+        candidates.sort(key=lambda t: t[0], reverse=True)
+        top = candidates[: query.max_results]
+
+        raw_results = [
+            RetrievalResult(
+                source_id=source_id,
+                trust=source.trust,
+                content=chunk,
+                score=score,
+                provenance=source.provenance,
+            )
+            for score, source_id, chunk, source in top
+        ]
+
+        return self._boundary.annotate_results(raw_results, query)
+
+
+# ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 
@@ -153,7 +233,7 @@ def _tokenize(text: str) -> set[str]:
 
 
 def _overlap_score(query_tokens: set[str], doc_tokens: set[str]) -> float:
-    """Jaccard-style overlap: |intersection| / |query|.
+    """Recall-based overlap: |intersection| / |query|.
 
     Returns 0.0 when the query token set is empty.
     """
