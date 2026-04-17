@@ -14,10 +14,17 @@ Public surface:
         RegistrationError,
         RetrievalPort,
         InMemoryRetriever,
+        DocumentStore,
+        SQLiteDocumentStore,
+        IngestionRequest,
+        IngestionResult,
+        IngestionPipeline,
     )
 """
 
 from .boundaries import RetrievalBoundary, RetrievalPolicyViolation
+from .document_store import DocumentStore, SQLiteDocumentStore
+from .ingestion import IngestionPipeline, IngestionRequest, IngestionResult
 from .models import (
     KnowledgeSource,
     RetrievalQuery,
@@ -40,4 +47,9 @@ __all__ = [
     "RegistrationError",
     "RetrievalPort",
     "InMemoryRetriever",
+    "DocumentStore",
+    "SQLiteDocumentStore",
+    "IngestionRequest",
+    "IngestionResult",
+    "IngestionPipeline",
 ]
