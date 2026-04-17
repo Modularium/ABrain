@@ -1,6 +1,6 @@
 """Retrieval governance boundary — query validation and trust enforcement.
 
-Phase 3 — "Retrieval- und Wissensschicht", Step R1.
+Phase 3 — "Retrieval- und Wissensschicht", Step R1 / R5.
 
 ``RetrievalBoundary`` is the single policy enforcement point for all
 retrieval operations in ABrain.  It enforces:
@@ -14,6 +14,11 @@ retrieval operations in ABrain.  It enforces:
 4. Result annotation — warnings are injected into results when lower-trust
    content is returned so downstream consumers can decide how much weight
    to give the content.
+5. Prompt-injection detection (R5) — EXTERNAL and UNTRUSTED results are
+   scanned for instruction-injection patterns before they leave the boundary.
+   UNTRUSTED content with injection raises ``RetrievalPolicyViolation``;
+   EXTERNAL content with injection receives an advisory warning.
+   TRUSTED and INTERNAL sources are not scanned (controlled, verified content).
 
 Design invariants
 -----------------
@@ -22,6 +27,8 @@ Design invariants
 - Raises ``RetrievalPolicyViolation`` (not a generic exception) so callers can
   distinguish governance blocks from retrieval errors.
 - Never suppresses or modifies ``content`` — only adds ``warnings``.
+- ``sanitise_results()`` is the canonical combined call (annotation + injection
+  scan); retrievers should call it instead of ``annotate_results()`` directly.
 """
 
 from __future__ import annotations
@@ -163,3 +170,107 @@ class RetrievalBoundary:
             elif warning:
                 warnings.append(warning)
         return warnings
+
+    def sanitise_results(
+        self, results: list[RetrievalResult], query: RetrievalQuery
+    ) -> list[RetrievalResult]:
+        """Apply trust/scope annotation AND prompt-injection scanning.
+
+        This is the canonical method retrievers should call before returning
+        results to callers.  It combines two steps:
+
+        1. ``annotate_results()`` — injects trust/scope advisory warnings.
+        2. Injection scan — checks EXTERNAL and UNTRUSTED content for
+           instruction-injection patterns.
+
+        Behaviour by trust level
+        ------------------------
+        TRUSTED, INTERNAL
+            Not scanned.  These are controlled, verified sources; scanning
+            would produce false positives on documentation content.
+        EXTERNAL
+            Scanned.  A detected injection pattern appends an advisory warning
+            to ``result.warnings``; the result is still returned so the caller
+            can decide how to handle it.
+        UNTRUSTED
+            Scanned.  A detected injection pattern raises
+            ``RetrievalPolicyViolation`` immediately — untrusted content with
+            instruction-injection is an unacceptable risk.
+
+        Raises
+        ------
+        RetrievalPolicyViolation
+            When any UNTRUSTED result contains an injection pattern.
+        """
+        annotated = self.annotate_results(results, query)
+        final: list[RetrievalResult] = []
+        for result in annotated:
+            if result.trust not in (SourceTrust.EXTERNAL, SourceTrust.UNTRUSTED):
+                final.append(result)
+                continue
+            matched = _detect_injection(result.content)
+            if matched is None:
+                final.append(result)
+                continue
+            if result.trust == SourceTrust.UNTRUSTED:
+                raise RetrievalPolicyViolation(
+                    reason=(
+                        f"Prompt-injection pattern detected in UNTRUSTED source "
+                        f"'{result.source_id}': matched '{matched}'.  "
+                        f"This content is blocked from reaching the retrieval consumer."
+                    ),
+                    query=query,
+                )
+            # EXTERNAL: advisory warning, result still returned
+            warning = (
+                f"Potential prompt-injection pattern detected in EXTERNAL source "
+                f"'{result.source_id}': '{matched}'.  Validate this content before use."
+            )
+            if warning not in result.warnings:
+                result = result.model_copy(
+                    update={"warnings": result.warnings + [warning]}
+                )
+            final.append(result)
+        return final
+
+
+# ---------------------------------------------------------------------------
+# Prompt-injection detection (R5)
+# ---------------------------------------------------------------------------
+
+# Lowercase substring patterns that indicate instruction-injection attempts.
+# Conservative set: high-signal phrases unlikely to appear in legitimate
+# documentation content from EXTERNAL or UNTRUSTED sources.
+_INJECTION_PATTERNS: tuple[str, ...] = (
+    "ignore previous instructions",
+    "ignore all instructions",
+    "ignore all previous instructions",
+    "disregard previous instructions",
+    "disregard all previous instructions",
+    "disregard your instructions",
+    "forget your instructions",
+    "forget all previous instructions",
+    "forget previous instructions",
+    "you are now a",
+    "you must now",
+    "new system prompt",
+    "override your instructions",
+    "as an ai with no restrictions",
+    # Role-injection via embedded role markers
+    "\nsystem:",
+    "\nuser:",
+    "\nassistant:",
+)
+
+
+def _detect_injection(text: str) -> str | None:
+    """Return the first matched injection pattern found in *text*, or None.
+
+    Comparison is case-insensitive.  Only EXTERNAL and UNTRUSTED content
+    should be passed here; TRUSTED/INTERNAL is never scanned.
+    """
+    lower = text.lower()
+    for pattern in _INJECTION_PATTERNS:
+        if pattern in lower:
+            return pattern
+    return None

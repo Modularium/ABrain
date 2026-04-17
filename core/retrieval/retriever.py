@@ -144,7 +144,7 @@ class InMemoryRetriever:
             for score, source_id, chunk, source in top
         ]
 
-        return self._boundary.annotate_results(raw_results, query)
+        return self._boundary.sanitise_results(raw_results, query)
 
 
 # ---------------------------------------------------------------------------
@@ -219,7 +219,7 @@ class SQLiteRetriever:
             for score, source_id, chunk, source in top
         ]
 
-        return self._boundary.annotate_results(raw_results, query)
+        return self._boundary.sanitise_results(raw_results, query)
 
 
 # ---------------------------------------------------------------------------
