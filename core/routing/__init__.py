@@ -13,9 +13,12 @@ Public surface:
         ModelRoutingResult,
         ModelDispatcher,
         NoModelAvailableError,
+        DEFAULT_MODELS,
+        build_default_registry,
     )
 """
 
+from .catalog import DEFAULT_MODELS, build_default_registry
 from .dispatcher import ModelDispatcher, ModelRoutingRequest, ModelRoutingResult, NoModelAvailableError
 from .models import ModelDescriptor, ModelProvider, ModelPurpose, ModelTier
 from .registry import ModelRegistry, RegistrationError
@@ -31,4 +34,6 @@ __all__ = [
     "ModelRoutingResult",
     "ModelDispatcher",
     "NoModelAvailableError",
+    "DEFAULT_MODELS",
+    "build_default_registry",
 ]
