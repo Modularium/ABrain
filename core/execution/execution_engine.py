@@ -11,7 +11,7 @@ from core.model_context import ModelContext, TaskContext
 
 from .adapters import ExecutionAdapterRegistry
 from .adapters.base import ExecutionResult
-from .adapters.validation import result_warnings
+from .adapters.validation import result_warnings, budget_warnings
 
 
 class ExecutionEngine:
@@ -50,6 +50,9 @@ class ExecutionEngine:
         caps_warnings = result_warnings(adapter.manifest, result)
         if caps_warnings:
             result.warnings.extend(caps_warnings)
+        budget_warns = budget_warnings(adapter.manifest, result)
+        if budget_warns:
+            result.warnings.extend(budget_warns)
         return result
 
     def _resolve_descriptor(

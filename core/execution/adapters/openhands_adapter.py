@@ -12,6 +12,7 @@ from core.decision.agent_descriptor import AgentDescriptor, AgentExecutionKind, 
 from core.models.errors import StructuredError
 from core.execution.provider_capabilities import ExecutionCapabilities
 from core.execution.adapters.manifest import AdapterManifest, RiskTier
+from core.execution.adapters.budget import AdapterBudget, IsolationRequirements
 
 from .base import BaseExecutionAdapter, ExecutionResult
 
@@ -50,6 +51,16 @@ class OpenHandsExecutionAdapter(BaseExecutionAdapter):
         required_metadata_keys=[],
         optional_metadata_keys=["endpoint_url", "api_key", "selected_repository", "branch"],
         recommended_policy_scope="code_execution",
+        budget=AdapterBudget(
+            max_cost_usd=5.0,
+            max_duration_ms=120_000,
+        ),
+        isolation=IsolationRequirements(
+            network_access_required=True,
+            filesystem_write_required=True,
+            process_spawn_required=True,
+            privileged_operation=False,
+        ),
     )
 
     def __init__(self, *, timeout_seconds: float = 10.0) -> None:

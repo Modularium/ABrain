@@ -9,6 +9,7 @@ from core.decision.agent_descriptor import AgentDescriptor
 from core.models.errors import CoreExecutionError, StructuredError
 from core.execution.provider_capabilities import ExecutionCapabilities
 from core.execution.adapters.manifest import AdapterManifest, RiskTier
+from core.execution.adapters.budget import AdapterBudget, IsolationRequirements
 
 from .base import BaseExecutionAdapter, ExecutionResult
 
@@ -45,6 +46,15 @@ class AdminBotExecutionAdapter(BaseExecutionAdapter):
         required_metadata_keys=[],
         optional_metadata_keys=["service_name"],
         recommended_policy_scope="system_ops",
+        budget=AdapterBudget(
+            max_duration_ms=5_000,
+        ),
+        isolation=IsolationRequirements(
+            network_access_required=False,
+            filesystem_write_required=False,
+            process_spawn_required=False,
+            privileged_operation=False,
+        ),
     )
 
     _TASK_TO_TOOL = {

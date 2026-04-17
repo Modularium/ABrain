@@ -31,6 +31,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field
 
 from core.execution.provider_capabilities import ExecutionCapabilities
+from core.execution.adapters.budget import AdapterBudget, IsolationRequirements
 
 
 class RiskTier(StrEnum):
@@ -107,3 +108,18 @@ class AdapterManifest(BaseModel):
 
     recommended_policy_scope: str | None = None
     """Policy scope tag recommended for agents using this adapter."""
+
+    budget: AdapterBudget = Field(default_factory=AdapterBudget)
+    """Per-adapter soft budget ceilings.
+
+    Exceeding a limit emits a warning on the ``ExecutionResult``.  None fields
+    mean unconstrained.  Operators may tighten limits via policy overrides.
+    """
+
+    isolation: IsolationRequirements = Field(default_factory=IsolationRequirements)
+    """Static isolation requirements for this adapter's deployment environment.
+
+    These are governance declarations for operator review and policy matching.
+    Runtime enforcement is at the infrastructure level (containers, seccomp,
+    network policies).
+    """

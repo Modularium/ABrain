@@ -169,3 +169,57 @@ def result_warnings(
             f"but result.token_count is None."
         )
     return warnings
+
+
+def budget_warnings(
+    manifest: AdapterManifest, result: "ExecutionResult"
+) -> list[str]:
+    """Return soft budget-violation warnings for a result.
+
+    Checks the three budget fields declared in ``manifest.budget`` against
+    the corresponding fields on ``result``.  A violation is emitted when the
+    result field is populated *and* exceeds the declared limit.
+
+    All violations are non-fatal warnings: cost, duration and token counts are
+    only known post-execution, so enforcement is advisory.  Operators that need
+    hard limits must enforce them at the infrastructure level (pre-execution
+    timeout, spending caps in provider dashboards).
+
+    Called for both success and error results so that runaway executions are
+    visible in the trace even when the adapter ultimately fails.
+    """
+    warnings: list[str] = []
+    budget = manifest.budget
+    name = manifest.adapter_name
+
+    if (
+        budget.max_cost_usd is not None
+        and result.cost is not None
+        and result.cost > budget.max_cost_usd
+    ):
+        warnings.append(
+            f"Adapter '{name}' exceeded max_cost_usd budget: "
+            f"{result.cost:.4f} > {budget.max_cost_usd:.4f} USD."
+        )
+
+    if (
+        budget.max_duration_ms is not None
+        and result.duration_ms is not None
+        and result.duration_ms > budget.max_duration_ms
+    ):
+        warnings.append(
+            f"Adapter '{name}' exceeded max_duration_ms budget: "
+            f"{result.duration_ms} > {budget.max_duration_ms} ms."
+        )
+
+    if (
+        budget.max_tokens is not None
+        and result.token_count is not None
+        and result.token_count > budget.max_tokens
+    ):
+        warnings.append(
+            f"Adapter '{name}' exceeded max_tokens budget: "
+            f"{result.token_count} > {budget.max_tokens} tokens."
+        )
+
+    return warnings

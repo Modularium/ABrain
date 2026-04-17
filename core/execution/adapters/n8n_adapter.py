@@ -14,6 +14,7 @@ from core.models.errors import StructuredError
 from core.model_context import ModelContext, TaskContext
 from core.execution.provider_capabilities import ExecutionCapabilities
 from core.execution.adapters.manifest import AdapterManifest, RiskTier
+from core.execution.adapters.budget import AdapterBudget, IsolationRequirements
 
 from .base import BaseExecutionAdapter, ExecutionResult
 
@@ -54,6 +55,17 @@ class N8NExecutionAdapter(BaseExecutionAdapter):
             "workflow_id", "fixed_payload",
         ],
         recommended_policy_scope="workflow_execution",
+        budget=AdapterBudget(
+            max_cost_usd=1.0,
+            max_duration_ms=30_000,
+            max_tokens=4_000,
+        ),
+        isolation=IsolationRequirements(
+            network_access_required=True,
+            filesystem_write_required=False,
+            process_spawn_required=False,
+            privileged_operation=False,
+        ),
     )
 
     def __init__(self, *, timeout_seconds: float = 15.0) -> None:
