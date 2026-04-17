@@ -20,9 +20,11 @@ Public surface:
         IngestionRequest,
         IngestionResult,
         IngestionPipeline,
+        RetrievalAuditor,
     )
 """
 
+from .auditor import RetrievalAuditor
 from .boundaries import RetrievalBoundary, RetrievalPolicyViolation
 from .document_store import DocumentStore, SQLiteDocumentStore
 from .ingestion import IngestionPipeline, IngestionRequest, IngestionResult
@@ -54,4 +56,5 @@ __all__ = [
     "IngestionRequest",
     "IngestionResult",
     "IngestionPipeline",
+    "RetrievalAuditor",
 ]
