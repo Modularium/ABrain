@@ -9,9 +9,14 @@ Public surface:
         ModelDescriptor,
         ModelRegistry,
         RegistrationError,
+        ModelRoutingRequest,
+        ModelRoutingResult,
+        ModelDispatcher,
+        NoModelAvailableError,
     )
 """
 
+from .dispatcher import ModelDispatcher, ModelRoutingRequest, ModelRoutingResult, NoModelAvailableError
 from .models import ModelDescriptor, ModelProvider, ModelPurpose, ModelTier
 from .registry import ModelRegistry, RegistrationError
 
@@ -22,4 +27,8 @@ __all__ = [
     "ModelDescriptor",
     "ModelRegistry",
     "RegistrationError",
+    "ModelRoutingRequest",
+    "ModelRoutingResult",
+    "ModelDispatcher",
+    "NoModelAvailableError",
 ]
