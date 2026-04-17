@@ -10,6 +10,10 @@ Public surface:
         RetrievalResult,
         RetrievalBoundary,
         RetrievalPolicyViolation,
+        KnowledgeSourceRegistry,
+        RegistrationError,
+        RetrievalPort,
+        InMemoryRetriever,
     )
 """
 
@@ -21,6 +25,8 @@ from .models import (
     RetrievalScope,
     SourceTrust,
 )
+from .registry import KnowledgeSourceRegistry, RegistrationError
+from .retriever import InMemoryRetriever, RetrievalPort
 
 __all__ = [
     "SourceTrust",
@@ -30,4 +36,8 @@ __all__ = [
     "RetrievalResult",
     "RetrievalBoundary",
     "RetrievalPolicyViolation",
+    "KnowledgeSourceRegistry",
+    "RegistrationError",
+    "RetrievalPort",
+    "InMemoryRetriever",
 ]
