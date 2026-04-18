@@ -1,6 +1,7 @@
-"""Learning helpers for neural policy training."""
+"""Learning helpers for neural policy training and offline LearningOps."""
 
 __all__ = [
+    # Online neural-policy training (pre-Phase-5)
     "load_dataset",
     "load_model",
     "OnlineUpdater",
@@ -11,6 +12,11 @@ __all__ = [
     "TrainingMetrics",
     "TrainingSample",
     "NeuralTrainer",
+    # Phase 5 – LearningOps offline schema
+    "DatasetBuilder",
+    "DataQualityFilter",
+    "LearningRecord",
+    "QualityViolation",
 ]
 
 
@@ -40,4 +46,16 @@ def __getattr__(name: str):
             "save_model": save_model,
             "load_model": load_model,
         }[name]
+    if name == "LearningRecord":
+        from .record import LearningRecord
+
+        return LearningRecord
+    if name in {"DatasetBuilder"}:
+        from .dataset_builder import DatasetBuilder
+
+        return DatasetBuilder
+    if name in {"DataQualityFilter", "QualityViolation"}:
+        from .quality import DataQualityFilter, QualityViolation
+
+        return {"DataQualityFilter": DataQualityFilter, "QualityViolation": QualityViolation}[name]
     raise AttributeError(name)
