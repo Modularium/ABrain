@@ -15,6 +15,8 @@ __all__ = [
     # Phase 5 – LearningOps offline schema
     "DatasetBuilder",
     "DataQualityFilter",
+    "DatasetExporter",
+    "ExportManifest",
     "LearningRecord",
     "QualityViolation",
 ]
@@ -58,4 +60,8 @@ def __getattr__(name: str):
         from .quality import DataQualityFilter, QualityViolation
 
         return {"DataQualityFilter": DataQualityFilter, "QualityViolation": QualityViolation}[name]
+    if name in {"DatasetExporter", "ExportManifest"}:
+        from .exporter import DatasetExporter, ExportManifest
+
+        return {"DatasetExporter": DatasetExporter, "ExportManifest": ExportManifest}[name]
     raise AttributeError(name)
