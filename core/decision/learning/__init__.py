@@ -18,6 +18,8 @@ __all__ = [
     "DatasetExporter",
     "ExportManifest",
     "LearningRecord",
+    "ModelRegistry",
+    "ModelVersionEntry",
     "OfflineTrainer",
     "OfflineTrainingResult",
     "QualityViolation",
@@ -75,4 +77,8 @@ def __getattr__(name: str):
             "OfflineTrainingResult": OfflineTrainingResult,
             "TrainingJobConfig": TrainingJobConfig,
         }[name]
+    if name in {"ModelRegistry", "ModelVersionEntry"}:
+        from .model_registry import ModelRegistry, ModelVersionEntry
+
+        return {"ModelRegistry": ModelRegistry, "ModelVersionEntry": ModelVersionEntry}[name]
     raise AttributeError(name)
