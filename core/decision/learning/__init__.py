@@ -18,7 +18,10 @@ __all__ = [
     "DatasetExporter",
     "ExportManifest",
     "LearningRecord",
+    "OfflineTrainer",
+    "OfflineTrainingResult",
     "QualityViolation",
+    "TrainingJobConfig",
 ]
 
 
@@ -64,4 +67,12 @@ def __getattr__(name: str):
         from .exporter import DatasetExporter, ExportManifest
 
         return {"DatasetExporter": DatasetExporter, "ExportManifest": ExportManifest}[name]
+    if name in {"OfflineTrainer", "OfflineTrainingResult", "TrainingJobConfig"}:
+        from .offline_trainer import OfflineTrainer, OfflineTrainingResult, TrainingJobConfig
+
+        return {
+            "OfflineTrainer": OfflineTrainer,
+            "OfflineTrainingResult": OfflineTrainingResult,
+            "TrainingJobConfig": TrainingJobConfig,
+        }[name]
     raise AttributeError(name)
