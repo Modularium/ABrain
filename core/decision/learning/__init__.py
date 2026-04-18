@@ -23,6 +23,8 @@ __all__ = [
     "OfflineTrainer",
     "OfflineTrainingResult",
     "QualityViolation",
+    "ShadowComparison",
+    "ShadowEvaluator",
     "TrainingJobConfig",
 ]
 
@@ -81,4 +83,8 @@ def __getattr__(name: str):
         from .model_registry import ModelRegistry, ModelVersionEntry
 
         return {"ModelRegistry": ModelRegistry, "ModelVersionEntry": ModelVersionEntry}[name]
+    if name in {"ShadowComparison", "ShadowEvaluator"}:
+        from .shadow_evaluator import ShadowComparison, ShadowEvaluator
+
+        return {"ShadowComparison": ShadowComparison, "ShadowEvaluator": ShadowEvaluator}[name]
     raise AttributeError(name)
