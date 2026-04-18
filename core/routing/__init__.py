@@ -18,6 +18,7 @@ Public surface:
     )
 """
 
+from .auditor import RoutingAuditor
 from .catalog import DEFAULT_MODELS, build_default_registry
 from .dispatcher import ModelDispatcher, ModelRoutingRequest, ModelRoutingResult, NoModelAvailableError
 from .models import ModelDescriptor, ModelProvider, ModelPurpose, ModelTier
@@ -36,4 +37,5 @@ __all__ = [
     "NoModelAvailableError",
     "DEFAULT_MODELS",
     "build_default_registry",
+    "RoutingAuditor",
 ]
