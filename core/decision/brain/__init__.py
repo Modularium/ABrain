@@ -5,6 +5,7 @@ __all__ = [
     "BrainBudget",
     "BrainPolicySignals",
     "BrainRecord",
+    "BrainRecordBuilder",
     "BrainState",
     "BrainStateEncoder",
     "BrainTarget",
@@ -41,4 +42,8 @@ def __getattr__(name: str):
         from .encoder import BrainStateEncoder
 
         return BrainStateEncoder
+    if name == "BrainRecordBuilder":
+        from .record_builder import BrainRecordBuilder
+
+        return BrainRecordBuilder
     raise AttributeError(name)
