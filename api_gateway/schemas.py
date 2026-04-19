@@ -72,6 +72,14 @@ OPENAPI_TAGS = [
         "name": "Routing",
         "description": "Read-only inspection of the canonical routing-model catalog with lineage and energy metadata.",
     },
+    {
+        "name": "Reasoning",
+        "description": (
+            "ABrain V2 Domain Reasoning surface. Input-driven, deterministic reasoners "
+            "interpret external-system context snapshots (starting with LabOS) and emit "
+            "Response Shape V2 recommendations without executing anything."
+        ),
+    },
 ]
 
 
@@ -496,3 +504,42 @@ class RoutingModelsResponse(BaseModel):
     providers: dict[str, int] = Field(default_factory=dict)
     purposes: dict[str, int] = Field(default_factory=dict)
     models: list[RoutingModelEntry] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# LabOS reasoning (read-only mirror of `services.core.run_labos_reasoning`).
+# Kept as a permissive dict pass-through so the Response Shape V2 payload is
+# forwarded verbatim without a second typed projection.
+# ---------------------------------------------------------------------------
+
+
+class LabOsReasoningRequest(BaseModel):
+    """Request body wrapper carrying a LabOS context snapshot.
+
+    The concrete per-field validation lives in the canonical reasoner
+    (``core.reasoning.labos.schemas.LabOsContext``).  The gateway wrapper
+    only pins that callers send a JSON object under ``context``.
+    """
+
+    model_config = ConfigDict(
+        extra="forbid",
+        json_schema_extra={
+            "example": {
+                "context": {
+                    "reactors": [
+                        {"reactor_id": "R1", "status": "warning"}
+                    ]
+                }
+            }
+        },
+    )
+
+    context: dict[str, Any] = Field(
+        default_factory=dict,
+        description=(
+            "LabOS snapshot to reason over. Forwarded verbatim to "
+            "`services.core.run_labos_reasoning`. The reasoner validates "
+            "the concrete shape; invalid payloads surface as HTTP 400 "
+            "`invalid_context` with the pydantic error detail."
+        ),
+    )

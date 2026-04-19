@@ -1243,6 +1243,140 @@ def _handle_routing_models(args: argparse.Namespace) -> int:
     return _emit(payload, _render_routing_models, json_mode=_json_mode(args))
 
 
+# ---------------------------------------------------------------------------
+# LabOS reasoning surface — thin CLI delegate of
+# :func:`services.core.run_labos_reasoning`.  No mode-specific logic lives
+# here; the mode string is forwarded to the single canonical dispatcher.
+# ---------------------------------------------------------------------------
+
+
+def _read_reasoning_context(args: argparse.Namespace) -> dict[str, Any]:
+    sources = [
+        bool(getattr(args, "input", None)),
+        bool(getattr(args, "input_json", None)),
+        bool(getattr(args, "stdin", False)),
+    ]
+    if sum(1 for flag in sources if flag) > 1:
+        raise CliUsageError(
+            "Input nur einmal angeben: --input PATH, --input-json '...' oder --stdin"
+        )
+
+    raw: str
+    if getattr(args, "input", None):
+        path = Path(args.input)
+        if not path.is_file():
+            raise CliUsageError(f"Input-Datei nicht gefunden: {path}")
+        raw = path.read_text(encoding="utf-8")
+    elif getattr(args, "input_json", None):
+        raw = args.input_json
+    elif getattr(args, "stdin", False):
+        raw = sys.stdin.read()
+    else:
+        return {}
+
+    stripped = raw.strip()
+    if not stripped:
+        return {}
+    try:
+        parsed = json.loads(stripped)
+    except json.JSONDecodeError as exc:
+        raise CliUsageError(f"Input muss valides JSON sein: {exc.msg}") from exc
+    if not isinstance(parsed, dict):
+        raise CliUsageError("Input muss ein JSON-Objekt (LabOS-Context) sein")
+    return parsed
+
+
+def _render_labos_reasoning(payload: dict[str, Any]) -> str:
+    """Text renderer for LabOS reasoning — compact operator summary."""
+    if "error" in payload:
+        detail = payload.get("detail") or ""
+        text = f"[WARN] LabOS reasoning error: {payload['error']}"
+        if detail:
+            rendered_detail = (
+                _compact_json(detail) if not isinstance(detail, str) else detail
+            )
+            text += f"\n       detail={rendered_detail}"
+        return text
+
+    mode = payload.get("reasoning_mode", "-")
+    summary = payload.get("summary") or "(no summary)"
+    highlights = payload.get("highlights") or []
+    prioritized = payload.get("prioritized_entities") or []
+    recommended = payload.get("recommended_actions") or []
+    approval_required = payload.get("approval_required_actions") or []
+    deferred = payload.get("blocked_or_deferred_actions") or []
+    used_sections = payload.get("used_context_sections") or []
+
+    lines = [
+        f"=== LabOS Reasoning: {mode} ===",
+        f"Summary:               {summary}",
+        f"Prioritized entities:  {len(prioritized)}",
+        f"Recommended actions:   {len(recommended)}",
+        f"Approval-required:     {len(approval_required)}",
+        f"Deferred/blocked:      {len(deferred)}",
+        f"Used sections:         {', '.join(used_sections) if used_sections else '(none)'}",
+    ]
+
+    if highlights:
+        lines.append("")
+        lines.append("Highlights:")
+        for item in highlights[:10]:
+            lines.append(f"  - {item}")
+        if len(highlights) > 10:
+            lines.append(f"  ... ({len(highlights) - 10} more)")
+
+    if prioritized:
+        lines.append("")
+        lines.append(f"Top prioritized ({min(len(prioritized), 10)} of {len(prioritized)}):")
+        for entity in prioritized[:10]:
+            lines.append(
+                f"  #{entity.get('priority_rank', '-')}"
+                f"  [{entity.get('priority_bucket', '-')}]"
+                f"  {entity.get('entity_type', '-')}:{entity.get('entity_id', '-')}"
+                f" — {entity.get('priority_reason', '-')}"
+            )
+
+    for label, bucket in (
+        ("Recommended", recommended),
+        ("Approval-required", approval_required),
+    ):
+        if not bucket:
+            continue
+        lines.append("")
+        lines.append(f"{label} actions ({len(bucket)}):")
+        for action in bucket[:10]:
+            lines.append(
+                f"  - {action.get('action_name', '-')}"
+                f" on {action.get('target_entity_type', '-')}:"
+                f"{action.get('target_entity_id', '-')}"
+                f" [risk={action.get('risk_level', '-')}"
+                f", approval={action.get('requires_approval', '-')}]"
+            )
+
+    if deferred:
+        lines.append("")
+        lines.append(f"Deferred/blocked ({len(deferred)}):")
+        for action in deferred[:10]:
+            lines.append(
+                f"  - {action.get('intended_action', '-')}"
+                f" on {action.get('target_entity_type', '-')}:"
+                f"{action.get('target_entity_id', '-')}"
+                f" ({action.get('deferral_reason', '-')})"
+            )
+
+    return "\n".join(lines)
+
+
+def _handle_reasoning_labos(args: argparse.Namespace) -> int:
+    core = _load_core()
+    context = _read_reasoning_context(args)
+    payload = core.run_labos_reasoning(args.mode, context)
+    rc = _emit(payload, _render_labos_reasoning, json_mode=_json_mode(args))
+    if "error" in payload:
+        return 1
+    return rc
+
+
 def _handle_governance_pii(args: argparse.Namespace) -> int:
     core = _load_core()
     categories: list[str] | None = None
@@ -2356,6 +2490,44 @@ def build_parser() -> argparse.ArgumentParser:
     )
     lo_export.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     lo_export.set_defaults(handler=_handle_learningops_export)
+
+    reasoning_parser = subparsers.add_parser(
+        "reasoning",
+        help="Domain-Reasoning-Surfaces (V2 — z.B. LabOS-Use-Cases)",
+    )
+    reasoning_subparsers = reasoning_parser.add_subparsers(dest="action", required=True)
+    reasoning_labos = reasoning_subparsers.add_parser(
+        "labos",
+        help="ABrain V2 Domain Reasoning fuer LabOS-Snapshots",
+    )
+    from services.core import LABOS_REASONING_MODES as _LABOS_MODES
+
+    reasoning_labos.add_argument(
+        "mode",
+        choices=list(_LABOS_MODES),
+        help="Reasoning-Mode (z.B. reactor_daily_overview)",
+    )
+    reasoning_labos.add_argument(
+        "--input",
+        default=None,
+        help="Pfad zu einer JSON-Datei mit dem LabOS-Context",
+    )
+    reasoning_labos.add_argument(
+        "--input-json",
+        default=None,
+        help="LabOS-Context direkt als JSON-String",
+    )
+    reasoning_labos.add_argument(
+        "--stdin",
+        action="store_true",
+        help="LabOS-Context von stdin lesen",
+    )
+    reasoning_labos.add_argument(
+        "--json",
+        action="store_true",
+        help="Maschinenlesbare JSON-Ausgabe",
+    )
+    reasoning_labos.set_defaults(handler=_handle_reasoning_labos)
 
     health_parser = subparsers.add_parser("health", help="Kernstatus, Governance und Startpfade anzeigen")
     health_parser.add_argument("--limit", type=int, default=5, help="Maximale Anzahl fuer Listenabschnitte")

@@ -202,6 +202,7 @@ DEVELOPER & OPERATIONS:
   explain <trace_id>     Explainability eines Trace anzeigen
   agent list             Registrierte Agenten aus dem Kern anzeigen
   health                 Kernstatus, Governance und Startpfade anzeigen
+  reasoning labos <mode> Domain-Reasoning fuer LabOS (V2) ausfuehren
 
 DIAGNOSTICS:
   status                 System- und Runtime-Status anzeigen
@@ -596,6 +597,10 @@ cmd_agent() {
 
 cmd_health() {
     run_control_plane_bridge health "$@"
+}
+
+cmd_reasoning() {
+    run_control_plane_bridge reasoning "$@"
 }
 
 cmd_start() {
@@ -1053,6 +1058,9 @@ main() {
             ;;
         health)
             cmd_health "${command_args[@]}"
+            ;;
+        reasoning)
+            cmd_reasoning "${command_args[@]}"
             ;;
         stop)
             cmd_stop "${command_args[@]}"

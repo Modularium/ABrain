@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .handlers import (
+    LABOS_REASONING_HANDLERS,
     ApproveHandler,
     ExplainHandler,
     GetTraceHandler,
@@ -83,6 +84,15 @@ TOOLS: dict[str, ExposedTool] = {
         input_model=ListRoutingModelsHandler.input_model,
         handler=ListRoutingModelsHandler(),
     ),
+    **{
+        _cls.name: ExposedTool(
+            name=_cls.name,
+            description=_cls.description,
+            input_model=_cls.input_model,
+            handler=_cls(),
+        )
+        for _cls in LABOS_REASONING_HANDLERS
+    },
 }
 
 __all__ = ["ExposedTool", "TOOLS"]

@@ -2690,13 +2690,27 @@ def get_agent_performance_report(
 # validation message uniformly — same pattern as
 # :func:`get_routing_models`.
 
-_LABOS_REASONING_MODES = (
+LABOS_REASONING_MODES: tuple[str, ...] = (
     "reactor_daily_overview",
     "incident_review",
     "maintenance_suggestions",
     "schedule_runtime_review",
     "cross_domain_overview",
 )
+_LABOS_REASONING_MODES = LABOS_REASONING_MODES
+
+
+def run_labos_reasoning(
+    mode: str, context: Dict[str, Any] | None = None
+) -> Dict[str, Any]:
+    """Public mode-based dispatcher for LabOS reasoning.
+
+    CLI / HTTP / MCP surfaces call this with the bare mode name so none
+    of them maintain their own mode→reasoner switch.  Unknown modes
+    and invalid contexts surface as the same error envelopes the
+    typed ``get_labos_*`` entry points already emit.
+    """
+    return _run_labos_reasoner(mode, context)
 
 
 def _run_labos_reasoner(mode: str, context: Dict[str, Any] | None) -> Dict[str, Any]:

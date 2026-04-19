@@ -21,6 +21,7 @@ from api_gateway.schemas import (
     ControlPlaneRunRequest,
     ExplainabilityResponse,
     GovernanceListResponse,
+    LabOsReasoningRequest,
     PlanListResponse,
     PlanRunResponse,
     RoutingModelsResponse,
@@ -382,6 +383,64 @@ async def control_plane_routing_models(
             detail=payload.get("detail") or payload["error"],
         )
     return payload
+
+
+_LABOS_REASONING_ENDPOINT_SUMMARIES: dict[str, str] = {
+    "reactor_daily_overview": "Which reactors need attention today, which are nominal.",
+    "incident_review": "Prioritised review of open/critical LabOS incidents.",
+    "maintenance_suggestions": "Overdue/due maintenance items and allowed follow-up actions.",
+    "schedule_runtime_review": "Schedules and commands that are failing or blocked.",
+    "cross_domain_overview": "Combined reactor + incident + maintenance + schedule focus list.",
+}
+
+
+def _register_labos_reasoning_endpoint(mode: str, summary: str) -> None:
+    """Register one `POST /control-plane/reasoning/labos/<mode>` endpoint.
+
+    All five endpoints share the same thin delegation to
+    ``services.core.run_labos_reasoning`` — the only per-mode difference is
+    the URL path and the OpenAPI summary.
+    """
+
+    @api_route(version="dev")
+    @app.post(
+        f"/control-plane/reasoning/labos/{mode}",
+        tags=["Reasoning"],
+        summary=summary,
+        description=(
+            "Run the deterministic ABrain V2 LabOS domain reasoner for "
+            f"`{mode}` over a caller-supplied LabOS context snapshot. "
+            "Thin delegate of `services.core.run_labos_reasoning` — no "
+            "parallel implementation. Invalid contexts surface as HTTP 400 "
+            "`invalid_context` with the pydantic error detail; unknown "
+            "reasoning modes cannot occur since the mode is fixed in the URL."
+        ),
+        responses={
+            **COMMON_ERROR_RESPONSES,
+            400: {
+                "model": ApiErrorResponse,
+                "description": "The supplied context fails LabOS schema validation.",
+            },
+        },
+    )
+    @limiter.limit(RATE_LIMIT)
+    async def _endpoint(request: Request, payload: LabOsReasoningRequest) -> dict:
+        check_scope(request, "agents:read")
+        from services.core import run_labos_reasoning
+
+        response = run_labos_reasoning(mode, payload.context)
+        if "error" in response:
+            raise HTTPException(
+                status_code=400,
+                detail=response.get("detail") or response["error"],
+            )
+        return response
+
+    _endpoint.__name__ = f"control_plane_reasoning_labos_{mode}"
+
+
+for _mode, _summary in _LABOS_REASONING_ENDPOINT_SUMMARIES.items():
+    _register_labos_reasoning_endpoint(_mode, _summary)
 
 
 @api_route(version="dev")

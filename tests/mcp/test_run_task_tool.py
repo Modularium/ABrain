@@ -95,6 +95,11 @@ def test_tools_list_contains_only_static_v2_tools():
         "abrain.get_trace",
         "abrain.explain",
         "abrain.list_routing_models",
+        "abrain.reason_labos_reactor_daily_overview",
+        "abrain.reason_labos_incident_review",
+        "abrain.reason_labos_maintenance_suggestions",
+        "abrain.reason_labos_schedule_runtime_review",
+        "abrain.reason_labos_cross_domain_overview",
     ]
 
 

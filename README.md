@@ -177,9 +177,44 @@ Smolit-AI-Assistant → ABrain (Domain Reasoning) → LabOS MCP → LabOS API/DB
 
 **Entry points** live on `services/core.py` as
 `get_labos_<usecase>(context)` and are thin delegates of
-`core/reasoning/labos/usecases.py`. See
+`core/reasoning/labos/usecases.py`. The surface dispatcher
+`run_labos_reasoning(mode, context)` shares a single code path
+across CLI, HTTP and MCP. See
 [`docs/reviews/phase_v2_labos_reasoning_review.md`](docs/reviews/phase_v2_labos_reasoning_review.md)
-for the full design note.
+and
+[`docs/reviews/phase_v2_labos_surface_parity_review.md`](docs/reviews/phase_v2_labos_surface_parity_review.md)
+for the full design notes.
+
+**Surfaces (identical Response Shape V2):**
+
+```bash
+# CLI — reads context from file / stdin / inline JSON
+./scripts/abrain reasoning labos reactor_daily_overview --input ctx.json --json
+cat ctx.json | ./scripts/abrain reasoning labos incident_review --stdin
+./scripts/abrain reasoning labos maintenance_suggestions --input-json '{"maintenance_items":[]}'
+```
+
+```bash
+# HTTP — one endpoint per mode
+curl -X POST http://localhost:8080/control-plane/reasoning/labos/reactor_daily_overview \
+     -H 'Content-Type: application/json' \
+     -d '{"context": {"reactors": [{"reactor_id":"R1","status":"warning"}]}}'
+```
+
+```jsonc
+// MCP — one tool per mode, strict input schema
+{
+  "method": "tools/call",
+  "params": {
+    "name": "abrain.reason_labos_reactor_daily_overview",
+    "arguments": {"context": {"reactors": [{"reactor_id":"R1","status":"warning"}]}}
+  }
+}
+```
+
+Invalid contexts surface symmetrically: CLI exit code `1` with
+`{"error":"invalid_context", ...}`, HTTP `400`, MCP `isError=true`
+with `status: "error"`.
 
 ---
 
