@@ -260,7 +260,7 @@ ABrain als hybrides Multi-Model-System ausbauen: verschiedene Modelle und Ausfü
 - [x] Routing nach Kosten, Latenz, Risiko und Qualitätsbedarf implementieren (`phase4_M3_review.md`)
 - [x] Fallback-Kaskaden definieren (`phaseS4_provider_fallback_review.md`, `phaseS4_2_soft_fallback_review.md`)
 - [x] lokale/kleine Modelle für einfache Klassifikation, Ranking und Guardrails prüfen (`phase4_M4_review.md`)
-- [ ] Quantisierungs- und Distillationspfad für lokale Modelle aufbauen — *deferred zusammen mit §6.5 Green-AI-Items*
+- [ ] Quantisierungs- und Distillationspfad für lokale Modelle aufbauen — *Infrastruktur gelandet (declaration/audit/CLI/defaults/policy-inventory/policy: `037b161e`, `a92b76e3`, `6dd5770b`, `80b6d6f9`, `a0c9486c`, `7d531220`); Eval-Ausführung bleibt operator-seitig (siehe `phase_quantization_inventory.md`, `phase_quantization_routing_policy_review.md`)*
 - [x] KPI-Vergleiche zwischen externen und internen Pfaden etablieren (`phase4_M4_review.md`)
 
 ### Exit-Kriterien
@@ -425,7 +425,7 @@ ABrain schrittweise von einem reinen Routing-Modell zu einem breiteren Entscheid
 
 - [x] Energieverbrauch pro Modellpfad messen — wattage × latency estimator over `PerformanceHistoryStore` ☑ (`phase_green_energy_estimator_review.md`)
 - [x] Kosten pro Task und pro Modellpfad reporten (`phase_gov_agent_performance_report_review.md`, commit `bd157ef5`)
-- [ ] Quantisierung/Distillation für lokale Spezialmodelle evaluieren
+- [ ] Quantisierung/Distillation für lokale Spezialmodelle evaluieren — *Eval-Infrastruktur gelandet (siehe §Phase 4 §263); offene Arbeit ist operator-seitig: reale Benchmarks laufen lassen und `quality_delta_vs_baseline` / `quality_delta_vs_teacher` in `QuantizationProfile` / `DistillationLineage` registrieren*
 - [x] unnötig große Modelle durch Routing und Retrieval vermeiden (`phase4_M3_review.md`, `phase4_M4_review.md`)
 
 ---
