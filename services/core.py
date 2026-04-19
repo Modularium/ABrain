@@ -1727,3 +1727,38 @@ def compute_evaluation_baselines(*, limit: int = 100) -> Dict[str, Any]:
     )
     report = evaluator.compute_baselines(limit=limit)
     return report.model_dump(mode="json")
+
+
+def get_brain_operations_snapshot(
+    *,
+    trace_limit: int = 1000,
+    workflow_filter: str | None = None,
+    version_filter: str | None = None,
+    max_feed_entries: int | None = None,
+) -> Dict[str, Any]:
+    """Return a Brain v1 baseline + suggestion-feed snapshot.
+
+    Thin read-only wrapper over ``BrainOperationsReporter`` that exposes the
+    composite Phase 6 operator lagebericht (baseline verdict + gated
+    suggestion feed) to the canonical CLI / control-plane surfaces. Reads
+    ``brain_shadow_eval`` spans from the canonical ``TraceStore``; writes
+    nothing.
+    """
+    from core.decision.brain import BrainOperationsReporter
+
+    trace_state = _get_trace_state()
+    trace_store = trace_state["store"]
+    if trace_store is None:
+        return {
+            "error": "trace_store_unavailable",
+            "trace_store_path": trace_state["path"],
+        }
+
+    reporter = BrainOperationsReporter(trace_store=trace_store)
+    report = reporter.generate(
+        trace_limit=trace_limit,
+        workflow_filter=workflow_filter,
+        version_filter=version_filter,
+        max_feed_entries=max_feed_entries,
+    )
+    return report.model_dump(mode="json")

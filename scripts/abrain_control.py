@@ -804,6 +804,68 @@ def _handle_agent_list(args: argparse.Namespace) -> int:
     return _emit(payload, _render_agent_list, json_mode=_json_mode(args))
 
 
+def _render_brain_status(payload: dict[str, Any]) -> str:
+    """Render a BrainOperationsReport for operator review."""
+    if "error" in payload:
+        return (
+            f"[WARN] Brain status unavailable: {payload['error']}\n"
+            f"       trace_store_path={payload.get('trace_store_path', '-')}"
+        )
+
+    baseline = payload.get("baseline") or {}
+    overall = baseline.get("overall") or {}
+    feed = payload.get("suggestion_feed") or {}
+
+    lines = [
+        "=== Brain v1 Operations Report ===",
+        f"Generated at:       {payload.get('generated_at', '-')}",
+        f"Trace limit:        {payload.get('trace_limit', 0)}",
+        f"Workflow filter:    {payload.get('workflow_filter') or '(none)'}",
+        f"Version filter:     {payload.get('version_filter') or '(none)'}",
+        "",
+        "Baseline:",
+        f"  Recommendation:   {baseline.get('recommendation', '-')}",
+        f"  Reason:           {baseline.get('recommendation_reason', '-')}",
+        f"  Traces scanned:   {baseline.get('traces_scanned', 0)}",
+        f"  Shadow samples:   {baseline.get('samples', 0)}",
+    ]
+    if overall:
+        agreement = overall.get("agreement_rate")
+        divergence = overall.get("mean_score_divergence")
+        overlap = overall.get("mean_top_k_overlap")
+        lines.append(
+            f"  Overall:          "
+            f"agreement={f'{agreement:.1%}' if agreement is not None else 'n/a'}"
+            f"  mean_divergence={f'{divergence:.3f}' if divergence is not None else 'n/a'}"
+            f"  mean_top_k_overlap={f'{overlap:.3f}' if overlap is not None else 'n/a'}"
+        )
+
+    lines.extend(
+        [
+            "",
+            "Suggestion feed:",
+            f"  Gated:            {feed.get('gated', False)}",
+            f"  Gate passed:      {feed.get('gate_passed', False)}",
+            f"  Gate reason:      {feed.get('gate_reason', '-')}",
+            f"  Shadow samples:   {feed.get('shadow_samples', 0)}",
+            f"  Disagreements:    {feed.get('disagreement_samples', 0)}",
+            f"  Entries returned: {len(feed.get('entries') or [])}",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _handle_brain_status(args: argparse.Namespace) -> int:
+    core = _load_core()
+    payload = core.get_brain_operations_snapshot(
+        trace_limit=max(1, args.trace_limit),
+        workflow_filter=args.workflow,
+        version_filter=args.version,
+        max_feed_entries=args.max_feed_entries,
+    )
+    return _emit(payload, _render_brain_status, json_mode=_json_mode(args))
+
+
 def _handle_health(args: argparse.Namespace) -> int:
     core = _load_core()
     payload = core.get_control_plane_overview(
@@ -964,6 +1026,40 @@ def build_parser() -> argparse.ArgumentParser:
     agent_list.add_argument("--limit", type=int, default=20, help="Maximale Anzahl an Agenten")
     agent_list.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     agent_list.set_defaults(handler=_handle_agent_list)
+
+    brain_parser = subparsers.add_parser(
+        "brain",
+        help="Phase-6 Brain v1 Operator-Surface (shadow baseline + suggestion feed)",
+    )
+    brain_subparsers = brain_parser.add_subparsers(dest="action", required=True)
+    brain_status = brain_subparsers.add_parser(
+        "status",
+        help="Baseline-Verdict (promote/observe/reject) und gated Suggestion-Feed anzeigen",
+    )
+    brain_status.add_argument(
+        "--trace-limit",
+        type=int,
+        default=1000,
+        help="Maximale Trace-Anzahl fuer den Baseline- und Feed-Scan (default 1000)",
+    )
+    brain_status.add_argument(
+        "--workflow",
+        default=None,
+        help="Optionaler Workflow-Filter",
+    )
+    brain_status.add_argument(
+        "--version",
+        default=None,
+        help="Optionaler Brain-Version-Filter",
+    )
+    brain_status.add_argument(
+        "--max-feed-entries",
+        type=int,
+        default=None,
+        help="Optionales Cap fuer Suggestion-Feed-Eintraege",
+    )
+    brain_status.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    brain_status.set_defaults(handler=_handle_brain_status)
 
     health_parser = subparsers.add_parser("health", help="Kernstatus, Governance und Startpfade anzeigen")
     health_parser.add_argument("--limit", type=int, default=5, help="Maximale Anzahl fuer Listenabschnitte")
