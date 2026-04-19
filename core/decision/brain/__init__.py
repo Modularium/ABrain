@@ -3,12 +3,17 @@
 __all__ = [
     "BrainAgentSignal",
     "BrainBudget",
+    "BrainOfflineTrainer",
     "BrainPolicySignals",
     "BrainRecord",
     "BrainRecordBuilder",
     "BrainState",
     "BrainStateEncoder",
     "BrainTarget",
+    "BrainTrainingJobConfig",
+    "BrainTrainingResult",
+    "load_brain_records",
+    "save_brain_records",
 ]
 
 
@@ -46,4 +51,21 @@ def __getattr__(name: str):
         from .record_builder import BrainRecordBuilder
 
         return BrainRecordBuilder
+    if name in {"BrainOfflineTrainer", "BrainTrainingJobConfig", "BrainTrainingResult",
+                "load_brain_records", "save_brain_records"}:
+        from .trainer import (
+            BrainOfflineTrainer,
+            BrainTrainingJobConfig,
+            BrainTrainingResult,
+            load_brain_records,
+            save_brain_records,
+        )
+
+        return {
+            "BrainOfflineTrainer": BrainOfflineTrainer,
+            "BrainTrainingJobConfig": BrainTrainingJobConfig,
+            "BrainTrainingResult": BrainTrainingResult,
+            "load_brain_records": load_brain_records,
+            "save_brain_records": save_brain_records,
+        }[name]
     raise AttributeError(name)
