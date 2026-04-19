@@ -418,7 +418,7 @@ ABrain schrittweise von einem reinen Routing-Modell zu einem breiteren Entscheid
 - [x] Datenschema für Training und Auswertung (`phase5_L1_review.md`, `phase6_B1_review.md`)
 - [ ] Provenienz und Lizenzstatus je Datenquelle
 - [ ] PII-Strategie
-- [x] Retention- und Löschkonzept — *read-only Scanner ☑ (`phase_gov_retention_scanner_review.md`, commit `31f315fb`); destruktiver Pruner steht aus*
+- [x] Retention- und Löschkonzept — Scanner ☑ (`phase_gov_retention_scanner_review.md`, commit `31f315fb`), Pruner ☑ (`phase_gov_retention_pruner_review.md`)
 - [ ] reproduzierbare Datensplits
 
 ## 6.5 Effizienz und Green AI

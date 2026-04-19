@@ -41,6 +41,11 @@ from .retention import (
     RetentionScanner,
     RetentionTotals,
 )
+from .retention_pruner import (
+    RetentionPruneOutcome,
+    RetentionPruneResult,
+    RetentionPruner,
+)
 
 _audit = AuditLog(log_dir=os.getenv("AUDIT_LOG_DIR", "audit"))
 
@@ -74,6 +79,9 @@ __all__ = [
     "ReplayStepInput",
     "RetentionCandidate",
     "RetentionPolicy",
+    "RetentionPruneOutcome",
+    "RetentionPruneResult",
+    "RetentionPruner",
     "RetentionReport",
     "RetentionScanner",
     "RetentionTotals",

@@ -304,6 +304,29 @@ class TraceStore:
             ).fetchall()
         return [self._row_to_trace(row) for row in rows]
 
+    def delete_trace(self, trace_id: str) -> bool:
+        """Delete one trace and its spans + explainability rows.
+
+        Returns ``True`` if a row was removed, ``False`` if the trace
+        was already absent. Destructive: the caller owns the retention
+        decision — this store does not re-check policy.
+        """
+        with self._connect() as connection:
+            cursor = connection.execute(
+                "DELETE FROM traces WHERE trace_id = ?",
+                (trace_id,),
+            )
+            removed = cursor.rowcount > 0
+            connection.execute(
+                "DELETE FROM spans WHERE trace_id = ?",
+                (trace_id,),
+            )
+            connection.execute(
+                "DELETE FROM explainability WHERE trace_id = ?",
+                (trace_id,),
+            )
+        return removed
+
     def _ensure_schema(self) -> None:
         with self._connect() as connection:
             connection.executescript(

@@ -67,6 +67,19 @@ class ApprovalStore:
         self._auto_save()
         return updated
 
+    def delete_request(self, approval_id: str) -> bool:
+        """Remove one approval request from the store.
+
+        Returns ``True`` if the request was present, ``False`` otherwise.
+        Destructive: the caller owns the retention decision — this store
+        does not re-check policy.
+        """
+        if approval_id not in self._requests:
+            return False
+        del self._requests[approval_id]
+        self._auto_save()
+        return True
+
     def save_json(self, path: str | Path | None = None) -> Path:
         target = Path(path) if path else self.path
         if target is None:
