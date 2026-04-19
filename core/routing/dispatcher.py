@@ -3,25 +3,33 @@
 Phase 4 — "System-Level MoE und hybrides Modellrouting", Step M2.
 
 ``ModelDispatcher`` selects the best available model from ``ModelRegistry``
-for a given ``ModelRoutingRequest``, respecting cost and latency budgets,
-capability requirements, and a tier-ordered fallback cascade.
+for a given ``ModelRoutingRequest``, respecting cost, latency, and quality
+budgets, capability requirements, and a tier-ordered fallback cascade.
 
 Dispatch algorithm
 ------------------
-The dispatcher runs up to five selection passes, each relaxing constraints
+The dispatcher runs up to six selection passes, each relaxing constraints
 further.  The first pass that yields at least one candidate wins.
 
-Pass 1  strict     — purpose + availability + capabilities + cost + latency
-Pass 2  no-latency — same as pass 1 but without the latency constraint
-Pass 3  no-cost    — same as pass 1 but without the cost constraint
-Pass 4  no-budget  — purpose + availability + capabilities only
-Pass 5  no-caps    — purpose + availability only (last resort)
+Pass 1  strict      — purpose + availability + capabilities + cost + latency + quality
+Pass 2  no-latency  — same as pass 1 but without the latency constraint
+Pass 3  no-cost     — same as pass 1 but without the cost constraint
+Pass 4  no-budget   — purpose + availability + capabilities + quality
+Pass 5  no-quality  — purpose + availability + capabilities only
+Pass 6  no-caps     — purpose + availability only (last resort)
+
+Capability requirements (tool use, structured output) are contracts — they
+must never relax before the quality preference, hence the dedicated
+``no-quality`` pass before ``no-caps``.
 
 Within each pass, candidates are sorted:
 
 1. LOCAL tier first when ``prefer_local=True``
-2. Cost ascending (None = unknown, sorted last)
-3. Latency ascending (None = unknown, sorted last)
+2. Tier ascending (LOCAL → SMALL → MEDIUM → LARGE)
+3. Cost ascending (None = unknown, sorted last)
+4. Latency ascending (None = unknown, sorted last)
+5. Quality regression ascending — measured deltas beat unknown deltas
+   (LOCAL-only in practice; hosted tiers carry no lineage)
 
 The top candidate from the first winning pass is returned.
 If no pass yields any candidate, ``NoModelAvailableError`` is raised.
@@ -77,6 +85,16 @@ class ModelRoutingRequest(BaseModel):
     prefer_local:
         Hint: prefer LOCAL-tier models when they satisfy all other constraints.
         Does not override hard budget or capability requirements.
+    max_quality_regression:
+        Maximum tolerated quality regression (absolute value) against the
+        declared baseline or teacher.  In ``[0.0, 1.0]``.  A candidate with
+        declared ``quality_delta_vs_teacher`` (preferred) or
+        ``quality_delta_vs_baseline`` below ``-max_quality_regression`` is
+        filtered out at the strict pass.  ``None`` (default) disables the
+        quality gate entirely — today's behaviour.  Candidates whose delta
+        is ``None`` (unmeasured) always pass the filter: unknown deltas are
+        not coerced to ``0.0`` nor treated as regressions, mirroring the
+        ``unknown cost passes when no budget set`` rule.
     task_id:
         Optional task identifier for audit attribution.
     """
@@ -89,6 +107,7 @@ class ModelRoutingRequest(BaseModel):
     require_tool_use: bool = False
     require_structured_output: bool = False
     prefer_local: bool = False
+    max_quality_regression: float | None = Field(default=None, ge=0.0, le=1.0)
     task_id: str | None = Field(default=None, max_length=128)
 
 
@@ -181,13 +200,29 @@ _TIER_ORDER: dict[ModelTier, int] = {
     ModelTier.LARGE: 3,
 }
 
-# Sentinel for unknown cost/latency — sorts after known values.
+# Sentinel for unknown cost/latency/quality — sorts after known values.
 _UNKNOWN_COST = math.inf
 _UNKNOWN_LATENCY = math.inf
+_UNKNOWN_QUALITY = math.inf
+
+
+def _effective_quality_delta(descriptor: ModelDescriptor) -> float | None:
+    """Return the single quality delta the policy reads for *descriptor*.
+
+    Distillation takes precedence over quantization: a distilled student is a
+    more fundamental transformation than a quantized artefact, and its teacher
+    is the semantic reference point.  Hosted tiers never declare lineage by
+    schema invariant, so this always returns ``None`` for them.
+    """
+    if descriptor.distillation is not None:
+        return descriptor.distillation.quality_delta_vs_teacher
+    if descriptor.quantization is not None:
+        return descriptor.quantization.quality_delta_vs_baseline
+    return None
 
 
 def _dispatch(request: ModelRoutingRequest, registry: ModelRegistry) -> ModelRoutingResult:
-    """Execute the five-pass fallback cascade and return the best candidate."""
+    """Execute the six-pass fallback cascade and return the best candidate."""
     # Base pool: purpose-matching, available models.
     base = [
         d for d in registry.list_by_purpose(request.purpose)
@@ -199,6 +234,7 @@ def _dispatch(request: ModelRoutingRequest, registry: ModelRegistry) -> ModelRou
         ("relaxed latency constraint", _apply_no_latency(base, request)),
         ("relaxed cost constraint", _apply_no_cost(base, request)),
         ("relaxed budget constraints", _apply_no_budget(base, request)),
+        ("relaxed quality tolerance", _apply_no_quality(base, request)),
         ("relaxed capability requirements", _apply_no_caps(base, request)),
     ]
 
@@ -260,25 +296,60 @@ def _apply_latency(
     ]
 
 
+def _apply_quality(
+    candidates: list[ModelDescriptor], request: ModelRoutingRequest
+) -> list[ModelDescriptor]:
+    """Filter by declared quality regression tolerance.
+
+    When ``max_quality_regression`` is ``None`` the filter is a no-op.
+    Candidates without a declared delta (``None``) always pass — see
+    ``ModelRoutingRequest.max_quality_regression`` for the rationale.
+    """
+    if request.max_quality_regression is None:
+        return candidates
+    threshold = -request.max_quality_regression
+    result: list[ModelDescriptor] = []
+    for d in candidates:
+        delta = _effective_quality_delta(d)
+        if delta is None or delta >= threshold:
+            result.append(d)
+    return result
+
+
 def _apply_all(
     candidates: list[ModelDescriptor], request: ModelRoutingRequest
 ) -> list[ModelDescriptor]:
-    return _apply_latency(_apply_cost(_apply_caps(candidates, request), request), request)
+    return _apply_quality(
+        _apply_latency(
+            _apply_cost(_apply_caps(candidates, request), request), request
+        ),
+        request,
+    )
 
 
 def _apply_no_latency(
     candidates: list[ModelDescriptor], request: ModelRoutingRequest
 ) -> list[ModelDescriptor]:
-    return _apply_cost(_apply_caps(candidates, request), request)
+    return _apply_quality(
+        _apply_cost(_apply_caps(candidates, request), request), request
+    )
 
 
 def _apply_no_cost(
     candidates: list[ModelDescriptor], request: ModelRoutingRequest
 ) -> list[ModelDescriptor]:
-    return _apply_latency(_apply_caps(candidates, request), request)
+    return _apply_quality(
+        _apply_latency(_apply_caps(candidates, request), request), request
+    )
 
 
 def _apply_no_budget(
+    candidates: list[ModelDescriptor], request: ModelRoutingRequest
+) -> list[ModelDescriptor]:
+    return _apply_quality(_apply_caps(candidates, request), request)
+
+
+def _apply_no_quality(
     candidates: list[ModelDescriptor], request: ModelRoutingRequest
 ) -> list[ModelDescriptor]:
     return _apply_caps(candidates, request)
@@ -292,13 +363,21 @@ def _apply_no_caps(
 
 def _sort_key(
     descriptor: ModelDescriptor, prefer_local: bool
-) -> tuple[int, int, float, float]:
-    """Sort key: (local_penalty, tier, cost, latency) — lower is preferred."""
+) -> tuple[int, int, float, float, float]:
+    """Sort key: (local_penalty, tier, cost, latency, quality_penalty).
+
+    Lower is preferred.  The quality term is the negated effective delta so
+    that a measured ``-0.02`` (penalty 0.02) sorts ahead of a measured
+    ``-0.15`` (penalty 0.15).  Unknown deltas become ``+inf`` so measured-
+    better-quality beats unknown-quality at equal tier/cost/latency.
+    """
     local_bonus = 0 if (prefer_local and descriptor.tier == ModelTier.LOCAL) else 1
     tier = _TIER_ORDER[descriptor.tier]
     cost = descriptor.cost_per_1k_tokens if descriptor.cost_per_1k_tokens is not None else _UNKNOWN_COST
     latency = descriptor.p95_latency_ms if descriptor.p95_latency_ms is not None else _UNKNOWN_LATENCY
-    return (local_bonus, tier, cost, latency)
+    delta = _effective_quality_delta(descriptor)
+    quality_penalty = -delta if delta is not None else _UNKNOWN_QUALITY
+    return (local_bonus, tier, cost, latency, quality_penalty)
 
 
 def _rank(
