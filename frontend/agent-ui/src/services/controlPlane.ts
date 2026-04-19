@@ -212,6 +212,70 @@ export interface RunPayload {
   options?: Record<string, unknown>
 }
 
+// Routing-model catalog — canonical projection of `services.core.get_routing_models`.
+// Mirrors the OpenAPI schema emitted by `/control-plane/routing/models` and the
+// MCP `abrain.list_routing_models` structuredContent.  Stable-schema: every entry
+// always exposes `quantization`, `distillation`, `energy_profile` (nullable).
+
+export interface RoutingModelQuantization {
+  method: string
+  bits: number
+  baseline_model_id: string
+  quality_delta_vs_baseline: number | null
+  evaluated_on: string | null
+}
+
+export interface RoutingModelDistillation {
+  teacher_model_id: string
+  recipe: string
+  quality_delta_vs_teacher: number | null
+  evaluated_on: string | null
+}
+
+export interface RoutingModelEnergyProfile {
+  avg_power_watts: number
+  source: string
+}
+
+export interface RoutingModelEntry {
+  model_id: string
+  display_name: string
+  provider: string
+  tier: string
+  purposes: string[]
+  context_window: number
+  cost_per_1k_tokens: number | null
+  p95_latency_ms: number | null
+  supports_tool_use: boolean
+  supports_structured_output: boolean
+  is_available: boolean
+  quantization: RoutingModelQuantization | null
+  distillation: RoutingModelDistillation | null
+  energy_profile: RoutingModelEnergyProfile | null
+}
+
+export interface RoutingModelsResponse {
+  total: number
+  catalog_size: number
+  filters: {
+    tier: string | null
+    provider: string | null
+    purpose: string | null
+    available_only: boolean
+  }
+  tiers: Record<string, number>
+  providers: Record<string, number>
+  purposes: Record<string, number>
+  models: RoutingModelEntry[]
+}
+
+export interface RoutingModelFilters {
+  tier?: string | null
+  provider?: string | null
+  purpose?: string | null
+  available_only?: boolean
+}
+
 function getBaseUrl(): string {
   return useAppStore.getState().settings.api.baseUrl.replace(/\/$/, '')
 }
@@ -285,4 +349,15 @@ export const controlPlaneApi = {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+  getRoutingModels: (filters: RoutingModelFilters = {}) => {
+    const params = new URLSearchParams()
+    if (filters.tier) params.set('tier', filters.tier)
+    if (filters.provider) params.set('provider', filters.provider)
+    if (filters.purpose) params.set('purpose', filters.purpose)
+    if (filters.available_only) params.set('available_only', 'true')
+    const query = params.toString()
+    return request<RoutingModelsResponse>(
+      `/control-plane/routing/models${query ? `?${query}` : ''}`
+    )
+  },
 }

@@ -1,4 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+
+import {
+  controlPlaneApi,
+  type RoutingModelEntry,
+  type RoutingModelFilters,
+  type RoutingModelsResponse,
+} from '@/services/controlPlane'
 
 interface RoutingRule {
   id: string
@@ -23,29 +30,6 @@ interface RoutingRule {
     successRate: number
     avgResponseTime: number
     lastUsed?: Date
-  }
-}
-
-interface Model {
-  id: string
-  name: string
-  provider: string
-  version: string
-  status: 'available' | 'unavailable' | 'maintenance'
-  capabilities: string[]
-  pricing: {
-    inputTokens: number
-    outputTokens: number
-    currency: string
-  }
-  limits: {
-    maxTokens: number
-    requestsPerMinute: number
-  }
-  stats: {
-    avgResponseTime: number
-    successRate: number
-    totalRequests: number
   }
 }
 
@@ -118,61 +102,46 @@ const mockRoutingRules: RoutingRule[] = [
   }
 ]
 
-const mockModels: Model[] = [
-  {
-    id: 'gpt-4-turbo',
-    name: 'GPT-4 Turbo',
-    provider: 'OpenAI',
-    version: '2024-04-09',
-    status: 'available',
-    capabilities: ['reasoning', 'coding', 'analysis', 'creative'],
-    pricing: { inputTokens: 0.01, outputTokens: 0.03, currency: 'USD' },
-    limits: { maxTokens: 128000, requestsPerMinute: 100 },
-    stats: { avgResponseTime: 4.2, successRate: 98.5, totalRequests: 1247 }
-  },
-  {
-    id: 'gpt-3.5-turbo',
-    name: 'GPT-3.5 Turbo',
-    provider: 'OpenAI',
-    version: '0125',
-    status: 'available',
-    capabilities: ['general', 'coding', 'analysis'],
-    pricing: { inputTokens: 0.0005, outputTokens: 0.0015, currency: 'USD' },
-    limits: { maxTokens: 16385, requestsPerMinute: 500 },
-    stats: { avgResponseTime: 1.8, successRate: 97.2, totalRequests: 3456 }
-  },
-  {
-    id: 'claude-3-opus',
-    name: 'Claude 3 Opus',
-    provider: 'Anthropic',
-    version: '20240229',
-    status: 'available',
-    capabilities: ['reasoning', 'analysis', 'creative', 'long-context'],
-    pricing: { inputTokens: 0.015, outputTokens: 0.075, currency: 'USD' },
-    limits: { maxTokens: 200000, requestsPerMinute: 50 },
-    stats: { avgResponseTime: 6.1, successRate: 96.8, totalRequests: 892 }
-  },
-  {
-    id: 'local-llama',
-    name: 'Local Llama 2',
-    provider: 'Local',
-    version: '13B',
-    status: 'maintenance',
-    capabilities: ['general', 'coding'],
-    pricing: { inputTokens: 0, outputTokens: 0, currency: 'USD' },
-    limits: { maxTokens: 4096, requestsPerMinute: 10 },
-    stats: { avgResponseTime: 12.5, successRate: 89.3, totalRequests: 234 }
-  }
-]
-
 export default function ModernRoutingPage() {
   const [routingRules, setRoutingRules] = useState<RoutingRule[]>(mockRoutingRules)
-  const [models] = useState<Model[]>(mockModels)
+  const [catalog, setCatalog] = useState<RoutingModelsResponse | null>(null)
+  const [catalogLoading, setCatalogLoading] = useState(false)
+  const [catalogError, setCatalogError] = useState<string | null>(null)
+  const [catalogFilters, setCatalogFilters] = useState<RoutingModelFilters>({})
   const [activeTab, setActiveTab] = useState<'rules' | 'models' | 'analytics'>('rules')
   const [selectedRule] = useState<string | null>(null)
   const [isCreatingRule, setIsCreatingRule] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'enabled' | 'disabled'>('all')
+
+  // Fetch `/control-plane/routing/models` (canonical catalog — §6.5 Green AI).
+  // Refetch when filters change; empty filters query the full catalog.
+  useEffect(() => {
+    let cancelled = false
+    setCatalogLoading(true)
+    setCatalogError(null)
+    controlPlaneApi
+      .getRoutingModels(catalogFilters)
+      .then((payload) => {
+        if (cancelled) return
+        setCatalog(payload)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setCatalogError(err instanceof Error ? err.message : 'Failed to load routing catalog')
+      })
+      .finally(() => {
+        if (!cancelled) setCatalogLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [catalogFilters])
+
+  const availableCatalogModelCount = useMemo(() => {
+    if (!catalog) return 0
+    return catalog.models.filter((m) => m.is_available).length
+  }, [catalog])
 
   const getStatusColor = (enabled: boolean) => {
     return enabled 
@@ -180,21 +149,26 @@ export default function ModernRoutingPage() {
       : 'bg-gray-100 text-gray-800 border-gray-200'
   }
 
-  const getModelStatusColor = (status: string) => {
-    switch (status) {
-      case 'available': return 'bg-green-100 text-green-800 border-green-200'
-      case 'maintenance': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'unavailable': return 'bg-red-100 text-red-800 border-red-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
+  const getModelStatusColor = (isAvailable: boolean) => {
+    return isAvailable
+      ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300'
+      : 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300'
+  }
+
+  const getTierBadgeColor = (tier: string) => {
+    switch (tier) {
+      case 'local': return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+      case 'small': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+      case 'medium': return 'bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-300'
+      case 'large': return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
     }
   }
 
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 4
-    }).format(amount)
+  const formatCostPer1k = (cost: number | null) => {
+    if (cost === null) return '—'
+    if (cost === 0) return 'free'
+    return `$${cost.toFixed(4)}`
   }
 
   const formatTimeAgo = (date: Date) => {
@@ -327,85 +301,116 @@ export default function ModernRoutingPage() {
     </div>
   )
 
-  const ModelCard = ({ model }: { model: Model }) => (
+  const ModelCard = ({ model }: { model: RoutingModelEntry }) => (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all duration-200">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <span className="text-white font-bold text-lg">
-              {model.provider === 'OpenAI' ? '🔥' : model.provider === 'Anthropic' ? '🧠' : '💻'}
+      <div className="flex items-start justify-between mb-4 gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="font-semibold text-gray-900 dark:text-white text-lg break-all">
+              {model.display_name}
+            </h3>
+            <span className={`px-2 py-0.5 text-xs rounded-md font-medium ${getTierBadgeColor(model.tier)}`}>
+              {model.tier}
             </span>
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white text-lg">
-              {model.name}
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {model.provider} • {model.version}
-            </p>
-          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 font-mono break-all">
+            {model.model_id}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            provider: {model.provider}
+          </p>
         </div>
-        <span className={`px-3 py-1 text-xs rounded-full border font-medium ${getModelStatusColor(model.status)}`}>
-          {model.status === 'available' ? '✅ Available' : 
-           model.status === 'maintenance' ? '🔧 Maintenance' : '❌ Unavailable'}
+        <span className={`px-3 py-1 text-xs rounded-full border font-medium whitespace-nowrap ${getModelStatusColor(model.is_available)}`}>
+          {model.is_available ? 'available' : 'unavailable'}
         </span>
       </div>
 
-      {/* Capabilities */}
+      {/* Purposes */}
       <div className="mb-4">
-        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Capabilities:</h4>
+        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Purposes</h4>
         <div className="flex flex-wrap gap-2">
-          {model.capabilities.map((capability, index) => (
-            <span key={index} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-lg">
-              {capability}
+          {model.purposes.length === 0 ? (
+            <span className="text-xs text-gray-400 italic">none declared</span>
+          ) : (
+            model.purposes.map((purpose) => (
+              <span key={purpose} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs rounded-lg">
+                {purpose}
+              </span>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Capability flags */}
+      <div className="mb-4 flex flex-wrap gap-2 text-xs">
+        <span className={`px-2 py-1 rounded-md ${model.supports_tool_use ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'}`}>
+          tool_use: {model.supports_tool_use ? 'yes' : 'no'}
+        </span>
+        <span className={`px-2 py-1 rounded-md ${model.supports_structured_output ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'}`}>
+          structured_output: {model.supports_structured_output ? 'yes' : 'no'}
+        </span>
+      </div>
+
+      {/* Catalog stats — canonical fields only */}
+      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-center">
+        <div>
+          <div className="text-lg font-semibold text-gray-900 dark:text-white">
+            {model.context_window.toLocaleString()}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">context</div>
+        </div>
+        <div>
+          <div className="text-lg font-semibold text-gray-900 dark:text-white">
+            {formatCostPer1k(model.cost_per_1k_tokens)}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">$/1k tok</div>
+        </div>
+        <div>
+          <div className="text-lg font-semibold text-gray-900 dark:text-white">
+            {model.p95_latency_ms !== null ? `${model.p95_latency_ms}ms` : '—'}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">p95 latency</div>
+        </div>
+      </div>
+
+      {/* §6.5 lineage + energy — honesty rule: `None` means not declared */}
+      <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 space-y-2 text-xs">
+        <div>
+          <span className="font-medium text-gray-700 dark:text-gray-300">quantization: </span>
+          {model.quantization ? (
+            <span className="text-gray-600 dark:text-gray-400">
+              {model.quantization.method} ({model.quantization.bits}-bit,
+              {' '}baseline {model.quantization.baseline_model_id}
+              {model.quantization.quality_delta_vs_baseline !== null
+                ? `, Δ ${model.quantization.quality_delta_vs_baseline.toFixed(3)}`
+                : ''})
             </span>
-          ))}
+          ) : (
+            <span className="text-gray-400 italic">not declared</span>
+          )}
         </div>
-      </div>
-
-      {/* Pricing */}
-      <div className="mb-4">
-        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pricing:</h4>
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div>
-            <span className="text-gray-500 dark:text-gray-400">Input:</span>
-            <span className="ml-1 font-medium">{formatCurrency(model.pricing.inputTokens, model.pricing.currency)}/1K</span>
-          </div>
-          <div>
-            <span className="text-gray-500 dark:text-gray-400">Output:</span>
-            <span className="ml-1 font-medium">{formatCurrency(model.pricing.outputTokens, model.pricing.currency)}/1K</span>
-          </div>
+        <div>
+          <span className="font-medium text-gray-700 dark:text-gray-300">distillation: </span>
+          {model.distillation ? (
+            <span className="text-gray-600 dark:text-gray-400">
+              {model.distillation.recipe} (teacher {model.distillation.teacher_model_id}
+              {model.distillation.quality_delta_vs_teacher !== null
+                ? `, Δ ${model.distillation.quality_delta_vs_teacher.toFixed(3)}`
+                : ''})
+            </span>
+          ) : (
+            <span className="text-gray-400 italic">not declared</span>
+          )}
         </div>
-      </div>
-
-      {/* Limits */}
-      <div className="mb-4">
-        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Limits:</h4>
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div>
-            <span className="text-gray-500 dark:text-gray-400">Max Tokens:</span>
-            <span className="ml-1 font-medium">{model.limits.maxTokens.toLocaleString()}</span>
-          </div>
-          <div>
-            <span className="text-gray-500 dark:text-gray-400">RPM:</span>
-            <span className="ml-1 font-medium">{model.limits.requestsPerMinute}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-        <div className="text-center">
-          <div className="text-lg font-bold text-gray-900 dark:text-white">{model.stats.totalRequests}</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">Requests</div>
-        </div>
-        <div className="text-center">
-          <div className="text-lg font-bold text-green-600">{model.stats.successRate}%</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">Success</div>
-        </div>
-        <div className="text-center">
-          <div className="text-lg font-bold text-blue-600">{model.stats.avgResponseTime}s</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">Avg Time</div>
+        <div>
+          <span className="font-medium text-gray-700 dark:text-gray-300">energy_profile: </span>
+          {model.energy_profile ? (
+            <span className="text-gray-600 dark:text-gray-400">
+              {model.energy_profile.avg_power_watts.toFixed(1)}W ({model.energy_profile.source})
+            </span>
+          ) : (
+            <span className="text-gray-400 italic">not declared</span>
+          )}
         </div>
       </div>
     </div>
@@ -458,7 +463,7 @@ export default function ModernRoutingPage() {
               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Available Models</span>
             </div>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {models.filter(m => m.status === 'available').length}
+              {catalog ? availableCatalogModelCount : '—'}
             </p>
           </div>
 
@@ -561,10 +566,101 @@ export default function ModernRoutingPage() {
             )}
 
             {activeTab === 'models' && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {models.map((model) => (
-                  <ModelCard key={model.id} model={model} />
-                ))}
+              <div className="space-y-6">
+                {/* Filters forwarded verbatim to `/control-plane/routing/models` */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <select
+                    value={catalogFilters.tier ?? ''}
+                    onChange={(e) =>
+                      setCatalogFilters((prev) => ({
+                        ...prev,
+                        tier: e.target.value || null,
+                      }))
+                    }
+                    className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">All tiers</option>
+                    <option value="local">local</option>
+                    <option value="small">small</option>
+                    <option value="medium">medium</option>
+                    <option value="large">large</option>
+                  </select>
+                  <select
+                    value={catalogFilters.provider ?? ''}
+                    onChange={(e) =>
+                      setCatalogFilters((prev) => ({
+                        ...prev,
+                        provider: e.target.value || null,
+                      }))
+                    }
+                    className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">All providers</option>
+                    <option value="anthropic">anthropic</option>
+                    <option value="openai">openai</option>
+                    <option value="google">google</option>
+                    <option value="local">local</option>
+                    <option value="custom">custom</option>
+                  </select>
+                  <select
+                    value={catalogFilters.purpose ?? ''}
+                    onChange={(e) =>
+                      setCatalogFilters((prev) => ({
+                        ...prev,
+                        purpose: e.target.value || null,
+                      }))
+                    }
+                    className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">All purposes</option>
+                    <option value="planning">planning</option>
+                    <option value="classification">classification</option>
+                    <option value="ranking">ranking</option>
+                    <option value="retrieval_assist">retrieval_assist</option>
+                    <option value="local_assist">local_assist</option>
+                    <option value="specialist">specialist</option>
+                  </select>
+                  <label className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(catalogFilters.available_only)}
+                      onChange={(e) =>
+                        setCatalogFilters((prev) => ({
+                          ...prev,
+                          available_only: e.target.checked,
+                        }))
+                      }
+                    />
+                    available only
+                  </label>
+                </div>
+
+                {/* Catalog meta line — total / catalog_size verbatim from the service */}
+                {catalog && !catalogError ? (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {catalog.total} of {catalog.catalog_size} models match current filters
+                  </p>
+                ) : null}
+
+                {catalogError ? (
+                  <div className="rounded-xl border border-rose-200 bg-rose-50 dark:border-rose-900/40 dark:bg-rose-950/30 px-4 py-3 text-sm text-rose-700 dark:text-rose-200">
+                    Failed to load routing catalog: {catalogError}
+                  </div>
+                ) : catalogLoading && !catalog ? (
+                  <div className="py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                    Loading routing catalog…
+                  </div>
+                ) : catalog && catalog.models.length === 0 ? (
+                  <div className="py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                    No models match the selected filters.
+                  </div>
+                ) : catalog ? (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {catalog.models.map((model) => (
+                      <ModelCard key={model.model_id} model={model} />
+                    ))}
+                  </div>
+                ) : null}
               </div>
             )}
 
