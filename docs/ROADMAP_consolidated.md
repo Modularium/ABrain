@@ -423,7 +423,7 @@ ABrain schrittweise von einem reinen Routing-Modell zu einem breiteren Entscheid
 
 ## 6.5 Effizienz und Green AI
 
-- [ ] Energieverbrauch pro Modellpfad messen
+- [x] Energieverbrauch pro Modellpfad messen — wattage × latency estimator over `PerformanceHistoryStore` ☑ (`phase_green_energy_estimator_review.md`)
 - [x] Kosten pro Task und pro Modellpfad reporten (`phase_gov_agent_performance_report_review.md`, commit `bd157ef5`)
 - [ ] Quantisierung/Distillation für lokale Spezialmodelle evaluieren
 - [x] unnötig große Modelle durch Routing und Retrieval vermeiden (`phase4_M3_review.md`, `phase4_M4_review.md`)

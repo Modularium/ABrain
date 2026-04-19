@@ -30,6 +30,14 @@ from .performance_report import (
     AgentPerformanceReporter,
     AgentPerformanceTotals,
 )
+from .energy_report import (
+    AgentEnergyEstimate,
+    EnergyEstimator,
+    EnergyEstimatorConfig,
+    EnergyProfile,
+    EnergyReport,
+    EnergyTotals,
+)
 from .planner import Planner, PlannerResult
 from .routing_engine import RankedCandidate, RoutingDecision, RoutingEngine, RoutingPreferences
 from .task_intent import TaskIntent
@@ -70,6 +78,12 @@ __all__ = [
     "AgentPerformanceReport",
     "AgentPerformanceReporter",
     "AgentPerformanceTotals",
+    "AgentEnergyEstimate",
+    "EnergyEstimator",
+    "EnergyEstimatorConfig",
+    "EnergyProfile",
+    "EnergyReport",
+    "EnergyTotals",
     "Planner",
     "PlannerResult",
     "RankedCandidate",
