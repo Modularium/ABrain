@@ -912,6 +912,86 @@ def _render_governance_retention(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_governance_pii(payload: dict[str, Any]) -> str:
+    """Render a retention-scoped PII annotation for operator review."""
+    if "error" in payload:
+        return (
+            f"[WARN] PII scan unavailable: {payload['error']}\n"
+            f"       trace_store_path={payload.get('trace_store_path', '-')}"
+        )
+
+    annotation = payload.get("pii_annotation") or {}
+    retention = payload.get("retention_report") or {}
+    retention_totals = retention.get("totals") or {}
+    policy = payload.get("policy") or {}
+    categories = policy.get("enabled_categories") or []
+    category_counts = annotation.get("category_counts") or {}
+    annotations = annotation.get("annotations") or []
+
+    lines = [
+        "=== Governance PII Annotation (over retention candidates) ===",
+        f"Generated at:        {retention.get('generated_at', '-')}",
+        f"Evaluation time:     {retention.get('evaluation_time', '-')}",
+        "",
+        "Policy:",
+        f"  enabled_categories:  {', '.join(categories) if categories else '(none)'}",
+        "",
+        "Retention totals:",
+        f"  Traces scanned:      {retention_totals.get('traces_scanned', 0)}",
+        f"  Approvals scanned:   {retention_totals.get('approvals_scanned', 0)}",
+        f"  Trace candidates:    {retention_totals.get('trace_candidates', 0)}",
+        f"  Approval candidates: {retention_totals.get('approval_candidates', 0)}",
+        "",
+        "PII totals:",
+        f"  Total candidates:        {annotation.get('total_candidates', 0)}",
+        f"  Candidates with findings: {annotation.get('candidates_with_findings', 0)}",
+    ]
+    if category_counts:
+        lines.append("  Category counts:")
+        for category in sorted(category_counts):
+            lines.append(f"    - {category}: {category_counts[category]}")
+    else:
+        lines.append("  Category counts:    (none)")
+
+    flagged = [entry for entry in annotations if entry.get("finding_count", 0) > 0]
+    lines.extend(["", f"Flagged candidates ({len(flagged)}):"])
+    if not flagged:
+        lines.append("  (none)")
+    else:
+        for entry in flagged[:20]:
+            cats = sorted(
+                {
+                    match.get("category", "?")
+                    for finding in (entry.get("result") or {}).get("findings", [])
+                    for match in finding.get("matches", [])
+                }
+            )
+            lines.append(
+                f"  - [{entry.get('kind', '-')}] {entry.get('record_id', '-')}"
+                f"  findings={entry.get('finding_count', 0)}"
+                f"  categories={','.join(cats) if cats else '-'}"
+            )
+        if len(flagged) > 20:
+            lines.append(f"  ... ({len(flagged) - 20} more)")
+    return "\n".join(lines)
+
+
+def _handle_governance_pii(args: argparse.Namespace) -> int:
+    core = _load_core()
+    categories: list[str] | None = None
+    if args.categories:
+        categories = [item.strip() for item in args.categories.split(",") if item.strip()]
+    payload = core.get_retention_pii_annotation(
+        trace_retention_days=max(1, args.trace_retention_days),
+        approval_retention_days=max(1, args.approval_retention_days),
+        trace_limit=max(1, args.trace_limit),
+        keep_open_traces=not args.include_open_traces,
+        keep_pending_approvals=not args.include_pending_approvals,
+        enabled_categories=categories,
+    )
+    return _emit(payload, _render_governance_pii, json_mode=_json_mode(args))
+
+
 def _handle_governance_retention(args: argparse.Namespace) -> int:
     core = _load_core()
     payload = core.get_retention_scan(
@@ -1158,6 +1238,46 @@ def build_parser() -> argparse.ArgumentParser:
     )
     gov_retention.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     gov_retention.set_defaults(handler=_handle_governance_retention)
+
+    gov_pii = governance_subparsers.add_parser(
+        "pii",
+        help="Read-only PII-Annotation ueber den Retention-Kandidatenset",
+    )
+    gov_pii.add_argument(
+        "--trace-retention-days",
+        type=int,
+        default=90,
+        help="Maximale Trace-Aufbewahrung in Tagen (default 90)",
+    )
+    gov_pii.add_argument(
+        "--approval-retention-days",
+        type=int,
+        default=90,
+        help="Maximale Approval-Aufbewahrung in Tagen (default 90)",
+    )
+    gov_pii.add_argument(
+        "--trace-limit",
+        type=int,
+        default=10_000,
+        help="Maximale Trace-Anzahl fuer den Retention-Scan (default 10000)",
+    )
+    gov_pii.add_argument(
+        "--include-open-traces",
+        action="store_true",
+        help="Auch Traces ohne ended_at als Kandidaten zulassen",
+    )
+    gov_pii.add_argument(
+        "--include-pending-approvals",
+        action="store_true",
+        help="Auch PENDING-Approvals als Kandidaten zulassen",
+    )
+    gov_pii.add_argument(
+        "--categories",
+        default=None,
+        help="Komma-Liste aktivierter PII-Kategorien (default: built-in conservative set)",
+    )
+    gov_pii.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    gov_pii.set_defaults(handler=_handle_governance_pii)
 
     health_parser = subparsers.add_parser("health", help="Kernstatus, Governance und Startpfade anzeigen")
     health_parser.add_argument("--limit", type=int, default=5, help="Maximale Anzahl fuer Listenabschnitte")

@@ -1806,3 +1806,73 @@ def get_retention_scan(
     )
     report = scanner.scan(trace_limit=trace_limit)
     return report.model_dump(mode="json")
+
+
+def get_retention_pii_annotation(
+    *,
+    trace_retention_days: int = 90,
+    approval_retention_days: int = 90,
+    trace_limit: int = 10_000,
+    keep_open_traces: bool = True,
+    keep_pending_approvals: bool = True,
+    enabled_categories: list[str] | None = None,
+) -> Dict[str, Any]:
+    """Return PII findings annotated onto the retention candidate set.
+
+    Composes ``RetentionScanner`` (governance windows) and ``PiiDetector``
+    (string scanning) via :func:`core.audit.pii.annotate_retention_candidates`
+    so operators see *which* records flagged for deletion also contain PII.
+    Read-only across both stores; no record is mutated or deleted.
+    """
+    from core.audit.pii import (
+        DEFAULT_PII_CATEGORIES,
+        PiiDetector,
+        PiiPolicy,
+        annotate_retention_candidates,
+    )
+    from core.audit.retention import RetentionPolicy, RetentionScanner
+
+    trace_state = _get_trace_state()
+    trace_store = trace_state["store"]
+    if trace_store is None:
+        return {
+            "error": "trace_store_unavailable",
+            "trace_store_path": trace_state["path"],
+        }
+
+    approval_state = _get_approval_state()
+    approval_store = approval_state["store"]
+
+    retention_policy = RetentionPolicy(
+        trace_retention_days=trace_retention_days,
+        approval_retention_days=approval_retention_days,
+        keep_open_traces=keep_open_traces,
+        keep_pending_approvals=keep_pending_approvals,
+    )
+    scanner = RetentionScanner(
+        trace_store=trace_store,
+        approval_store=approval_store,
+        policy=retention_policy,
+    )
+    report = scanner.scan(trace_limit=trace_limit)
+
+    categories = (
+        list(enabled_categories)
+        if enabled_categories is not None
+        else list(DEFAULT_PII_CATEGORIES)
+    )
+    pii_policy = PiiPolicy(enabled_categories=categories)
+    detector = PiiDetector(policy=pii_policy)
+    annotation = annotate_retention_candidates(
+        detector=detector,
+        report=report,
+        trace_store=trace_store,
+        approval_store=approval_store,
+    )
+    return {
+        "retention_report": report.model_dump(mode="json"),
+        "pii_annotation": annotation.model_dump(mode="json"),
+        "policy": {
+            "enabled_categories": categories,
+        },
+    }
