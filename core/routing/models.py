@@ -26,6 +26,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from core.decision.energy_report import EnergyProfile
+
 
 class ModelPurpose(StrEnum):
     """Intended purpose classification for a model.
@@ -288,6 +290,15 @@ class ModelDescriptor(BaseModel):
     distillation:
         Optional declared distillation lineage.  Non-LOCAL tiers must not
         declare one.
+    energy_profile:
+        Optional operator-supplied wattage profile used by the dispatcher
+        to compute a per-decision energy estimate
+        (``joules = p95_latency_ms/1000 × avg_power_watts``).  Unlike
+        ``quantization``/``distillation`` this may be declared on any tier
+        — hosted GPUs have wattage too.  ``None`` means the operator has
+        not published a wattage for this model path, and the dispatcher's
+        energy gate will treat the candidate as having unknown energy
+        (pass-through on filter, sort-last on rank).
     notes:
         Free-text operator notes.  Not used for routing logic.
     """
@@ -307,6 +318,7 @@ class ModelDescriptor(BaseModel):
     is_available: bool = True
     quantization: QuantizationProfile | None = None
     distillation: DistillationLineage | None = None
+    energy_profile: EnergyProfile | None = None
     notes: str | None = Field(default=None, max_length=1024)
 
     @field_validator("model_id", "display_name")

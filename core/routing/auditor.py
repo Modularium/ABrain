@@ -27,6 +27,10 @@ Recorded KPIs per dispatch
 - ``routing.result.distillation.teacher_model_id``  declared teacher
 - ``routing.result.distillation.method``  declared distillation method
 - ``routing.result.distillation.quality_delta_vs_teacher``   evaluated delta
+- ``routing.result.estimated_energy_joules``  per-decision energy estimate
+  (``p95_latency_ms/1000 × avg_power_watts``) or ``None`` when unknown
+- ``routing.result.energy_profile_source``  declared wattage fidelity
+  (``measured`` / ``vendor_spec`` / ``estimated``) or ``None`` when no profile
 
 Design invariants
 -----------------
@@ -173,6 +177,8 @@ class RoutingAuditor:
             "routing.result.distillation.teacher_model_id": None,
             "routing.result.distillation.method": None,
             "routing.result.distillation.quality_delta_vs_teacher": None,
+            "routing.result.estimated_energy_joules": None,
+            "routing.result.energy_profile_source": None,
         }
         return self._emit(
             trace_id=trace_id,
@@ -266,7 +272,30 @@ def _result_attributes(
         ),
     }
     attrs.update(_lineage_attributes(descriptor))
+    attrs.update(_energy_attributes(descriptor))
     return attrs
+
+
+def _energy_attributes(descriptor: ModelDescriptor | None) -> dict[str, Any]:
+    """Flatten per-decision energy estimate onto span attributes.
+
+    Always returns both keys so the span schema stays stable.  The joules
+    estimate matches the dispatcher's ``_effective_energy_joules`` formula
+    (``p95_latency_ms/1000 × avg_power_watts``); unknown inputs degrade to
+    ``None`` rather than inventing a default.
+    """
+    profile = descriptor.energy_profile if descriptor is not None else None
+    latency_ms = descriptor.p95_latency_ms if descriptor is not None else None
+    if profile is None or latency_ms is None:
+        joules: float | None = None
+    else:
+        joules = (latency_ms / 1000.0) * profile.avg_power_watts
+    return {
+        "routing.result.estimated_energy_joules": joules,
+        "routing.result.energy_profile_source": (
+            str(profile.source) if profile is not None else None
+        ),
+    }
 
 
 def _lineage_attributes(descriptor: ModelDescriptor | None) -> dict[str, Any]:

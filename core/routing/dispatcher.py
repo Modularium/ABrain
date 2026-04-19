@@ -8,19 +8,21 @@ budgets, capability requirements, and a tier-ordered fallback cascade.
 
 Dispatch algorithm
 ------------------
-The dispatcher runs up to six selection passes, each relaxing constraints
+The dispatcher runs up to seven selection passes, each relaxing constraints
 further.  The first pass that yields at least one candidate wins.
 
-Pass 1  strict      — purpose + availability + capabilities + cost + latency + quality
+Pass 1  strict      — purpose + availability + capabilities + cost + latency + quality + energy
 Pass 2  no-latency  — same as pass 1 but without the latency constraint
 Pass 3  no-cost     — same as pass 1 but without the cost constraint
-Pass 4  no-budget   — purpose + availability + capabilities + quality
-Pass 5  no-quality  — purpose + availability + capabilities only
-Pass 6  no-caps     — purpose + availability only (last resort)
+Pass 4  no-budget   — purpose + availability + capabilities + quality + energy
+Pass 5  no-quality  — purpose + availability + capabilities + energy
+Pass 6  no-energy   — purpose + availability + capabilities only
+Pass 7  no-caps     — purpose + availability only (last resort)
 
 Capability requirements (tool use, structured output) are contracts — they
-must never relax before the quality preference, hence the dedicated
-``no-quality`` pass before ``no-caps``.
+must never relax before preferences.  Quality and energy are preferences;
+quality relaxes first (operator-visible regression) and energy relaxes
+second (infrastructure-visible overage).
 
 Within each pass, candidates are sorted:
 
@@ -30,6 +32,7 @@ Within each pass, candidates are sorted:
 4. Latency ascending (None = unknown, sorted last)
 5. Quality regression ascending — measured deltas beat unknown deltas
    (LOCAL-only in practice; hosted tiers carry no lineage)
+6. Energy ascending — lower joules preferred; unknown energy sorts last
 
 The top candidate from the first winning pass is returned.
 If no pass yields any candidate, ``NoModelAvailableError`` is raised.
@@ -95,6 +98,14 @@ class ModelRoutingRequest(BaseModel):
         is ``None`` (unmeasured) always pass the filter: unknown deltas are
         not coerced to ``0.0`` nor treated as regressions, mirroring the
         ``unknown cost passes when no budget set`` rule.
+    max_energy_joules:
+        Maximum tolerated per-decision energy in joules.  Must be
+        ``>= 0.0``.  Per-decision energy is
+        ``p95_latency_ms/1000 × energy_profile.avg_power_watts`` using
+        the descriptor's declared wattage.  ``None`` (default) disables
+        the energy gate entirely.  Candidates with unknown p95 or unknown
+        wattage produce an unknown per-decision energy and always pass
+        the filter — mirroring the ``None``-delta honesty rule.
     task_id:
         Optional task identifier for audit attribution.
     """
@@ -108,6 +119,7 @@ class ModelRoutingRequest(BaseModel):
     require_structured_output: bool = False
     prefer_local: bool = False
     max_quality_regression: float | None = Field(default=None, ge=0.0, le=1.0)
+    max_energy_joules: float | None = Field(default=None, ge=0.0)
     task_id: str | None = Field(default=None, max_length=128)
 
 
@@ -200,10 +212,11 @@ _TIER_ORDER: dict[ModelTier, int] = {
     ModelTier.LARGE: 3,
 }
 
-# Sentinel for unknown cost/latency/quality — sorts after known values.
+# Sentinel for unknown cost/latency/quality/energy — sorts after known values.
 _UNKNOWN_COST = math.inf
 _UNKNOWN_LATENCY = math.inf
 _UNKNOWN_QUALITY = math.inf
+_UNKNOWN_ENERGY = math.inf
 
 
 def _effective_quality_delta(descriptor: ModelDescriptor) -> float | None:
@@ -221,6 +234,23 @@ def _effective_quality_delta(descriptor: ModelDescriptor) -> float | None:
     return None
 
 
+def _effective_energy_joules(descriptor: ModelDescriptor) -> float | None:
+    """Per-decision energy estimate for *descriptor*, or ``None`` when unknown.
+
+    Formula: ``joules = p95_latency_ms / 1000 × avg_power_watts``.  Uses the
+    declared p95 (not an observed average) so the filter signal matches the
+    existing ``max_p95_latency_ms`` filter — a candidate cannot pass the
+    latency budget and fail the energy budget due to a different latency
+    number.  Either missing input yields ``None``; unknown energy passes the
+    filter and sorts last, consistent with the ``None``-delta honesty rule.
+    """
+    if descriptor.p95_latency_ms is None:
+        return None
+    if descriptor.energy_profile is None:
+        return None
+    return (descriptor.p95_latency_ms / 1000.0) * descriptor.energy_profile.avg_power_watts
+
+
 def _dispatch(request: ModelRoutingRequest, registry: ModelRegistry) -> ModelRoutingResult:
     """Execute the six-pass fallback cascade and return the best candidate."""
     # Base pool: purpose-matching, available models.
@@ -235,6 +265,7 @@ def _dispatch(request: ModelRoutingRequest, registry: ModelRegistry) -> ModelRou
         ("relaxed cost constraint", _apply_no_cost(base, request)),
         ("relaxed budget constraints", _apply_no_budget(base, request)),
         ("relaxed quality tolerance", _apply_no_quality(base, request)),
+        ("relaxed energy tolerance", _apply_no_energy(base, request)),
         ("relaxed capability requirements", _apply_no_caps(base, request)),
     ]
 
@@ -316,12 +347,36 @@ def _apply_quality(
     return result
 
 
+def _apply_energy(
+    candidates: list[ModelDescriptor], request: ModelRoutingRequest
+) -> list[ModelDescriptor]:
+    """Filter by declared per-decision energy tolerance.
+
+    When ``max_energy_joules`` is ``None`` the filter is a no-op.
+    Candidates with unknown per-decision energy (missing p95 or missing
+    wattage) always pass — honesty rule, same as the ``None``-delta rule
+    for quality.
+    """
+    if request.max_energy_joules is None:
+        return candidates
+    threshold = request.max_energy_joules
+    result: list[ModelDescriptor] = []
+    for d in candidates:
+        joules = _effective_energy_joules(d)
+        if joules is None or joules <= threshold:
+            result.append(d)
+    return result
+
+
 def _apply_all(
     candidates: list[ModelDescriptor], request: ModelRoutingRequest
 ) -> list[ModelDescriptor]:
-    return _apply_quality(
-        _apply_latency(
-            _apply_cost(_apply_caps(candidates, request), request), request
+    return _apply_energy(
+        _apply_quality(
+            _apply_latency(
+                _apply_cost(_apply_caps(candidates, request), request), request
+            ),
+            request,
         ),
         request,
     )
@@ -330,26 +385,40 @@ def _apply_all(
 def _apply_no_latency(
     candidates: list[ModelDescriptor], request: ModelRoutingRequest
 ) -> list[ModelDescriptor]:
-    return _apply_quality(
-        _apply_cost(_apply_caps(candidates, request), request), request
+    return _apply_energy(
+        _apply_quality(
+            _apply_cost(_apply_caps(candidates, request), request), request
+        ),
+        request,
     )
 
 
 def _apply_no_cost(
     candidates: list[ModelDescriptor], request: ModelRoutingRequest
 ) -> list[ModelDescriptor]:
-    return _apply_quality(
-        _apply_latency(_apply_caps(candidates, request), request), request
+    return _apply_energy(
+        _apply_quality(
+            _apply_latency(_apply_caps(candidates, request), request), request
+        ),
+        request,
     )
 
 
 def _apply_no_budget(
     candidates: list[ModelDescriptor], request: ModelRoutingRequest
 ) -> list[ModelDescriptor]:
-    return _apply_quality(_apply_caps(candidates, request), request)
+    return _apply_energy(
+        _apply_quality(_apply_caps(candidates, request), request), request
+    )
 
 
 def _apply_no_quality(
+    candidates: list[ModelDescriptor], request: ModelRoutingRequest
+) -> list[ModelDescriptor]:
+    return _apply_energy(_apply_caps(candidates, request), request)
+
+
+def _apply_no_energy(
     candidates: list[ModelDescriptor], request: ModelRoutingRequest
 ) -> list[ModelDescriptor]:
     return _apply_caps(candidates, request)
@@ -363,13 +432,16 @@ def _apply_no_caps(
 
 def _sort_key(
     descriptor: ModelDescriptor, prefer_local: bool
-) -> tuple[int, int, float, float, float]:
-    """Sort key: (local_penalty, tier, cost, latency, quality_penalty).
+) -> tuple[int, int, float, float, float, float]:
+    """Sort key: (local_penalty, tier, cost, latency, quality_penalty, energy_penalty).
 
     Lower is preferred.  The quality term is the negated effective delta so
     that a measured ``-0.02`` (penalty 0.02) sorts ahead of a measured
     ``-0.15`` (penalty 0.15).  Unknown deltas become ``+inf`` so measured-
-    better-quality beats unknown-quality at equal tier/cost/latency.
+    better-quality beats unknown-quality at equal tier/cost/latency.  The
+    energy term is the per-decision joules estimate; unknown energy also
+    becomes ``+inf`` so measured-lower-energy beats unknown-energy at equal
+    earlier terms.
     """
     local_bonus = 0 if (prefer_local and descriptor.tier == ModelTier.LOCAL) else 1
     tier = _TIER_ORDER[descriptor.tier]
@@ -377,7 +449,9 @@ def _sort_key(
     latency = descriptor.p95_latency_ms if descriptor.p95_latency_ms is not None else _UNKNOWN_LATENCY
     delta = _effective_quality_delta(descriptor)
     quality_penalty = -delta if delta is not None else _UNKNOWN_QUALITY
-    return (local_bonus, tier, cost, latency, quality_penalty)
+    joules = _effective_energy_joules(descriptor)
+    energy_penalty = joules if joules is not None else _UNKNOWN_ENERGY
+    return (local_bonus, tier, cost, latency, quality_penalty, energy_penalty)
 
 
 def _rank(
