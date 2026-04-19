@@ -1762,3 +1762,47 @@ def get_brain_operations_snapshot(
         max_feed_entries=max_feed_entries,
     )
     return report.model_dump(mode="json")
+
+
+def get_retention_scan(
+    *,
+    trace_retention_days: int = 90,
+    approval_retention_days: int = 90,
+    trace_limit: int = 10_000,
+    keep_open_traces: bool = True,
+    keep_pending_approvals: bool = True,
+) -> Dict[str, Any]:
+    """Return a read-only retention candidate report.
+
+    Thin wrapper over ``RetentionScanner`` exposing the §6.4 governance
+    surface to the canonical CLI / control-plane. Reads ``TraceStore`` and
+    ``ApprovalStore`` only; no record is deleted (pruning lives in the
+    separate ``RetentionPruner`` surface). Returns an error payload if the
+    canonical TraceStore is not available.
+    """
+    from core.audit.retention import RetentionPolicy, RetentionScanner
+
+    trace_state = _get_trace_state()
+    trace_store = trace_state["store"]
+    if trace_store is None:
+        return {
+            "error": "trace_store_unavailable",
+            "trace_store_path": trace_state["path"],
+        }
+
+    approval_state = _get_approval_state()
+    approval_store = approval_state["store"]
+
+    policy = RetentionPolicy(
+        trace_retention_days=trace_retention_days,
+        approval_retention_days=approval_retention_days,
+        keep_open_traces=keep_open_traces,
+        keep_pending_approvals=keep_pending_approvals,
+    )
+    scanner = RetentionScanner(
+        trace_store=trace_store,
+        approval_store=approval_store,
+        policy=policy,
+    )
+    report = scanner.scan(trace_limit=trace_limit)
+    return report.model_dump(mode="json")

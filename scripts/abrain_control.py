@@ -866,6 +866,64 @@ def _handle_brain_status(args: argparse.Namespace) -> int:
     return _emit(payload, _render_brain_status, json_mode=_json_mode(args))
 
 
+def _render_governance_retention(payload: dict[str, Any]) -> str:
+    """Render a RetentionReport for operator review."""
+    if "error" in payload:
+        return (
+            f"[WARN] Retention scan unavailable: {payload['error']}\n"
+            f"       trace_store_path={payload.get('trace_store_path', '-')}"
+        )
+
+    policy = payload.get("policy") or {}
+    totals = payload.get("totals") or {}
+    candidates = payload.get("candidates") or []
+
+    lines = [
+        "=== Governance Retention Report ===",
+        f"Generated at:        {payload.get('generated_at', '-')}",
+        f"Evaluation time:     {payload.get('evaluation_time', '-')}",
+        f"Trace scan limit:    {payload.get('trace_limit', 0)}",
+        "",
+        "Policy:",
+        f"  trace_retention_days:    {policy.get('trace_retention_days', '-')}",
+        f"  approval_retention_days: {policy.get('approval_retention_days', '-')}",
+        f"  keep_open_traces:        {policy.get('keep_open_traces', '-')}",
+        f"  keep_pending_approvals:  {policy.get('keep_pending_approvals', '-')}",
+        "",
+        "Totals:",
+        f"  Traces scanned:      {totals.get('traces_scanned', 0)}",
+        f"  Approvals scanned:   {totals.get('approvals_scanned', 0)}",
+        f"  Trace candidates:    {totals.get('trace_candidates', 0)}",
+        f"  Approval candidates: {totals.get('approval_candidates', 0)}",
+        "",
+        f"Candidates ({len(candidates)}):",
+    ]
+    if not candidates:
+        lines.append("  (none)")
+    else:
+        for entry in candidates[:20]:
+            lines.append(
+                f"  - [{entry.get('kind', '-')}] {entry.get('record_id', '-')}"
+                f"  age={entry.get('age_days', 0):.2f}d"
+                f"  retention={entry.get('retention_days', '-')}d"
+            )
+        if len(candidates) > 20:
+            lines.append(f"  ... ({len(candidates) - 20} more)")
+    return "\n".join(lines)
+
+
+def _handle_governance_retention(args: argparse.Namespace) -> int:
+    core = _load_core()
+    payload = core.get_retention_scan(
+        trace_retention_days=max(1, args.trace_retention_days),
+        approval_retention_days=max(1, args.approval_retention_days),
+        trace_limit=max(1, args.trace_limit),
+        keep_open_traces=not args.include_open_traces,
+        keep_pending_approvals=not args.include_pending_approvals,
+    )
+    return _emit(payload, _render_governance_retention, json_mode=_json_mode(args))
+
+
 def _handle_health(args: argparse.Namespace) -> int:
     core = _load_core()
     payload = core.get_control_plane_overview(
@@ -1060,6 +1118,46 @@ def build_parser() -> argparse.ArgumentParser:
     )
     brain_status.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     brain_status.set_defaults(handler=_handle_brain_status)
+
+    governance_parser = subparsers.add_parser(
+        "governance",
+        help="Phase-6 Daten-Governance Operator-Surface (Retention etc.)",
+    )
+    governance_subparsers = governance_parser.add_subparsers(dest="action", required=True)
+    gov_retention = governance_subparsers.add_parser(
+        "retention",
+        help="Read-only Retention-Kandidatenreport ueber TraceStore + ApprovalStore",
+    )
+    gov_retention.add_argument(
+        "--trace-retention-days",
+        type=int,
+        default=90,
+        help="Maximale Trace-Aufbewahrung in Tagen (default 90)",
+    )
+    gov_retention.add_argument(
+        "--approval-retention-days",
+        type=int,
+        default=90,
+        help="Maximale Approval-Aufbewahrung in Tagen (default 90)",
+    )
+    gov_retention.add_argument(
+        "--trace-limit",
+        type=int,
+        default=10_000,
+        help="Maximale Trace-Anzahl fuer den Scan (default 10000)",
+    )
+    gov_retention.add_argument(
+        "--include-open-traces",
+        action="store_true",
+        help="Auch Traces ohne ended_at als Kandidaten zulassen",
+    )
+    gov_retention.add_argument(
+        "--include-pending-approvals",
+        action="store_true",
+        help="Auch PENDING-Approvals als Kandidaten zulassen",
+    )
+    gov_retention.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    gov_retention.set_defaults(handler=_handle_governance_retention)
 
     health_parser = subparsers.add_parser("health", help="Kernstatus, Governance und Startpfade anzeigen")
     health_parser.add_argument("--limit", type=int, default=5, help="Maximale Anzahl fuer Listenabschnitte")
