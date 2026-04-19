@@ -1878,6 +1878,98 @@ def get_retention_pii_annotation(
     }
 
 
+def get_dataset_quality_report(
+    *,
+    require_routing_decision: bool = True,
+    require_outcome: bool = False,
+    require_approval_outcome: bool = False,
+    min_quality_score: float = 0.0,
+    limit: int = 1000,
+    rejected_sample_size: int = 20,
+) -> Dict[str, Any]:
+    """Return a read-only quality report over canonical LearningRecords.
+
+    Composes :class:`core.decision.learning.DatasetBuilder` (over the
+    canonical ``TraceStore`` + ``ApprovalStore``) with
+    :class:`core.decision.learning.DataQualityFilter` so operators can
+    preview which records a training job would drop before running it.
+    Returns counts, a per-field violation histogram, and a bounded
+    sample of rejected records (with their violations) for spot checks.
+
+    Read-only across both stores; no record is mutated or persisted.
+    Surfaces ``trace_store_unavailable`` if the TraceStore is absent.
+    """
+    from datetime import UTC, datetime
+
+    from core.decision.learning import DataQualityFilter, DatasetBuilder
+
+    trace_state = _get_trace_state()
+    trace_store = trace_state["store"]
+    if trace_store is None:
+        return {
+            "error": "trace_store_unavailable",
+            "trace_store_path": trace_state["path"],
+        }
+
+    approval_state = _get_approval_state()
+    approval_store = approval_state["store"]
+
+    clamped_min = max(0.0, min(1.0, float(min_quality_score)))
+    policy_filter = DataQualityFilter(
+        require_routing_decision=require_routing_decision,
+        require_outcome=require_outcome,
+        require_approval_outcome=require_approval_outcome,
+        min_quality_score=clamped_min,
+    )
+
+    builder = DatasetBuilder(trace_store=trace_store, approval_store=approval_store)
+    records = builder.build(limit=max(1, limit))
+
+    accepted, rejected = policy_filter.filter_with_report(records)
+
+    violations_by_field: Dict[str, int] = {}
+    for _record, violations in rejected:
+        for violation in violations:
+            violations_by_field[violation.field] = (
+                violations_by_field.get(violation.field, 0) + 1
+            )
+
+    sample_cap = max(0, rejected_sample_size)
+    rejected_sample: list[Dict[str, Any]] = []
+    for record, violations in rejected[:sample_cap]:
+        rejected_sample.append(
+            {
+                "trace_id": record.trace_id,
+                "workflow_name": record.workflow_name,
+                "task_type": record.task_type,
+                "quality_score": record.quality_score(),
+                "violations": [
+                    {"field": v.field, "reason": v.reason} for v in violations
+                ],
+            }
+        )
+
+    total = len(records)
+    return {
+        "generated_at": datetime.now(UTC).isoformat(),
+        "policy": {
+            "require_routing_decision": bool(require_routing_decision),
+            "require_outcome": bool(require_outcome),
+            "require_approval_outcome": bool(require_approval_outcome),
+            "min_quality_score": clamped_min,
+        },
+        "totals": {
+            "total": total,
+            "accepted": len(accepted),
+            "rejected": len(rejected),
+            "acceptance_rate": (len(accepted) / total) if total else 0.0,
+        },
+        "violations_by_field": violations_by_field,
+        "rejected_sample": rejected_sample,
+        "rejected_sample_truncated": len(rejected) > sample_cap,
+    }
+
+
 def get_dataset_split(
     *,
     train_ratio: float,

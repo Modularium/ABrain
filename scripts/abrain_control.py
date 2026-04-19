@@ -1181,6 +1181,77 @@ def _render_learningops_split(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_learningops_filter(payload: dict[str, Any]) -> str:
+    """Render a DataQualityFilter preview report for operator review."""
+    if "error" in payload:
+        return (
+            f"[WARN] Quality filter preview unavailable: {payload['error']}\n"
+            f"       detail={payload.get('detail', payload.get('trace_store_path', '-'))}"
+        )
+
+    policy = payload.get("policy") or {}
+    totals = payload.get("totals") or {}
+    violations = payload.get("violations_by_field") or {}
+    sample = payload.get("rejected_sample") or []
+
+    lines = [
+        "=== LearningOps Quality Filter Preview ===",
+        f"Generated at:           {payload.get('generated_at', '-')}",
+        "",
+        "Policy:",
+        f"  require_routing_decision: {policy.get('require_routing_decision', False)}",
+        f"  require_outcome:          {policy.get('require_outcome', False)}",
+        f"  require_approval_outcome: {policy.get('require_approval_outcome', False)}",
+        f"  min_quality_score:        {policy.get('min_quality_score', 0.0):.4f}",
+        "",
+        "Totals:",
+        f"  Total records:   {totals.get('total', 0)}",
+        f"  Accepted:        {totals.get('accepted', 0)}",
+        f"  Rejected:        {totals.get('rejected', 0)}",
+        f"  Acceptance rate: {totals.get('acceptance_rate', 0.0):.4f}",
+        "",
+        f"Violations by field ({len(violations)}):",
+    ]
+    if not violations:
+        lines.append("  (none)")
+    else:
+        for field in sorted(violations):
+            lines.append(f"  - {field}: {violations[field]}")
+
+    lines.extend(["", f"Rejected sample ({len(sample)}):"])
+    if not sample:
+        lines.append("  (none)")
+    else:
+        for item in sample:
+            lines.append(
+                f"  - trace={item.get('trace_id', '-')}"
+                f"  wf={item.get('workflow_name', '-')}"
+                f"  task={item.get('task_type') or '-'}"
+                f"  q={item.get('quality_score', 0.0):.2f}"
+            )
+            for violation in item.get("violations") or []:
+                lines.append(
+                    f"      * {violation.get('field', '-')}: {violation.get('reason', '-')}"
+                )
+    if payload.get("rejected_sample_truncated"):
+        rejected_total = totals.get("rejected", 0)
+        lines.append(f"  ... ({rejected_total - len(sample)} more rejected, truncated)")
+    return "\n".join(lines)
+
+
+def _handle_learningops_filter(args: argparse.Namespace) -> int:
+    core = _load_core()
+    payload = core.get_dataset_quality_report(
+        require_routing_decision=bool(args.require_routing_decision),
+        require_outcome=bool(args.require_outcome),
+        require_approval_outcome=bool(args.require_approval_outcome),
+        min_quality_score=args.min_quality_score,
+        limit=max(1, args.limit),
+        rejected_sample_size=max(0, args.sample_size),
+    )
+    return _emit(payload, _render_learningops_filter, json_mode=_json_mode(args))
+
+
 def _handle_learningops_split(args: argparse.Namespace) -> int:
     core = _load_core()
     payload = core.get_dataset_split(
@@ -1624,6 +1695,60 @@ def build_parser() -> argparse.ArgumentParser:
     )
     lo_split.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     lo_split.set_defaults(handler=_handle_learningops_split)
+
+    lo_filter = learningops_subparsers.add_parser(
+        "filter",
+        help="DataQualityFilter-Preview ueber kanonische LearningRecords",
+    )
+    lo_filter.add_argument(
+        "--require-routing-decision",
+        dest="require_routing_decision",
+        action="store_true",
+        default=True,
+        help="Records ohne Routing-Entscheidung verwerfen (default: aktiv)",
+    )
+    lo_filter.add_argument(
+        "--no-require-routing-decision",
+        dest="require_routing_decision",
+        action="store_false",
+        help="Auch Records ohne Routing-Entscheidung zulassen",
+    )
+    lo_filter.add_argument(
+        "--require-outcome",
+        dest="require_outcome",
+        action="store_true",
+        default=False,
+        help="Nur Records mit bekanntem Ergebnis (success) zulassen",
+    )
+    lo_filter.add_argument(
+        "--require-approval-outcome",
+        dest="require_approval_outcome",
+        action="store_true",
+        default=False,
+        help="Nur Records mit aufgeloester Approval zulassen",
+    )
+    lo_filter.add_argument(
+        "--min-quality-score",
+        dest="min_quality_score",
+        type=float,
+        default=0.0,
+        help="Minimal geforderter quality_score in [0.0, 1.0] (default 0.0)",
+    )
+    lo_filter.add_argument(
+        "--limit",
+        type=int,
+        default=1000,
+        help="Maximale Anzahl Traces, aus denen LearningRecords gebaut werden",
+    )
+    lo_filter.add_argument(
+        "--sample-size",
+        dest="sample_size",
+        type=int,
+        default=20,
+        help="Maximale Anzahl abgelehnter Records im Detail-Sample (default 20)",
+    )
+    lo_filter.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    lo_filter.set_defaults(handler=_handle_learningops_filter)
 
     health_parser = subparsers.add_parser("health", help="Kernstatus, Governance und Startpfade anzeigen")
     health_parser.add_argument("--limit", type=int, default=5, help="Maximale Anzahl fuer Listenabschnitte")
