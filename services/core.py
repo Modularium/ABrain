@@ -1876,3 +1876,32 @@ def get_retention_pii_annotation(
             "enabled_categories": categories,
         },
     }
+
+
+def get_agent_performance_report(
+    *,
+    sort_key: str = "avg_cost",
+    descending: bool = True,
+    min_executions: int = 0,
+    agent_ids: list[str] | None = None,
+) -> Dict[str, Any]:
+    """Return a cost/latency/success snapshot per agent path.
+
+    Read-only consumer of the canonical ``PerformanceHistoryStore``
+    (same instance used by the routing engine).  Composes the store
+    with :class:`core.decision.performance_report.AgentPerformanceReporter`
+    so operators get a one-call "what is each agent path currently
+    costing us" view.  No second history, no re-derivation from traces.
+    """
+    from core.decision.performance_report import AgentPerformanceReporter
+
+    state = _get_learning_state()
+    store = state["perf_history"]
+    reporter = AgentPerformanceReporter(store=store)
+    report = reporter.generate(
+        sort_key=sort_key,  # type: ignore[arg-type]
+        descending=descending,
+        min_executions=min_executions,
+        agent_ids=agent_ids,
+    )
+    return report.model_dump(mode="json")

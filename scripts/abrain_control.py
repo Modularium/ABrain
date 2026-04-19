@@ -1004,6 +1004,58 @@ def _handle_governance_retention(args: argparse.Namespace) -> int:
     return _emit(payload, _render_governance_retention, json_mode=_json_mode(args))
 
 
+def _render_ops_cost(payload: dict[str, Any]) -> str:
+    """Render an AgentPerformanceReport for operator review."""
+    entries = payload.get("entries") or []
+    totals = payload.get("totals") or {}
+
+    lines = [
+        "=== Ops Cost Report (per agent) ===",
+        f"Generated at:     {payload.get('generated_at', '-')}",
+        f"Sort key:         {payload.get('sort_key', '-')}"
+        f"  descending={payload.get('descending', '-')}",
+        f"Min executions:   {payload.get('min_executions', 0)}",
+        "",
+        "Totals:",
+        f"  Agents reported:         {totals.get('agents', 0)}",
+        f"  Total executions:        {totals.get('total_executions', 0)}",
+        f"  Total recent failures:   {totals.get('total_recent_failures', 0)}",
+        f"  Weighted success_rate:   {totals.get('weighted_success_rate', 0.0):.4f}",
+        f"  Weighted avg_latency:    {totals.get('weighted_avg_latency', 0.0):.4f}",
+        f"  Weighted avg_cost:       {totals.get('weighted_avg_cost', 0.0):.4f}",
+        "",
+        f"Entries ({len(entries)}):",
+    ]
+    if not entries:
+        lines.append("  (none)")
+    else:
+        for entry in entries[:20]:
+            lines.append(
+                f"  - {entry.get('agent_id', '-')}"
+                f"  execs={entry.get('execution_count', 0)}"
+                f"  avg_cost={entry.get('avg_cost', 0.0):.4f}"
+                f"  avg_latency={entry.get('avg_latency', 0.0):.4f}"
+                f"  success={entry.get('success_rate', 0.0):.4f}"
+            )
+        if len(entries) > 20:
+            lines.append(f"  ... ({len(entries) - 20} more)")
+    return "\n".join(lines)
+
+
+def _handle_ops_cost(args: argparse.Namespace) -> int:
+    core = _load_core()
+    agent_ids: list[str] | None = None
+    if args.agents:
+        agent_ids = [item.strip() for item in args.agents.split(",") if item.strip()]
+    payload = core.get_agent_performance_report(
+        sort_key=args.sort_key,
+        descending=not args.ascending,
+        min_executions=max(0, args.min_executions),
+        agent_ids=agent_ids,
+    )
+    return _emit(payload, _render_ops_cost, json_mode=_json_mode(args))
+
+
 def _handle_health(args: argparse.Namespace) -> int:
     core = _load_core()
     payload = core.get_control_plane_overview(
@@ -1278,6 +1330,40 @@ def build_parser() -> argparse.ArgumentParser:
     )
     gov_pii.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     gov_pii.set_defaults(handler=_handle_governance_pii)
+
+    ops_parser = subparsers.add_parser(
+        "ops",
+        help="Phase-6.5 Operator-Surface (Kosten, Energie, Performance)",
+    )
+    ops_subparsers = ops_parser.add_subparsers(dest="action", required=True)
+    ops_cost = ops_subparsers.add_parser(
+        "cost",
+        help="Read-only Kosten-/Latenz-/Success-Report pro Agent aus PerformanceHistoryStore",
+    )
+    ops_cost.add_argument(
+        "--sort-key",
+        choices=["avg_cost", "avg_latency", "success_rate", "execution_count", "agent_id"],
+        default="avg_cost",
+        help="Sortierschluessel fuer die Eintraege (default avg_cost)",
+    )
+    ops_cost.add_argument(
+        "--ascending",
+        action="store_true",
+        help="Aufsteigend sortieren (default: absteigend)",
+    )
+    ops_cost.add_argument(
+        "--min-executions",
+        type=int,
+        default=0,
+        help="Mindestanzahl Ausfuehrungen je Agent (default 0)",
+    )
+    ops_cost.add_argument(
+        "--agents",
+        default=None,
+        help="Komma-Liste expliziter Agent-IDs (default: alle registrierten)",
+    )
+    ops_cost.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    ops_cost.set_defaults(handler=_handle_ops_cost)
 
     health_parser = subparsers.add_parser("health", help="Kernstatus, Governance und Startpfade anzeigen")
     health_parser.add_argument("--limit", type=int, default=5, help="Maximale Anzahl fuer Listenabschnitte")
