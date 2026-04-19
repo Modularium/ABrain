@@ -17,6 +17,9 @@ __all__ = [
     "BrainShadowRunner",
     "BrainState",
     "BrainStateEncoder",
+    "BrainSuggestionEntry",
+    "BrainSuggestionFeed",
+    "BrainSuggestionFeedBuilder",
     "BrainTarget",
     "BrainTrainingJobConfig",
     "BrainTrainingResult",
@@ -110,5 +113,21 @@ def __getattr__(name: str):
             "BrainBaselineMetrics": BrainBaselineMetrics,
             "BrainBaselineReport": BrainBaselineReport,
             "BrainShadowEvalSummary": BrainShadowEvalSummary,
+        }[name]
+    if name in {
+        "BrainSuggestionEntry",
+        "BrainSuggestionFeed",
+        "BrainSuggestionFeedBuilder",
+    }:
+        from .suggestion_feed import (
+            BrainSuggestionEntry,
+            BrainSuggestionFeed,
+            BrainSuggestionFeedBuilder,
+        )
+
+        return {
+            "BrainSuggestionEntry": BrainSuggestionEntry,
+            "BrainSuggestionFeed": BrainSuggestionFeed,
+            "BrainSuggestionFeedBuilder": BrainSuggestionFeedBuilder,
         }[name]
     raise AttributeError(name)
