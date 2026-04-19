@@ -223,7 +223,7 @@ ABrain um eine sichere Wissens- und Kontextschicht erweitern, ohne untrusted con
 - [x] RAG nur für Erklärung, Planung und Assistenz freigeben, nicht direkt für kritische Actions (`phase3_R4_review.md`)
 - [x] Quellennachweise in Explainability/Audit integrieren (`phase3_R4_review.md`)
 - [x] Prompt-Injection-Abwehr an Retrieval-Grenzen implementieren (`phase3_R5_review.md`)
-- [ ] PII-/Lizenz-/Retention-Regeln für Wissensquellen definieren — *teilweise: Retention-Scanner read-only ☑ (`phase_gov_retention_scanner_review.md`); PII/Lizenz offen*
+- [ ] PII-/Lizenz-/Retention-Regeln für Wissensquellen definieren — *teilweise: Retention Scanner + Pruner ☑ (`phase_gov_retention_scanner_review.md`, `phase_gov_retention_pruner_review.md`); PII detector ☑ (`phase_gov_pii_strategy_review.md`); Lizenz-Governance offen*
 - [x] Benchmarks für Retrieval-Qualität und Antwortstabilität aufsetzen (`phase3_R6_review.md`)
 
 ### Exit-Kriterien
@@ -417,7 +417,7 @@ ABrain schrittweise von einem reinen Routing-Modell zu einem breiteren Entscheid
 
 - [x] Datenschema für Training und Auswertung (`phase5_L1_review.md`, `phase6_B1_review.md`)
 - [ ] Provenienz und Lizenzstatus je Datenquelle
-- [ ] PII-Strategie
+- [x] PII-Strategie — detector + retention-annotation surface ☑ (`phase_gov_pii_strategy_review.md`)
 - [x] Retention- und Löschkonzept — Scanner ☑ (`phase_gov_retention_scanner_review.md`, commit `31f315fb`), Pruner ☑ (`phase_gov_retention_pruner_review.md`)
 - [ ] reproduzierbare Datensplits
 

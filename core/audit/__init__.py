@@ -46,6 +46,19 @@ from .retention_pruner import (
     RetentionPruneResult,
     RetentionPruner,
 )
+from .pii import (
+    DEFAULT_PII_CATEGORIES,
+    PiiCandidateAnnotation,
+    PiiCategory,
+    PiiDetector,
+    PiiFinding,
+    PiiMatch,
+    PiiPattern,
+    PiiPolicy,
+    PiiRetentionAnnotation,
+    PiiScanResult,
+    annotate_retention_candidates,
+)
 
 _audit = AuditLog(log_dir=os.getenv("AUDIT_LOG_DIR", "audit"))
 
@@ -74,7 +87,17 @@ __all__ = [
     "ApprovalExportEntry",
     "AuditExport",
     "AuditExporter",
+    "DEFAULT_PII_CATEGORIES",
     "ExplainabilityRecord",
+    "PiiCandidateAnnotation",
+    "PiiCategory",
+    "PiiDetector",
+    "PiiFinding",
+    "PiiMatch",
+    "PiiPattern",
+    "PiiPolicy",
+    "PiiRetentionAnnotation",
+    "PiiScanResult",
     "ReplayDescriptor",
     "ReplayStepInput",
     "RetentionCandidate",
@@ -93,6 +116,7 @@ __all__ = [
     "TraceSnapshot",
     "TraceStore",
     "add_span_event",
+    "annotate_retention_candidates",
     "attach_trace_context",
     "audit_action",
     "create_trace_context",
