@@ -1,4 +1,237 @@
 {
+  "approval-04195bd782054b8098dd33b7f14a4b27": {
+    "agent_id": "workflow-agent",
+    "approval_id": "approval-04195bd782054b8098dd33b7f14a4b27",
+    "execution_kind": "workflow_engine",
+    "metadata": {
+      "approval_origin": "approval_policy",
+      "decision": {
+        "approval_id": "approval-04195bd782054b8098dd33b7f14a4b27",
+        "comment": null,
+        "decided_at": "2026-04-19T19:39:26.707555Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "matched_rules": [
+        "step_metadata_external_side_effect",
+        "high_risk_capability",
+        "workflow_engine_external_side_effect"
+      ],
+      "plan": {
+        "metadata": {},
+        "original_task": {
+          "task_type": "workflow_automation"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Trigger the external workflow.",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "workflow",
+              "external_side_effect": true,
+              "task_type": "workflow_automation"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "workflow.execute"
+            ],
+            "risk": "medium",
+            "step_id": "deploy",
+            "title": "Deploy"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-trace-approval"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "created_agent": null,
+            "policy_decision": {
+              "effect": "allow",
+              "matched_rules": [],
+              "reason": "no_policy_matched",
+              "winning_priority": null,
+              "winning_rule_id": null
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "allow_parallel_group": null,
+                "candidate_agent_ids": [
+                  "workflow-agent"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "inputs_from_steps": [],
+                "neural_policy_source": "deterministic_init",
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "workflow-agent",
+                  "capability_match_score": 1.0,
+                  "display_name": "Workflow Agent",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9979290911994466
+                },
+                "step_id": "deploy"
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "workflow-agent",
+                  "capability_match_score": 1.0,
+                  "display_name": "Workflow Agent",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9979290911994466
+                }
+              ],
+              "required_capabilities": [
+                "workflow.execute"
+              ],
+              "routing_confidence": 0.9979290911994466,
+              "score_gap": 0.0,
+              "selected_agent_id": "workflow-agent",
+              "selected_score": 0.9979290911994466,
+              "task_type": "workflow_automation"
+            },
+            "selected_agent": {
+              "agent_id": "workflow-agent",
+              "availability": "online",
+              "capabilities": [
+                "workflow.execute"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Workflow Agent",
+              "editable_in_flowise": false,
+              "execution_kind": "workflow_engine",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "n8n",
+              "trust_level": "sandboxed"
+            },
+            "step_index": 0,
+            "trace_id": "trace-01d2a3336f164c7bbb3b98edced5fc2c"
+          },
+          "approval_request": {
+            "agent_id": "workflow-agent",
+            "approval_id": "approval-04195bd782054b8098dd33b7f14a4b27",
+            "execution_kind": "workflow_engine",
+            "metadata": {
+              "approval_origin": "approval_policy",
+              "matched_rules": [
+                "step_metadata_external_side_effect",
+                "high_risk_capability",
+                "workflow_engine_external_side_effect"
+              ],
+              "plan": {
+                "metadata": {},
+                "original_task": {
+                  "task_type": "workflow_automation"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Trigger the external workflow.",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "workflow",
+                      "external_side_effect": true,
+                      "task_type": "workflow_automation"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "workflow.execute"
+                    ],
+                    "risk": "medium",
+                    "step_id": "deploy",
+                    "title": "Deploy"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-trace-approval"
+              },
+              "policy_decision": {
+                "effect": "allow",
+                "matched_rules": [],
+                "reason": "no_policy_matched",
+                "winning_priority": null,
+                "winning_rule_id": null
+              },
+              "trace_id": "trace-01d2a3336f164c7bbb3b98edced5fc2c"
+            },
+            "plan_id": "plan-trace-approval",
+            "preview": {
+              "dependencies": [],
+              "required_capabilities": [
+                "workflow.execute"
+              ],
+              "task_type": "workflow_automation"
+            },
+            "proposed_action_summary": "Step deploy (Deploy) via Workflow Agent with capabilities: workflow.execute",
+            "reason": "step_metadata_external_side_effect, high_risk_capability, workflow_engine_external_side_effect",
+            "requested_at": "2026-04-19T19:39:26.597528Z",
+            "risk": "medium",
+            "source_type": "n8n",
+            "status": "pending",
+            "step_id": "deploy",
+            "task_summary": "Trigger the external workflow."
+          },
+          "trace_id": "trace-01d2a3336f164c7bbb3b98edced5fc2c"
+        },
+        "next_step_id": "deploy",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-04195bd782054b8098dd33b7f14a4b27",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "allow",
+        "matched_rules": [],
+        "reason": "no_policy_matched",
+        "winning_priority": null,
+        "winning_rule_id": null
+      },
+      "trace_id": "trace-01d2a3336f164c7bbb3b98edced5fc2c"
+    },
+    "plan_id": "plan-trace-approval",
+    "preview": {
+      "dependencies": [],
+      "required_capabilities": [
+        "workflow.execute"
+      ],
+      "task_type": "workflow_automation"
+    },
+    "proposed_action_summary": "Step deploy (Deploy) via Workflow Agent with capabilities: workflow.execute",
+    "reason": "step_metadata_external_side_effect, high_risk_capability, workflow_engine_external_side_effect",
+    "requested_at": "2026-04-19T19:39:26.597528Z",
+    "risk": "medium",
+    "source_type": "n8n",
+    "status": "approved",
+    "step_id": "deploy",
+    "task_summary": "Trigger the external workflow."
+  },
   "approval-07e65be590034f41af31cac27f69b1db": {
     "agent_id": "claude-reviewer",
     "approval_id": "approval-07e65be590034f41af31cac27f69b1db",
@@ -216,6 +449,460 @@
     "proposed_action_summary": "Governed step review (Review) via Claude Reviewer",
     "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
     "requested_at": "2026-04-12T08:38:58.457341Z",
+    "risk": "medium",
+    "source_type": "claude_code",
+    "status": "approved",
+    "step_id": "review",
+    "task_summary": "Review the patch."
+  },
+  "approval-0ad420b74b9d466b8a1d9eb4ee28b23b": {
+    "agent_id": "claude-reviewer",
+    "approval_id": "approval-0ad420b74b9d466b8a1d9eb4ee28b23b",
+    "execution_kind": "local_process",
+    "metadata": {
+      "approval_origin": "governance",
+      "decision": {
+        "approval_id": "approval-0ad420b74b9d466b8a1d9eb4ee28b23b",
+        "comment": null,
+        "decided_at": "2026-04-19T19:39:35.671412Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "plan": {
+        "metadata": {},
+        "original_task": {
+          "task_type": "code_review"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Review the patch.",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "code",
+              "task_type": "code_review"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "review.code"
+            ],
+            "risk": "medium",
+            "step_id": "review",
+            "title": "Review"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-policy-review"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "created_agent": null,
+            "policy_decision": {
+              "effect": "require_approval",
+              "matched_rules": [
+                "review-claude-review"
+              ],
+              "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+              "winning_priority": 10,
+              "winning_rule_id": "review-claude-review"
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "allow_parallel_group": null,
+                "candidate_agent_ids": [
+                  "claude-reviewer"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "inputs_from_steps": [],
+                "neural_policy_source": "deterministic_init",
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9977126661222363
+                },
+                "step_id": "review"
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9977126661222363
+                }
+              ],
+              "required_capabilities": [
+                "review.code"
+              ],
+              "routing_confidence": 0.9977126661222363,
+              "score_gap": 0.0,
+              "selected_agent_id": "claude-reviewer",
+              "selected_score": 0.9977126661222363,
+              "task_type": "code_review"
+            },
+            "selected_agent": {
+              "agent_id": "claude-reviewer",
+              "availability": "online",
+              "capabilities": [
+                "review.code"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Claude Reviewer",
+              "editable_in_flowise": false,
+              "execution_kind": "local_process",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "claude_code",
+              "trust_level": "sandboxed"
+            },
+            "step_index": 0,
+            "trace_id": "trace-7d811cd890e346cc9b5eb2942ce5fed7"
+          },
+          "approval_request": {
+            "agent_id": "claude-reviewer",
+            "approval_id": "approval-0ad420b74b9d466b8a1d9eb4ee28b23b",
+            "execution_kind": "local_process",
+            "metadata": {
+              "approval_origin": "governance",
+              "plan": {
+                "metadata": {},
+                "original_task": {
+                  "task_type": "code_review"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Review the patch.",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "code",
+                      "task_type": "code_review"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "review.code"
+                    ],
+                    "risk": "medium",
+                    "step_id": "review",
+                    "title": "Review"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-policy-review"
+              },
+              "policy_decision": {
+                "effect": "require_approval",
+                "matched_rules": [
+                  "review-claude-review"
+                ],
+                "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+                "winning_priority": 10,
+                "winning_rule_id": "review-claude-review"
+              },
+              "trace_id": "trace-7d811cd890e346cc9b5eb2942ce5fed7"
+            },
+            "plan_id": "plan-policy-review",
+            "preview": {
+              "dependencies": [],
+              "required_capabilities": [
+                "review.code"
+              ],
+              "task_type": "code_review"
+            },
+            "proposed_action_summary": "Governed step review (Review) via Claude Reviewer",
+            "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+            "requested_at": "2026-04-19T19:39:35.607931Z",
+            "risk": "medium",
+            "source_type": "claude_code",
+            "status": "pending",
+            "step_id": "review",
+            "task_summary": "Review the patch."
+          },
+          "trace_id": "trace-7d811cd890e346cc9b5eb2942ce5fed7"
+        },
+        "next_step_id": "review",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-0ad420b74b9d466b8a1d9eb4ee28b23b",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "require_approval",
+        "matched_rules": [
+          "review-claude-review"
+        ],
+        "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+        "winning_priority": 10,
+        "winning_rule_id": "review-claude-review"
+      },
+      "trace_id": "trace-7d811cd890e346cc9b5eb2942ce5fed7"
+    },
+    "plan_id": "plan-policy-review",
+    "preview": {
+      "dependencies": [],
+      "required_capabilities": [
+        "review.code"
+      ],
+      "task_type": "code_review"
+    },
+    "proposed_action_summary": "Governed step review (Review) via Claude Reviewer",
+    "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+    "requested_at": "2026-04-19T19:39:35.607931Z",
+    "risk": "medium",
+    "source_type": "claude_code",
+    "status": "approved",
+    "step_id": "review",
+    "task_summary": "Review the patch."
+  },
+  "approval-10cecc07fde0490eab3afc25e2a4b434": {
+    "agent_id": "claude-reviewer",
+    "approval_id": "approval-10cecc07fde0490eab3afc25e2a4b434",
+    "execution_kind": "local_process",
+    "metadata": {
+      "approval_origin": "governance",
+      "decision": {
+        "approval_id": "approval-10cecc07fde0490eab3afc25e2a4b434",
+        "comment": null,
+        "decided_at": "2026-04-19T19:10:04.131322Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "plan": {
+        "metadata": {},
+        "original_task": {
+          "task_type": "code_review"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Review the patch.",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "code",
+              "task_type": "code_review"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "review.code"
+            ],
+            "risk": "medium",
+            "step_id": "review",
+            "title": "Review"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-policy-review"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "created_agent": null,
+            "policy_decision": {
+              "effect": "require_approval",
+              "matched_rules": [
+                "review-claude-review"
+              ],
+              "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+              "winning_priority": 10,
+              "winning_rule_id": "review-claude-review"
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "allow_parallel_group": null,
+                "candidate_agent_ids": [
+                  "claude-reviewer"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "inputs_from_steps": [],
+                "neural_policy_source": "deterministic_init",
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9977126661222363
+                },
+                "step_id": "review"
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9977126661222363
+                }
+              ],
+              "required_capabilities": [
+                "review.code"
+              ],
+              "routing_confidence": 0.9977126661222363,
+              "score_gap": 0.0,
+              "selected_agent_id": "claude-reviewer",
+              "selected_score": 0.9977126661222363,
+              "task_type": "code_review"
+            },
+            "selected_agent": {
+              "agent_id": "claude-reviewer",
+              "availability": "online",
+              "capabilities": [
+                "review.code"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Claude Reviewer",
+              "editable_in_flowise": false,
+              "execution_kind": "local_process",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "claude_code",
+              "trust_level": "sandboxed"
+            },
+            "step_index": 0,
+            "trace_id": "trace-dcdde235516c49cab9ad357eaf62d649"
+          },
+          "approval_request": {
+            "agent_id": "claude-reviewer",
+            "approval_id": "approval-10cecc07fde0490eab3afc25e2a4b434",
+            "execution_kind": "local_process",
+            "metadata": {
+              "approval_origin": "governance",
+              "plan": {
+                "metadata": {},
+                "original_task": {
+                  "task_type": "code_review"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Review the patch.",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "code",
+                      "task_type": "code_review"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "review.code"
+                    ],
+                    "risk": "medium",
+                    "step_id": "review",
+                    "title": "Review"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-policy-review"
+              },
+              "policy_decision": {
+                "effect": "require_approval",
+                "matched_rules": [
+                  "review-claude-review"
+                ],
+                "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+                "winning_priority": 10,
+                "winning_rule_id": "review-claude-review"
+              },
+              "trace_id": "trace-dcdde235516c49cab9ad357eaf62d649"
+            },
+            "plan_id": "plan-policy-review",
+            "preview": {
+              "dependencies": [],
+              "required_capabilities": [
+                "review.code"
+              ],
+              "task_type": "code_review"
+            },
+            "proposed_action_summary": "Governed step review (Review) via Claude Reviewer",
+            "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+            "requested_at": "2026-04-19T19:10:04.076486Z",
+            "risk": "medium",
+            "source_type": "claude_code",
+            "status": "pending",
+            "step_id": "review",
+            "task_summary": "Review the patch."
+          },
+          "trace_id": "trace-dcdde235516c49cab9ad357eaf62d649"
+        },
+        "next_step_id": "review",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-10cecc07fde0490eab3afc25e2a4b434",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "require_approval",
+        "matched_rules": [
+          "review-claude-review"
+        ],
+        "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+        "winning_priority": 10,
+        "winning_rule_id": "review-claude-review"
+      },
+      "trace_id": "trace-dcdde235516c49cab9ad357eaf62d649"
+    },
+    "plan_id": "plan-policy-review",
+    "preview": {
+      "dependencies": [],
+      "required_capabilities": [
+        "review.code"
+      ],
+      "task_type": "code_review"
+    },
+    "proposed_action_summary": "Governed step review (Review) via Claude Reviewer",
+    "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+    "requested_at": "2026-04-19T19:10:04.076486Z",
     "risk": "medium",
     "source_type": "claude_code",
     "status": "approved",
@@ -451,6 +1138,1873 @@
     "step_id": "deploy",
     "task_summary": "Trigger the external workflow."
   },
+  "approval-4356f763c17e42f1b9ac5d6f2a2ad981": {
+    "agent_id": "claude-reviewer",
+    "approval_id": "approval-4356f763c17e42f1b9ac5d6f2a2ad981",
+    "execution_kind": "local_process",
+    "metadata": {
+      "approval_origin": "governance",
+      "decision": {
+        "approval_id": "approval-4356f763c17e42f1b9ac5d6f2a2ad981",
+        "comment": null,
+        "decided_at": "2026-04-19T19:10:03.946985Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "plan": {
+        "metadata": {
+          "intent_domain": "code"
+        },
+        "original_task": {
+          "description": "Review the patch",
+          "task_type": "code_review"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Review the patch",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "code",
+              "governance_origin": true,
+              "requires_human_approval": true,
+              "task_type": "code_review"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "analysis.code",
+              "review.code"
+            ],
+            "risk": "medium",
+            "step_id": "execute",
+            "title": "Execute code_review"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-code_review"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "policy_decision": {
+              "effect": "require_approval",
+              "matched_rules": [
+                "review-claude-review"
+              ],
+              "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+              "winning_priority": 10,
+              "winning_rule_id": "review-claude-review"
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "candidate_agent_ids": [
+                  "claude-reviewer"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "neural_policy_source": "deterministic_init",
+                "planner": {
+                  "domain_fallback": false,
+                  "planner_version": "v1",
+                  "rule_applied": "code_review"
+                },
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9976898990033268
+                }
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9976898990033268
+                }
+              ],
+              "required_capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "routing_confidence": 0.9976898990033268,
+              "score_gap": 0.0,
+              "selected_agent_id": "claude-reviewer",
+              "selected_score": 0.9976898990033268,
+              "task_type": "code_review"
+            },
+            "selected_agent": {
+              "agent_id": "claude-reviewer",
+              "availability": "online",
+              "capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Claude Reviewer",
+              "editable_in_flowise": false,
+              "execution_kind": "local_process",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "claude_code",
+              "trust_level": "sandboxed"
+            },
+            "trace_id": "trace-e7211cc295b142d596c11a4a63d9d588"
+          },
+          "approval_request": {
+            "agent_id": "claude-reviewer",
+            "approval_id": "approval-4356f763c17e42f1b9ac5d6f2a2ad981",
+            "execution_kind": "local_process",
+            "metadata": {
+              "approval_origin": "governance",
+              "plan": {
+                "metadata": {
+                  "intent_domain": "code"
+                },
+                "original_task": {
+                  "description": "Review the patch",
+                  "task_type": "code_review"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Review the patch",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "code",
+                      "governance_origin": true,
+                      "requires_human_approval": true,
+                      "task_type": "code_review"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "analysis.code",
+                      "review.code"
+                    ],
+                    "risk": "medium",
+                    "step_id": "execute",
+                    "title": "Execute code_review"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-code_review"
+              },
+              "policy_decision": {
+                "effect": "require_approval",
+                "matched_rules": [
+                  "review-claude-review"
+                ],
+                "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+                "winning_priority": 10,
+                "winning_rule_id": "review-claude-review"
+              },
+              "trace_id": "trace-e7211cc295b142d596c11a4a63d9d588"
+            },
+            "plan_id": "plan-code_review",
+            "preview": {
+              "required_capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "task_type": "code_review"
+            },
+            "proposed_action_summary": "Single-step execution via Claude Reviewer",
+            "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+            "requested_at": "2026-04-19T19:10:03.923283Z",
+            "risk": "medium",
+            "source_type": "claude_code",
+            "status": "pending",
+            "step_id": "execute",
+            "task_summary": "Review the patch"
+          }
+        },
+        "next_step_id": "execute",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-4356f763c17e42f1b9ac5d6f2a2ad981",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "require_approval",
+        "matched_rules": [
+          "review-claude-review"
+        ],
+        "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+        "winning_priority": 10,
+        "winning_rule_id": "review-claude-review"
+      },
+      "trace_id": "trace-e7211cc295b142d596c11a4a63d9d588"
+    },
+    "plan_id": "plan-code_review",
+    "preview": {
+      "required_capabilities": [
+        "analysis.code",
+        "review.code"
+      ],
+      "task_type": "code_review"
+    },
+    "proposed_action_summary": "Single-step execution via Claude Reviewer",
+    "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+    "requested_at": "2026-04-19T19:10:03.923283Z",
+    "risk": "medium",
+    "source_type": "claude_code",
+    "status": "approved",
+    "step_id": "execute",
+    "task_summary": "Review the patch"
+  },
+  "approval-4bfa484f3c2340ff9b7d39345da013c6": {
+    "agent_id": "claude-reviewer",
+    "approval_id": "approval-4bfa484f3c2340ff9b7d39345da013c6",
+    "execution_kind": "local_process",
+    "metadata": {
+      "approval_origin": "governance",
+      "decision": {
+        "approval_id": "approval-4bfa484f3c2340ff9b7d39345da013c6",
+        "comment": null,
+        "decided_at": "2026-04-19T19:32:30.801192Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "plan": {
+        "metadata": {
+          "intent_domain": "code"
+        },
+        "original_task": {
+          "description": "Review the patch",
+          "task_type": "code_review"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Review the patch",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "code",
+              "governance_origin": true,
+              "requires_human_approval": true,
+              "task_type": "code_review"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "analysis.code",
+              "review.code"
+            ],
+            "risk": "medium",
+            "step_id": "execute",
+            "title": "Execute code_review"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-code_review"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "policy_decision": {
+              "effect": "require_approval",
+              "matched_rules": [
+                "review-claude-review"
+              ],
+              "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+              "winning_priority": 10,
+              "winning_rule_id": "review-claude-review"
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "candidate_agent_ids": [
+                  "claude-reviewer"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "neural_policy_source": "deterministic_init",
+                "planner": {
+                  "domain_fallback": false,
+                  "planner_version": "v1",
+                  "rule_applied": "code_review"
+                },
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9976898990033268
+                }
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9976898990033268
+                }
+              ],
+              "required_capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "routing_confidence": 0.9976898990033268,
+              "score_gap": 0.0,
+              "selected_agent_id": "claude-reviewer",
+              "selected_score": 0.9976898990033268,
+              "task_type": "code_review"
+            },
+            "selected_agent": {
+              "agent_id": "claude-reviewer",
+              "availability": "online",
+              "capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Claude Reviewer",
+              "editable_in_flowise": false,
+              "execution_kind": "local_process",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "claude_code",
+              "trust_level": "sandboxed"
+            },
+            "trace_id": "trace-bbf96c98639c4f5fbbecbe8d3256c13c"
+          },
+          "approval_request": {
+            "agent_id": "claude-reviewer",
+            "approval_id": "approval-4bfa484f3c2340ff9b7d39345da013c6",
+            "execution_kind": "local_process",
+            "metadata": {
+              "approval_origin": "governance",
+              "plan": {
+                "metadata": {
+                  "intent_domain": "code"
+                },
+                "original_task": {
+                  "description": "Review the patch",
+                  "task_type": "code_review"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Review the patch",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "code",
+                      "governance_origin": true,
+                      "requires_human_approval": true,
+                      "task_type": "code_review"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "analysis.code",
+                      "review.code"
+                    ],
+                    "risk": "medium",
+                    "step_id": "execute",
+                    "title": "Execute code_review"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-code_review"
+              },
+              "policy_decision": {
+                "effect": "require_approval",
+                "matched_rules": [
+                  "review-claude-review"
+                ],
+                "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+                "winning_priority": 10,
+                "winning_rule_id": "review-claude-review"
+              },
+              "trace_id": "trace-bbf96c98639c4f5fbbecbe8d3256c13c"
+            },
+            "plan_id": "plan-code_review",
+            "preview": {
+              "required_capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "task_type": "code_review"
+            },
+            "proposed_action_summary": "Single-step execution via Claude Reviewer",
+            "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+            "requested_at": "2026-04-19T19:32:30.775957Z",
+            "risk": "medium",
+            "source_type": "claude_code",
+            "status": "pending",
+            "step_id": "execute",
+            "task_summary": "Review the patch"
+          }
+        },
+        "next_step_id": "execute",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-4bfa484f3c2340ff9b7d39345da013c6",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "require_approval",
+        "matched_rules": [
+          "review-claude-review"
+        ],
+        "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+        "winning_priority": 10,
+        "winning_rule_id": "review-claude-review"
+      },
+      "trace_id": "trace-bbf96c98639c4f5fbbecbe8d3256c13c"
+    },
+    "plan_id": "plan-code_review",
+    "preview": {
+      "required_capabilities": [
+        "analysis.code",
+        "review.code"
+      ],
+      "task_type": "code_review"
+    },
+    "proposed_action_summary": "Single-step execution via Claude Reviewer",
+    "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+    "requested_at": "2026-04-19T19:32:30.775957Z",
+    "risk": "medium",
+    "source_type": "claude_code",
+    "status": "approved",
+    "step_id": "execute",
+    "task_summary": "Review the patch"
+  },
+  "approval-4e0fa3dbe1a449f2b883f4b8e8b06f16": {
+    "agent_id": "claude-reviewer",
+    "approval_id": "approval-4e0fa3dbe1a449f2b883f4b8e8b06f16",
+    "execution_kind": "local_process",
+    "metadata": {
+      "approval_origin": "governance",
+      "decision": {
+        "approval_id": "approval-4e0fa3dbe1a449f2b883f4b8e8b06f16",
+        "comment": null,
+        "decided_at": "2026-04-19T20:14:15.644470Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "plan": {
+        "metadata": {
+          "intent_domain": "code"
+        },
+        "original_task": {
+          "description": "Review the patch",
+          "task_type": "code_review"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Review the patch",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "code",
+              "governance_origin": true,
+              "requires_human_approval": true,
+              "task_type": "code_review"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "analysis.code",
+              "review.code"
+            ],
+            "risk": "medium",
+            "step_id": "execute",
+            "title": "Execute code_review"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-code_review"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "policy_decision": {
+              "effect": "require_approval",
+              "matched_rules": [
+                "review-claude-review"
+              ],
+              "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+              "winning_priority": 10,
+              "winning_rule_id": "review-claude-review"
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "candidate_agent_ids": [
+                  "claude-reviewer"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "neural_policy_source": "deterministic_init",
+                "planner": {
+                  "domain_fallback": false,
+                  "planner_version": "v1",
+                  "rule_applied": "code_review"
+                },
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9976898990033268
+                }
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9976898990033268
+                }
+              ],
+              "required_capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "routing_confidence": 0.9976898990033268,
+              "score_gap": 0.0,
+              "selected_agent_id": "claude-reviewer",
+              "selected_score": 0.9976898990033268,
+              "task_type": "code_review"
+            },
+            "selected_agent": {
+              "agent_id": "claude-reviewer",
+              "availability": "online",
+              "capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Claude Reviewer",
+              "editable_in_flowise": false,
+              "execution_kind": "local_process",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "claude_code",
+              "trust_level": "sandboxed"
+            },
+            "trace_id": "trace-be0ea051fd2045be8a31fb3a6dd03324"
+          },
+          "approval_request": {
+            "agent_id": "claude-reviewer",
+            "approval_id": "approval-4e0fa3dbe1a449f2b883f4b8e8b06f16",
+            "execution_kind": "local_process",
+            "metadata": {
+              "approval_origin": "governance",
+              "plan": {
+                "metadata": {
+                  "intent_domain": "code"
+                },
+                "original_task": {
+                  "description": "Review the patch",
+                  "task_type": "code_review"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Review the patch",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "code",
+                      "governance_origin": true,
+                      "requires_human_approval": true,
+                      "task_type": "code_review"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "analysis.code",
+                      "review.code"
+                    ],
+                    "risk": "medium",
+                    "step_id": "execute",
+                    "title": "Execute code_review"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-code_review"
+              },
+              "policy_decision": {
+                "effect": "require_approval",
+                "matched_rules": [
+                  "review-claude-review"
+                ],
+                "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+                "winning_priority": 10,
+                "winning_rule_id": "review-claude-review"
+              },
+              "trace_id": "trace-be0ea051fd2045be8a31fb3a6dd03324"
+            },
+            "plan_id": "plan-code_review",
+            "preview": {
+              "required_capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "task_type": "code_review"
+            },
+            "proposed_action_summary": "Single-step execution via Claude Reviewer",
+            "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+            "requested_at": "2026-04-19T20:14:15.581291Z",
+            "risk": "medium",
+            "source_type": "claude_code",
+            "status": "pending",
+            "step_id": "execute",
+            "task_summary": "Review the patch"
+          }
+        },
+        "next_step_id": "execute",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-4e0fa3dbe1a449f2b883f4b8e8b06f16",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "require_approval",
+        "matched_rules": [
+          "review-claude-review"
+        ],
+        "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+        "winning_priority": 10,
+        "winning_rule_id": "review-claude-review"
+      },
+      "trace_id": "trace-be0ea051fd2045be8a31fb3a6dd03324"
+    },
+    "plan_id": "plan-code_review",
+    "preview": {
+      "required_capabilities": [
+        "analysis.code",
+        "review.code"
+      ],
+      "task_type": "code_review"
+    },
+    "proposed_action_summary": "Single-step execution via Claude Reviewer",
+    "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+    "requested_at": "2026-04-19T20:14:15.581291Z",
+    "risk": "medium",
+    "source_type": "claude_code",
+    "status": "approved",
+    "step_id": "execute",
+    "task_summary": "Review the patch"
+  },
+  "approval-66809252a8204407ab7b7f63f547d282": {
+    "agent_id": "workflow-agent",
+    "approval_id": "approval-66809252a8204407ab7b7f63f547d282",
+    "execution_kind": "workflow_engine",
+    "metadata": {
+      "approval_origin": "approval_policy",
+      "decision": {
+        "approval_id": "approval-66809252a8204407ab7b7f63f547d282",
+        "comment": null,
+        "decided_at": "2026-04-19T19:09:58.116662Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "matched_rules": [
+        "step_metadata_external_side_effect",
+        "high_risk_capability",
+        "workflow_engine_external_side_effect"
+      ],
+      "plan": {
+        "metadata": {},
+        "original_task": {
+          "task_type": "workflow_automation"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Trigger the external workflow.",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "workflow",
+              "external_side_effect": true,
+              "task_type": "workflow_automation"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "workflow.execute"
+            ],
+            "risk": "medium",
+            "step_id": "deploy",
+            "title": "Deploy"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-trace-approval"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "created_agent": null,
+            "policy_decision": {
+              "effect": "allow",
+              "matched_rules": [],
+              "reason": "no_policy_matched",
+              "winning_priority": null,
+              "winning_rule_id": null
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "allow_parallel_group": null,
+                "candidate_agent_ids": [
+                  "workflow-agent"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "inputs_from_steps": [],
+                "neural_policy_source": "deterministic_init",
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "workflow-agent",
+                  "capability_match_score": 1.0,
+                  "display_name": "Workflow Agent",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9979290911994466
+                },
+                "step_id": "deploy"
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "workflow-agent",
+                  "capability_match_score": 1.0,
+                  "display_name": "Workflow Agent",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9979290911994466
+                }
+              ],
+              "required_capabilities": [
+                "workflow.execute"
+              ],
+              "routing_confidence": 0.9979290911994466,
+              "score_gap": 0.0,
+              "selected_agent_id": "workflow-agent",
+              "selected_score": 0.9979290911994466,
+              "task_type": "workflow_automation"
+            },
+            "selected_agent": {
+              "agent_id": "workflow-agent",
+              "availability": "online",
+              "capabilities": [
+                "workflow.execute"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Workflow Agent",
+              "editable_in_flowise": false,
+              "execution_kind": "workflow_engine",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "n8n",
+              "trust_level": "sandboxed"
+            },
+            "step_index": 0,
+            "trace_id": "trace-2e08171288be488d8d7f4b4e2aafb1ec"
+          },
+          "approval_request": {
+            "agent_id": "workflow-agent",
+            "approval_id": "approval-66809252a8204407ab7b7f63f547d282",
+            "execution_kind": "workflow_engine",
+            "metadata": {
+              "approval_origin": "approval_policy",
+              "matched_rules": [
+                "step_metadata_external_side_effect",
+                "high_risk_capability",
+                "workflow_engine_external_side_effect"
+              ],
+              "plan": {
+                "metadata": {},
+                "original_task": {
+                  "task_type": "workflow_automation"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Trigger the external workflow.",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "workflow",
+                      "external_side_effect": true,
+                      "task_type": "workflow_automation"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "workflow.execute"
+                    ],
+                    "risk": "medium",
+                    "step_id": "deploy",
+                    "title": "Deploy"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-trace-approval"
+              },
+              "policy_decision": {
+                "effect": "allow",
+                "matched_rules": [],
+                "reason": "no_policy_matched",
+                "winning_priority": null,
+                "winning_rule_id": null
+              },
+              "trace_id": "trace-2e08171288be488d8d7f4b4e2aafb1ec"
+            },
+            "plan_id": "plan-trace-approval",
+            "preview": {
+              "dependencies": [],
+              "required_capabilities": [
+                "workflow.execute"
+              ],
+              "task_type": "workflow_automation"
+            },
+            "proposed_action_summary": "Step deploy (Deploy) via Workflow Agent with capabilities: workflow.execute",
+            "reason": "step_metadata_external_side_effect, high_risk_capability, workflow_engine_external_side_effect",
+            "requested_at": "2026-04-19T19:09:58.069758Z",
+            "risk": "medium",
+            "source_type": "n8n",
+            "status": "pending",
+            "step_id": "deploy",
+            "task_summary": "Trigger the external workflow."
+          },
+          "trace_id": "trace-2e08171288be488d8d7f4b4e2aafb1ec"
+        },
+        "next_step_id": "deploy",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-66809252a8204407ab7b7f63f547d282",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "allow",
+        "matched_rules": [],
+        "reason": "no_policy_matched",
+        "winning_priority": null,
+        "winning_rule_id": null
+      },
+      "trace_id": "trace-2e08171288be488d8d7f4b4e2aafb1ec"
+    },
+    "plan_id": "plan-trace-approval",
+    "preview": {
+      "dependencies": [],
+      "required_capabilities": [
+        "workflow.execute"
+      ],
+      "task_type": "workflow_automation"
+    },
+    "proposed_action_summary": "Step deploy (Deploy) via Workflow Agent with capabilities: workflow.execute",
+    "reason": "step_metadata_external_side_effect, high_risk_capability, workflow_engine_external_side_effect",
+    "requested_at": "2026-04-19T19:09:58.069758Z",
+    "risk": "medium",
+    "source_type": "n8n",
+    "status": "approved",
+    "step_id": "deploy",
+    "task_summary": "Trigger the external workflow."
+  },
+  "approval-761539c866924e57b30ec6b0df6cb8ec": {
+    "agent_id": "claude-reviewer",
+    "approval_id": "approval-761539c866924e57b30ec6b0df6cb8ec",
+    "execution_kind": "local_process",
+    "metadata": {
+      "approval_origin": "governance",
+      "decision": {
+        "approval_id": "approval-761539c866924e57b30ec6b0df6cb8ec",
+        "comment": null,
+        "decided_at": "2026-04-19T19:40:44.364176Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "plan": {
+        "metadata": {},
+        "original_task": {
+          "task_type": "code_review"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Review the patch.",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "code",
+              "task_type": "code_review"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "review.code"
+            ],
+            "risk": "medium",
+            "step_id": "review",
+            "title": "Review"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-policy-review"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "created_agent": null,
+            "policy_decision": {
+              "effect": "require_approval",
+              "matched_rules": [
+                "review-claude-review"
+              ],
+              "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+              "winning_priority": 10,
+              "winning_rule_id": "review-claude-review"
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "allow_parallel_group": null,
+                "candidate_agent_ids": [
+                  "claude-reviewer"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "inputs_from_steps": [],
+                "neural_policy_source": "deterministic_init",
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9977126661222363
+                },
+                "step_id": "review"
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9977126661222363
+                }
+              ],
+              "required_capabilities": [
+                "review.code"
+              ],
+              "routing_confidence": 0.9977126661222363,
+              "score_gap": 0.0,
+              "selected_agent_id": "claude-reviewer",
+              "selected_score": 0.9977126661222363,
+              "task_type": "code_review"
+            },
+            "selected_agent": {
+              "agent_id": "claude-reviewer",
+              "availability": "online",
+              "capabilities": [
+                "review.code"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Claude Reviewer",
+              "editable_in_flowise": false,
+              "execution_kind": "local_process",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "claude_code",
+              "trust_level": "sandboxed"
+            },
+            "step_index": 0,
+            "trace_id": "trace-3f4bd57db1954e7cb4796e2335471195"
+          },
+          "approval_request": {
+            "agent_id": "claude-reviewer",
+            "approval_id": "approval-761539c866924e57b30ec6b0df6cb8ec",
+            "execution_kind": "local_process",
+            "metadata": {
+              "approval_origin": "governance",
+              "plan": {
+                "metadata": {},
+                "original_task": {
+                  "task_type": "code_review"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Review the patch.",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "code",
+                      "task_type": "code_review"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "review.code"
+                    ],
+                    "risk": "medium",
+                    "step_id": "review",
+                    "title": "Review"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-policy-review"
+              },
+              "policy_decision": {
+                "effect": "require_approval",
+                "matched_rules": [
+                  "review-claude-review"
+                ],
+                "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+                "winning_priority": 10,
+                "winning_rule_id": "review-claude-review"
+              },
+              "trace_id": "trace-3f4bd57db1954e7cb4796e2335471195"
+            },
+            "plan_id": "plan-policy-review",
+            "preview": {
+              "dependencies": [],
+              "required_capabilities": [
+                "review.code"
+              ],
+              "task_type": "code_review"
+            },
+            "proposed_action_summary": "Governed step review (Review) via Claude Reviewer",
+            "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+            "requested_at": "2026-04-19T19:40:44.296981Z",
+            "risk": "medium",
+            "source_type": "claude_code",
+            "status": "pending",
+            "step_id": "review",
+            "task_summary": "Review the patch."
+          },
+          "trace_id": "trace-3f4bd57db1954e7cb4796e2335471195"
+        },
+        "next_step_id": "review",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-761539c866924e57b30ec6b0df6cb8ec",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "require_approval",
+        "matched_rules": [
+          "review-claude-review"
+        ],
+        "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+        "winning_priority": 10,
+        "winning_rule_id": "review-claude-review"
+      },
+      "trace_id": "trace-3f4bd57db1954e7cb4796e2335471195"
+    },
+    "plan_id": "plan-policy-review",
+    "preview": {
+      "dependencies": [],
+      "required_capabilities": [
+        "review.code"
+      ],
+      "task_type": "code_review"
+    },
+    "proposed_action_summary": "Governed step review (Review) via Claude Reviewer",
+    "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+    "requested_at": "2026-04-19T19:40:44.296981Z",
+    "risk": "medium",
+    "source_type": "claude_code",
+    "status": "approved",
+    "step_id": "review",
+    "task_summary": "Review the patch."
+  },
+  "approval-8243523dff21452480c517cda3cf0787": {
+    "agent_id": "claude-reviewer",
+    "approval_id": "approval-8243523dff21452480c517cda3cf0787",
+    "execution_kind": "local_process",
+    "metadata": {
+      "approval_origin": "governance",
+      "decision": {
+        "approval_id": "approval-8243523dff21452480c517cda3cf0787",
+        "comment": null,
+        "decided_at": "2026-04-19T19:32:30.990506Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "plan": {
+        "metadata": {},
+        "original_task": {
+          "task_type": "code_review"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Review the patch.",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "code",
+              "task_type": "code_review"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "review.code"
+            ],
+            "risk": "medium",
+            "step_id": "review",
+            "title": "Review"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-policy-review"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "created_agent": null,
+            "policy_decision": {
+              "effect": "require_approval",
+              "matched_rules": [
+                "review-claude-review"
+              ],
+              "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+              "winning_priority": 10,
+              "winning_rule_id": "review-claude-review"
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "allow_parallel_group": null,
+                "candidate_agent_ids": [
+                  "claude-reviewer"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "inputs_from_steps": [],
+                "neural_policy_source": "deterministic_init",
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9977126661222363
+                },
+                "step_id": "review"
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9977126661222363
+                }
+              ],
+              "required_capabilities": [
+                "review.code"
+              ],
+              "routing_confidence": 0.9977126661222363,
+              "score_gap": 0.0,
+              "selected_agent_id": "claude-reviewer",
+              "selected_score": 0.9977126661222363,
+              "task_type": "code_review"
+            },
+            "selected_agent": {
+              "agent_id": "claude-reviewer",
+              "availability": "online",
+              "capabilities": [
+                "review.code"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Claude Reviewer",
+              "editable_in_flowise": false,
+              "execution_kind": "local_process",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "claude_code",
+              "trust_level": "sandboxed"
+            },
+            "step_index": 0,
+            "trace_id": "trace-d4d7606de5e54e9b816c9ee61cdaa1c6"
+          },
+          "approval_request": {
+            "agent_id": "claude-reviewer",
+            "approval_id": "approval-8243523dff21452480c517cda3cf0787",
+            "execution_kind": "local_process",
+            "metadata": {
+              "approval_origin": "governance",
+              "plan": {
+                "metadata": {},
+                "original_task": {
+                  "task_type": "code_review"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Review the patch.",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "code",
+                      "task_type": "code_review"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "review.code"
+                    ],
+                    "risk": "medium",
+                    "step_id": "review",
+                    "title": "Review"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-policy-review"
+              },
+              "policy_decision": {
+                "effect": "require_approval",
+                "matched_rules": [
+                  "review-claude-review"
+                ],
+                "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+                "winning_priority": 10,
+                "winning_rule_id": "review-claude-review"
+              },
+              "trace_id": "trace-d4d7606de5e54e9b816c9ee61cdaa1c6"
+            },
+            "plan_id": "plan-policy-review",
+            "preview": {
+              "dependencies": [],
+              "required_capabilities": [
+                "review.code"
+              ],
+              "task_type": "code_review"
+            },
+            "proposed_action_summary": "Governed step review (Review) via Claude Reviewer",
+            "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+            "requested_at": "2026-04-19T19:32:30.932987Z",
+            "risk": "medium",
+            "source_type": "claude_code",
+            "status": "pending",
+            "step_id": "review",
+            "task_summary": "Review the patch."
+          },
+          "trace_id": "trace-d4d7606de5e54e9b816c9ee61cdaa1c6"
+        },
+        "next_step_id": "review",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-8243523dff21452480c517cda3cf0787",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "require_approval",
+        "matched_rules": [
+          "review-claude-review"
+        ],
+        "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+        "winning_priority": 10,
+        "winning_rule_id": "review-claude-review"
+      },
+      "trace_id": "trace-d4d7606de5e54e9b816c9ee61cdaa1c6"
+    },
+    "plan_id": "plan-policy-review",
+    "preview": {
+      "dependencies": [],
+      "required_capabilities": [
+        "review.code"
+      ],
+      "task_type": "code_review"
+    },
+    "proposed_action_summary": "Governed step review (Review) via Claude Reviewer",
+    "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+    "requested_at": "2026-04-19T19:32:30.932987Z",
+    "risk": "medium",
+    "source_type": "claude_code",
+    "status": "approved",
+    "step_id": "review",
+    "task_summary": "Review the patch."
+  },
+  "approval-83f39b07d692415bb7ef537593d3ce4d": {
+    "agent_id": "claude-reviewer",
+    "approval_id": "approval-83f39b07d692415bb7ef537593d3ce4d",
+    "execution_kind": "local_process",
+    "metadata": {
+      "approval_origin": "governance",
+      "decision": {
+        "approval_id": "approval-83f39b07d692415bb7ef537593d3ce4d",
+        "comment": null,
+        "decided_at": "2026-04-19T20:14:16.070898Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "plan": {
+        "metadata": {},
+        "original_task": {
+          "task_type": "code_review"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Review the patch.",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "code",
+              "task_type": "code_review"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "review.code"
+            ],
+            "risk": "medium",
+            "step_id": "review",
+            "title": "Review"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-policy-review"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "created_agent": null,
+            "policy_decision": {
+              "effect": "require_approval",
+              "matched_rules": [
+                "review-claude-review"
+              ],
+              "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+              "winning_priority": 10,
+              "winning_rule_id": "review-claude-review"
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "allow_parallel_group": null,
+                "candidate_agent_ids": [
+                  "claude-reviewer"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "inputs_from_steps": [],
+                "neural_policy_source": "deterministic_init",
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9977126661222363
+                },
+                "step_id": "review"
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9977126661222363
+                }
+              ],
+              "required_capabilities": [
+                "review.code"
+              ],
+              "routing_confidence": 0.9977126661222363,
+              "score_gap": 0.0,
+              "selected_agent_id": "claude-reviewer",
+              "selected_score": 0.9977126661222363,
+              "task_type": "code_review"
+            },
+            "selected_agent": {
+              "agent_id": "claude-reviewer",
+              "availability": "online",
+              "capabilities": [
+                "review.code"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Claude Reviewer",
+              "editable_in_flowise": false,
+              "execution_kind": "local_process",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "claude_code",
+              "trust_level": "sandboxed"
+            },
+            "step_index": 0,
+            "trace_id": "trace-4425c20152d94382a4cbed052d6fec7c"
+          },
+          "approval_request": {
+            "agent_id": "claude-reviewer",
+            "approval_id": "approval-83f39b07d692415bb7ef537593d3ce4d",
+            "execution_kind": "local_process",
+            "metadata": {
+              "approval_origin": "governance",
+              "plan": {
+                "metadata": {},
+                "original_task": {
+                  "task_type": "code_review"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Review the patch.",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "code",
+                      "task_type": "code_review"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "review.code"
+                    ],
+                    "risk": "medium",
+                    "step_id": "review",
+                    "title": "Review"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-policy-review"
+              },
+              "policy_decision": {
+                "effect": "require_approval",
+                "matched_rules": [
+                  "review-claude-review"
+                ],
+                "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+                "winning_priority": 10,
+                "winning_rule_id": "review-claude-review"
+              },
+              "trace_id": "trace-4425c20152d94382a4cbed052d6fec7c"
+            },
+            "plan_id": "plan-policy-review",
+            "preview": {
+              "dependencies": [],
+              "required_capabilities": [
+                "review.code"
+              ],
+              "task_type": "code_review"
+            },
+            "proposed_action_summary": "Governed step review (Review) via Claude Reviewer",
+            "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+            "requested_at": "2026-04-19T20:14:15.942926Z",
+            "risk": "medium",
+            "source_type": "claude_code",
+            "status": "pending",
+            "step_id": "review",
+            "task_summary": "Review the patch."
+          },
+          "trace_id": "trace-4425c20152d94382a4cbed052d6fec7c"
+        },
+        "next_step_id": "review",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-83f39b07d692415bb7ef537593d3ce4d",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "require_approval",
+        "matched_rules": [
+          "review-claude-review"
+        ],
+        "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+        "winning_priority": 10,
+        "winning_rule_id": "review-claude-review"
+      },
+      "trace_id": "trace-4425c20152d94382a4cbed052d6fec7c"
+    },
+    "plan_id": "plan-policy-review",
+    "preview": {
+      "dependencies": [],
+      "required_capabilities": [
+        "review.code"
+      ],
+      "task_type": "code_review"
+    },
+    "proposed_action_summary": "Governed step review (Review) via Claude Reviewer",
+    "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+    "requested_at": "2026-04-19T20:14:15.942926Z",
+    "risk": "medium",
+    "source_type": "claude_code",
+    "status": "approved",
+    "step_id": "review",
+    "task_summary": "Review the patch."
+  },
+  "approval-9f83446e5a0245fab83f2f55e8966973": {
+    "agent_id": "workflow-agent",
+    "approval_id": "approval-9f83446e5a0245fab83f2f55e8966973",
+    "execution_kind": "workflow_engine",
+    "metadata": {
+      "approval_origin": "approval_policy",
+      "decision": {
+        "approval_id": "approval-9f83446e5a0245fab83f2f55e8966973",
+        "comment": null,
+        "decided_at": "2026-04-19T20:14:04.825204Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "matched_rules": [
+        "step_metadata_external_side_effect",
+        "high_risk_capability",
+        "workflow_engine_external_side_effect"
+      ],
+      "plan": {
+        "metadata": {},
+        "original_task": {
+          "task_type": "workflow_automation"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Trigger the external workflow.",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "workflow",
+              "external_side_effect": true,
+              "task_type": "workflow_automation"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "workflow.execute"
+            ],
+            "risk": "medium",
+            "step_id": "deploy",
+            "title": "Deploy"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-trace-approval"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "created_agent": null,
+            "policy_decision": {
+              "effect": "allow",
+              "matched_rules": [],
+              "reason": "no_policy_matched",
+              "winning_priority": null,
+              "winning_rule_id": null
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "allow_parallel_group": null,
+                "candidate_agent_ids": [
+                  "workflow-agent"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "inputs_from_steps": [],
+                "neural_policy_source": "deterministic_init",
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "workflow-agent",
+                  "capability_match_score": 1.0,
+                  "display_name": "Workflow Agent",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9979290911994466
+                },
+                "step_id": "deploy"
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "workflow-agent",
+                  "capability_match_score": 1.0,
+                  "display_name": "Workflow Agent",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9979290911994466
+                }
+              ],
+              "required_capabilities": [
+                "workflow.execute"
+              ],
+              "routing_confidence": 0.9979290911994466,
+              "score_gap": 0.0,
+              "selected_agent_id": "workflow-agent",
+              "selected_score": 0.9979290911994466,
+              "task_type": "workflow_automation"
+            },
+            "selected_agent": {
+              "agent_id": "workflow-agent",
+              "availability": "online",
+              "capabilities": [
+                "workflow.execute"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Workflow Agent",
+              "editable_in_flowise": false,
+              "execution_kind": "workflow_engine",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "n8n",
+              "trust_level": "sandboxed"
+            },
+            "step_index": 0,
+            "trace_id": "trace-991f41f12997411282172785dd4dc323"
+          },
+          "approval_request": {
+            "agent_id": "workflow-agent",
+            "approval_id": "approval-9f83446e5a0245fab83f2f55e8966973",
+            "execution_kind": "workflow_engine",
+            "metadata": {
+              "approval_origin": "approval_policy",
+              "matched_rules": [
+                "step_metadata_external_side_effect",
+                "high_risk_capability",
+                "workflow_engine_external_side_effect"
+              ],
+              "plan": {
+                "metadata": {},
+                "original_task": {
+                  "task_type": "workflow_automation"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Trigger the external workflow.",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "workflow",
+                      "external_side_effect": true,
+                      "task_type": "workflow_automation"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "workflow.execute"
+                    ],
+                    "risk": "medium",
+                    "step_id": "deploy",
+                    "title": "Deploy"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-trace-approval"
+              },
+              "policy_decision": {
+                "effect": "allow",
+                "matched_rules": [],
+                "reason": "no_policy_matched",
+                "winning_priority": null,
+                "winning_rule_id": null
+              },
+              "trace_id": "trace-991f41f12997411282172785dd4dc323"
+            },
+            "plan_id": "plan-trace-approval",
+            "preview": {
+              "dependencies": [],
+              "required_capabilities": [
+                "workflow.execute"
+              ],
+              "task_type": "workflow_automation"
+            },
+            "proposed_action_summary": "Step deploy (Deploy) via Workflow Agent with capabilities: workflow.execute",
+            "reason": "step_metadata_external_side_effect, high_risk_capability, workflow_engine_external_side_effect",
+            "requested_at": "2026-04-19T20:14:04.687480Z",
+            "risk": "medium",
+            "source_type": "n8n",
+            "status": "pending",
+            "step_id": "deploy",
+            "task_summary": "Trigger the external workflow."
+          },
+          "trace_id": "trace-991f41f12997411282172785dd4dc323"
+        },
+        "next_step_id": "deploy",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-9f83446e5a0245fab83f2f55e8966973",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "allow",
+        "matched_rules": [],
+        "reason": "no_policy_matched",
+        "winning_priority": null,
+        "winning_rule_id": null
+      },
+      "trace_id": "trace-991f41f12997411282172785dd4dc323"
+    },
+    "plan_id": "plan-trace-approval",
+    "preview": {
+      "dependencies": [],
+      "required_capabilities": [
+        "workflow.execute"
+      ],
+      "task_type": "workflow_automation"
+    },
+    "proposed_action_summary": "Step deploy (Deploy) via Workflow Agent with capabilities: workflow.execute",
+    "reason": "step_metadata_external_side_effect, high_risk_capability, workflow_engine_external_side_effect",
+    "requested_at": "2026-04-19T20:14:04.687480Z",
+    "risk": "medium",
+    "source_type": "n8n",
+    "status": "approved",
+    "step_id": "deploy",
+    "task_summary": "Trigger the external workflow."
+  },
   "approval-a5ffd6d9ea4742b0825836111f6de05e": {
     "agent_id": "workflow-agent",
     "approval_id": "approval-a5ffd6d9ea4742b0825836111f6de05e",
@@ -679,6 +3233,1186 @@
     "status": "approved",
     "step_id": "deploy",
     "task_summary": "Trigger the external workflow."
+  },
+  "approval-a75a6548e1e94f178e31d051f72f978c": {
+    "agent_id": "claude-reviewer",
+    "approval_id": "approval-a75a6548e1e94f178e31d051f72f978c",
+    "execution_kind": "local_process",
+    "metadata": {
+      "approval_origin": "governance",
+      "decision": {
+        "approval_id": "approval-a75a6548e1e94f178e31d051f72f978c",
+        "comment": null,
+        "decided_at": "2026-04-19T19:39:35.464701Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "plan": {
+        "metadata": {
+          "intent_domain": "code"
+        },
+        "original_task": {
+          "description": "Review the patch",
+          "task_type": "code_review"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Review the patch",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "code",
+              "governance_origin": true,
+              "requires_human_approval": true,
+              "task_type": "code_review"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "analysis.code",
+              "review.code"
+            ],
+            "risk": "medium",
+            "step_id": "execute",
+            "title": "Execute code_review"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-code_review"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "policy_decision": {
+              "effect": "require_approval",
+              "matched_rules": [
+                "review-claude-review"
+              ],
+              "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+              "winning_priority": 10,
+              "winning_rule_id": "review-claude-review"
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "candidate_agent_ids": [
+                  "claude-reviewer"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "neural_policy_source": "deterministic_init",
+                "planner": {
+                  "domain_fallback": false,
+                  "planner_version": "v1",
+                  "rule_applied": "code_review"
+                },
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9976898990033268
+                }
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9976898990033268
+                }
+              ],
+              "required_capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "routing_confidence": 0.9976898990033268,
+              "score_gap": 0.0,
+              "selected_agent_id": "claude-reviewer",
+              "selected_score": 0.9976898990033268,
+              "task_type": "code_review"
+            },
+            "selected_agent": {
+              "agent_id": "claude-reviewer",
+              "availability": "online",
+              "capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Claude Reviewer",
+              "editable_in_flowise": false,
+              "execution_kind": "local_process",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "claude_code",
+              "trust_level": "sandboxed"
+            },
+            "trace_id": "trace-3a63f73967434b7dab9a55cba0a13176"
+          },
+          "approval_request": {
+            "agent_id": "claude-reviewer",
+            "approval_id": "approval-a75a6548e1e94f178e31d051f72f978c",
+            "execution_kind": "local_process",
+            "metadata": {
+              "approval_origin": "governance",
+              "plan": {
+                "metadata": {
+                  "intent_domain": "code"
+                },
+                "original_task": {
+                  "description": "Review the patch",
+                  "task_type": "code_review"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Review the patch",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "code",
+                      "governance_origin": true,
+                      "requires_human_approval": true,
+                      "task_type": "code_review"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "analysis.code",
+                      "review.code"
+                    ],
+                    "risk": "medium",
+                    "step_id": "execute",
+                    "title": "Execute code_review"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-code_review"
+              },
+              "policy_decision": {
+                "effect": "require_approval",
+                "matched_rules": [
+                  "review-claude-review"
+                ],
+                "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+                "winning_priority": 10,
+                "winning_rule_id": "review-claude-review"
+              },
+              "trace_id": "trace-3a63f73967434b7dab9a55cba0a13176"
+            },
+            "plan_id": "plan-code_review",
+            "preview": {
+              "required_capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "task_type": "code_review"
+            },
+            "proposed_action_summary": "Single-step execution via Claude Reviewer",
+            "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+            "requested_at": "2026-04-19T19:39:35.440322Z",
+            "risk": "medium",
+            "source_type": "claude_code",
+            "status": "pending",
+            "step_id": "execute",
+            "task_summary": "Review the patch"
+          }
+        },
+        "next_step_id": "execute",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-a75a6548e1e94f178e31d051f72f978c",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "require_approval",
+        "matched_rules": [
+          "review-claude-review"
+        ],
+        "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+        "winning_priority": 10,
+        "winning_rule_id": "review-claude-review"
+      },
+      "trace_id": "trace-3a63f73967434b7dab9a55cba0a13176"
+    },
+    "plan_id": "plan-code_review",
+    "preview": {
+      "required_capabilities": [
+        "analysis.code",
+        "review.code"
+      ],
+      "task_type": "code_review"
+    },
+    "proposed_action_summary": "Single-step execution via Claude Reviewer",
+    "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+    "requested_at": "2026-04-19T19:39:35.440322Z",
+    "risk": "medium",
+    "source_type": "claude_code",
+    "status": "approved",
+    "step_id": "execute",
+    "task_summary": "Review the patch"
+  },
+  "approval-ae1187242a66483f96b6e8243aab85c4": {
+    "agent_id": "claude-reviewer",
+    "approval_id": "approval-ae1187242a66483f96b6e8243aab85c4",
+    "execution_kind": "local_process",
+    "metadata": {
+      "approval_origin": "governance",
+      "decision": {
+        "approval_id": "approval-ae1187242a66483f96b6e8243aab85c4",
+        "comment": null,
+        "decided_at": "2026-04-19T18:54:51.507499Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "plan": {
+        "metadata": {
+          "intent_domain": "code"
+        },
+        "original_task": {
+          "description": "Review the patch",
+          "task_type": "code_review"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Review the patch",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "code",
+              "governance_origin": true,
+              "requires_human_approval": true,
+              "task_type": "code_review"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "analysis.code",
+              "review.code"
+            ],
+            "risk": "medium",
+            "step_id": "execute",
+            "title": "Execute code_review"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-code_review"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "policy_decision": {
+              "effect": "require_approval",
+              "matched_rules": [
+                "review-claude-review"
+              ],
+              "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+              "winning_priority": 10,
+              "winning_rule_id": "review-claude-review"
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "candidate_agent_ids": [
+                  "claude-reviewer"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "neural_policy_source": "deterministic_init",
+                "planner": {
+                  "domain_fallback": false,
+                  "planner_version": "v1",
+                  "rule_applied": "code_review"
+                },
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9976898990033268
+                }
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9976898990033268
+                }
+              ],
+              "required_capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "routing_confidence": 0.9976898990033268,
+              "score_gap": 0.0,
+              "selected_agent_id": "claude-reviewer",
+              "selected_score": 0.9976898990033268,
+              "task_type": "code_review"
+            },
+            "selected_agent": {
+              "agent_id": "claude-reviewer",
+              "availability": "online",
+              "capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Claude Reviewer",
+              "editable_in_flowise": false,
+              "execution_kind": "local_process",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "claude_code",
+              "trust_level": "sandboxed"
+            },
+            "trace_id": "trace-88c60b1edf604a509e0253bc4cf635ff"
+          },
+          "approval_request": {
+            "agent_id": "claude-reviewer",
+            "approval_id": "approval-ae1187242a66483f96b6e8243aab85c4",
+            "execution_kind": "local_process",
+            "metadata": {
+              "approval_origin": "governance",
+              "plan": {
+                "metadata": {
+                  "intent_domain": "code"
+                },
+                "original_task": {
+                  "description": "Review the patch",
+                  "task_type": "code_review"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Review the patch",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "code",
+                      "governance_origin": true,
+                      "requires_human_approval": true,
+                      "task_type": "code_review"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "analysis.code",
+                      "review.code"
+                    ],
+                    "risk": "medium",
+                    "step_id": "execute",
+                    "title": "Execute code_review"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-code_review"
+              },
+              "policy_decision": {
+                "effect": "require_approval",
+                "matched_rules": [
+                  "review-claude-review"
+                ],
+                "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+                "winning_priority": 10,
+                "winning_rule_id": "review-claude-review"
+              },
+              "trace_id": "trace-88c60b1edf604a509e0253bc4cf635ff"
+            },
+            "plan_id": "plan-code_review",
+            "preview": {
+              "required_capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "task_type": "code_review"
+            },
+            "proposed_action_summary": "Single-step execution via Claude Reviewer",
+            "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+            "requested_at": "2026-04-19T18:54:51.475761Z",
+            "risk": "medium",
+            "source_type": "claude_code",
+            "status": "pending",
+            "step_id": "execute",
+            "task_summary": "Review the patch"
+          }
+        },
+        "next_step_id": "execute",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-ae1187242a66483f96b6e8243aab85c4",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "require_approval",
+        "matched_rules": [
+          "review-claude-review"
+        ],
+        "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+        "winning_priority": 10,
+        "winning_rule_id": "review-claude-review"
+      },
+      "trace_id": "trace-88c60b1edf604a509e0253bc4cf635ff"
+    },
+    "plan_id": "plan-code_review",
+    "preview": {
+      "required_capabilities": [
+        "analysis.code",
+        "review.code"
+      ],
+      "task_type": "code_review"
+    },
+    "proposed_action_summary": "Single-step execution via Claude Reviewer",
+    "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+    "requested_at": "2026-04-19T18:54:51.475761Z",
+    "risk": "medium",
+    "source_type": "claude_code",
+    "status": "approved",
+    "step_id": "execute",
+    "task_summary": "Review the patch"
+  },
+  "approval-bdc68269342a40549a4ad0f154ff1063": {
+    "agent_id": "claude-reviewer",
+    "approval_id": "approval-bdc68269342a40549a4ad0f154ff1063",
+    "execution_kind": "local_process",
+    "metadata": {
+      "approval_origin": "governance",
+      "decision": {
+        "approval_id": "approval-bdc68269342a40549a4ad0f154ff1063",
+        "comment": null,
+        "decided_at": "2026-04-19T19:40:44.133702Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "plan": {
+        "metadata": {
+          "intent_domain": "code"
+        },
+        "original_task": {
+          "description": "Review the patch",
+          "task_type": "code_review"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Review the patch",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "code",
+              "governance_origin": true,
+              "requires_human_approval": true,
+              "task_type": "code_review"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "analysis.code",
+              "review.code"
+            ],
+            "risk": "medium",
+            "step_id": "execute",
+            "title": "Execute code_review"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-code_review"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "policy_decision": {
+              "effect": "require_approval",
+              "matched_rules": [
+                "review-claude-review"
+              ],
+              "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+              "winning_priority": 10,
+              "winning_rule_id": "review-claude-review"
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "candidate_agent_ids": [
+                  "claude-reviewer"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "neural_policy_source": "deterministic_init",
+                "planner": {
+                  "domain_fallback": false,
+                  "planner_version": "v1",
+                  "rule_applied": "code_review"
+                },
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9976898990033268
+                }
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9976898990033268
+                }
+              ],
+              "required_capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "routing_confidence": 0.9976898990033268,
+              "score_gap": 0.0,
+              "selected_agent_id": "claude-reviewer",
+              "selected_score": 0.9976898990033268,
+              "task_type": "code_review"
+            },
+            "selected_agent": {
+              "agent_id": "claude-reviewer",
+              "availability": "online",
+              "capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Claude Reviewer",
+              "editable_in_flowise": false,
+              "execution_kind": "local_process",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "claude_code",
+              "trust_level": "sandboxed"
+            },
+            "trace_id": "trace-c20e7bcdcf6348728c3043f662b3b273"
+          },
+          "approval_request": {
+            "agent_id": "claude-reviewer",
+            "approval_id": "approval-bdc68269342a40549a4ad0f154ff1063",
+            "execution_kind": "local_process",
+            "metadata": {
+              "approval_origin": "governance",
+              "plan": {
+                "metadata": {
+                  "intent_domain": "code"
+                },
+                "original_task": {
+                  "description": "Review the patch",
+                  "task_type": "code_review"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Review the patch",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "code",
+                      "governance_origin": true,
+                      "requires_human_approval": true,
+                      "task_type": "code_review"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "analysis.code",
+                      "review.code"
+                    ],
+                    "risk": "medium",
+                    "step_id": "execute",
+                    "title": "Execute code_review"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-code_review"
+              },
+              "policy_decision": {
+                "effect": "require_approval",
+                "matched_rules": [
+                  "review-claude-review"
+                ],
+                "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+                "winning_priority": 10,
+                "winning_rule_id": "review-claude-review"
+              },
+              "trace_id": "trace-c20e7bcdcf6348728c3043f662b3b273"
+            },
+            "plan_id": "plan-code_review",
+            "preview": {
+              "required_capabilities": [
+                "analysis.code",
+                "review.code"
+              ],
+              "task_type": "code_review"
+            },
+            "proposed_action_summary": "Single-step execution via Claude Reviewer",
+            "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+            "requested_at": "2026-04-19T19:40:44.095466Z",
+            "risk": "medium",
+            "source_type": "claude_code",
+            "status": "pending",
+            "step_id": "execute",
+            "task_summary": "Review the patch"
+          }
+        },
+        "next_step_id": "execute",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-bdc68269342a40549a4ad0f154ff1063",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "require_approval",
+        "matched_rules": [
+          "review-claude-review"
+        ],
+        "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+        "winning_priority": 10,
+        "winning_rule_id": "review-claude-review"
+      },
+      "trace_id": "trace-c20e7bcdcf6348728c3043f662b3b273"
+    },
+    "plan_id": "plan-code_review",
+    "preview": {
+      "required_capabilities": [
+        "analysis.code",
+        "review.code"
+      ],
+      "task_type": "code_review"
+    },
+    "proposed_action_summary": "Single-step execution via Claude Reviewer",
+    "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+    "requested_at": "2026-04-19T19:40:44.095466Z",
+    "risk": "medium",
+    "source_type": "claude_code",
+    "status": "approved",
+    "step_id": "execute",
+    "task_summary": "Review the patch"
+  },
+  "approval-c06b1bc2f0b547c5a4190b401b3be5bd": {
+    "agent_id": "workflow-agent",
+    "approval_id": "approval-c06b1bc2f0b547c5a4190b401b3be5bd",
+    "execution_kind": "workflow_engine",
+    "metadata": {
+      "approval_origin": "approval_policy",
+      "decision": {
+        "approval_id": "approval-c06b1bc2f0b547c5a4190b401b3be5bd",
+        "comment": null,
+        "decided_at": "2026-04-19T18:54:42.438345Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "matched_rules": [
+        "step_metadata_external_side_effect",
+        "high_risk_capability",
+        "workflow_engine_external_side_effect"
+      ],
+      "plan": {
+        "metadata": {},
+        "original_task": {
+          "task_type": "workflow_automation"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Trigger the external workflow.",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "workflow",
+              "external_side_effect": true,
+              "task_type": "workflow_automation"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "workflow.execute"
+            ],
+            "risk": "medium",
+            "step_id": "deploy",
+            "title": "Deploy"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-trace-approval"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "created_agent": null,
+            "policy_decision": {
+              "effect": "allow",
+              "matched_rules": [],
+              "reason": "no_policy_matched",
+              "winning_priority": null,
+              "winning_rule_id": null
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "allow_parallel_group": null,
+                "candidate_agent_ids": [
+                  "workflow-agent"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "inputs_from_steps": [],
+                "neural_policy_source": "deterministic_init",
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "workflow-agent",
+                  "capability_match_score": 1.0,
+                  "display_name": "Workflow Agent",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9979290911994466
+                },
+                "step_id": "deploy"
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "workflow-agent",
+                  "capability_match_score": 1.0,
+                  "display_name": "Workflow Agent",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9979290911994466
+                }
+              ],
+              "required_capabilities": [
+                "workflow.execute"
+              ],
+              "routing_confidence": 0.9979290911994466,
+              "score_gap": 0.0,
+              "selected_agent_id": "workflow-agent",
+              "selected_score": 0.9979290911994466,
+              "task_type": "workflow_automation"
+            },
+            "selected_agent": {
+              "agent_id": "workflow-agent",
+              "availability": "online",
+              "capabilities": [
+                "workflow.execute"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Workflow Agent",
+              "editable_in_flowise": false,
+              "execution_kind": "workflow_engine",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "n8n",
+              "trust_level": "sandboxed"
+            },
+            "step_index": 0,
+            "trace_id": "trace-53816d0b30514888b657bd0d0881f55a"
+          },
+          "approval_request": {
+            "agent_id": "workflow-agent",
+            "approval_id": "approval-c06b1bc2f0b547c5a4190b401b3be5bd",
+            "execution_kind": "workflow_engine",
+            "metadata": {
+              "approval_origin": "approval_policy",
+              "matched_rules": [
+                "step_metadata_external_side_effect",
+                "high_risk_capability",
+                "workflow_engine_external_side_effect"
+              ],
+              "plan": {
+                "metadata": {},
+                "original_task": {
+                  "task_type": "workflow_automation"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Trigger the external workflow.",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "workflow",
+                      "external_side_effect": true,
+                      "task_type": "workflow_automation"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "workflow.execute"
+                    ],
+                    "risk": "medium",
+                    "step_id": "deploy",
+                    "title": "Deploy"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-trace-approval"
+              },
+              "policy_decision": {
+                "effect": "allow",
+                "matched_rules": [],
+                "reason": "no_policy_matched",
+                "winning_priority": null,
+                "winning_rule_id": null
+              },
+              "trace_id": "trace-53816d0b30514888b657bd0d0881f55a"
+            },
+            "plan_id": "plan-trace-approval",
+            "preview": {
+              "dependencies": [],
+              "required_capabilities": [
+                "workflow.execute"
+              ],
+              "task_type": "workflow_automation"
+            },
+            "proposed_action_summary": "Step deploy (Deploy) via Workflow Agent with capabilities: workflow.execute",
+            "reason": "step_metadata_external_side_effect, high_risk_capability, workflow_engine_external_side_effect",
+            "requested_at": "2026-04-19T18:54:42.351992Z",
+            "risk": "medium",
+            "source_type": "n8n",
+            "status": "pending",
+            "step_id": "deploy",
+            "task_summary": "Trigger the external workflow."
+          },
+          "trace_id": "trace-53816d0b30514888b657bd0d0881f55a"
+        },
+        "next_step_id": "deploy",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-c06b1bc2f0b547c5a4190b401b3be5bd",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "allow",
+        "matched_rules": [],
+        "reason": "no_policy_matched",
+        "winning_priority": null,
+        "winning_rule_id": null
+      },
+      "trace_id": "trace-53816d0b30514888b657bd0d0881f55a"
+    },
+    "plan_id": "plan-trace-approval",
+    "preview": {
+      "dependencies": [],
+      "required_capabilities": [
+        "workflow.execute"
+      ],
+      "task_type": "workflow_automation"
+    },
+    "proposed_action_summary": "Step deploy (Deploy) via Workflow Agent with capabilities: workflow.execute",
+    "reason": "step_metadata_external_side_effect, high_risk_capability, workflow_engine_external_side_effect",
+    "requested_at": "2026-04-19T18:54:42.351992Z",
+    "risk": "medium",
+    "source_type": "n8n",
+    "status": "approved",
+    "step_id": "deploy",
+    "task_summary": "Trigger the external workflow."
+  },
+  "approval-c373294561b344179a0da713c73deab2": {
+    "agent_id": "claude-reviewer",
+    "approval_id": "approval-c373294561b344179a0da713c73deab2",
+    "execution_kind": "local_process",
+    "metadata": {
+      "approval_origin": "governance",
+      "decision": {
+        "approval_id": "approval-c373294561b344179a0da713c73deab2",
+        "comment": null,
+        "decided_at": "2026-04-19T18:54:51.812682Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "plan": {
+        "metadata": {},
+        "original_task": {
+          "task_type": "code_review"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Review the patch.",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "code",
+              "task_type": "code_review"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "review.code"
+            ],
+            "risk": "medium",
+            "step_id": "review",
+            "title": "Review"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-policy-review"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "created_agent": null,
+            "policy_decision": {
+              "effect": "require_approval",
+              "matched_rules": [
+                "review-claude-review"
+              ],
+              "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+              "winning_priority": 10,
+              "winning_rule_id": "review-claude-review"
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "allow_parallel_group": null,
+                "candidate_agent_ids": [
+                  "claude-reviewer"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "inputs_from_steps": [],
+                "neural_policy_source": "deterministic_init",
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9977126661222363
+                },
+                "step_id": "review"
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "claude-reviewer",
+                  "capability_match_score": 1.0,
+                  "display_name": "Claude Reviewer",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9977126661222363
+                }
+              ],
+              "required_capabilities": [
+                "review.code"
+              ],
+              "routing_confidence": 0.9977126661222363,
+              "score_gap": 0.0,
+              "selected_agent_id": "claude-reviewer",
+              "selected_score": 0.9977126661222363,
+              "task_type": "code_review"
+            },
+            "selected_agent": {
+              "agent_id": "claude-reviewer",
+              "availability": "online",
+              "capabilities": [
+                "review.code"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Claude Reviewer",
+              "editable_in_flowise": false,
+              "execution_kind": "local_process",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "claude_code",
+              "trust_level": "sandboxed"
+            },
+            "step_index": 0,
+            "trace_id": "trace-4b2174bebec047c0b681f8ff8ffd0b4c"
+          },
+          "approval_request": {
+            "agent_id": "claude-reviewer",
+            "approval_id": "approval-c373294561b344179a0da713c73deab2",
+            "execution_kind": "local_process",
+            "metadata": {
+              "approval_origin": "governance",
+              "plan": {
+                "metadata": {},
+                "original_task": {
+                  "task_type": "code_review"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Review the patch.",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "code",
+                      "task_type": "code_review"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "review.code"
+                    ],
+                    "risk": "medium",
+                    "step_id": "review",
+                    "title": "Review"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-policy-review"
+              },
+              "policy_decision": {
+                "effect": "require_approval",
+                "matched_rules": [
+                  "review-claude-review"
+                ],
+                "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+                "winning_priority": 10,
+                "winning_rule_id": "review-claude-review"
+              },
+              "trace_id": "trace-4b2174bebec047c0b681f8ff8ffd0b4c"
+            },
+            "plan_id": "plan-policy-review",
+            "preview": {
+              "dependencies": [],
+              "required_capabilities": [
+                "review.code"
+              ],
+              "task_type": "code_review"
+            },
+            "proposed_action_summary": "Governed step review (Review) via Claude Reviewer",
+            "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+            "requested_at": "2026-04-19T18:54:51.725318Z",
+            "risk": "medium",
+            "source_type": "claude_code",
+            "status": "pending",
+            "step_id": "review",
+            "task_summary": "Review the patch."
+          },
+          "trace_id": "trace-4b2174bebec047c0b681f8ff8ffd0b4c"
+        },
+        "next_step_id": "review",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-c373294561b344179a0da713c73deab2",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "require_approval",
+        "matched_rules": [
+          "review-claude-review"
+        ],
+        "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+        "winning_priority": 10,
+        "winning_rule_id": "review-claude-review"
+      },
+      "trace_id": "trace-4b2174bebec047c0b681f8ff8ffd0b4c"
+    },
+    "plan_id": "plan-policy-review",
+    "preview": {
+      "dependencies": [],
+      "required_capabilities": [
+        "review.code"
+      ],
+      "task_type": "code_review"
+    },
+    "proposed_action_summary": "Governed step review (Review) via Claude Reviewer",
+    "reason": "review-claude-review: Require approval for Claude review steps. for Claude Reviewer",
+    "requested_at": "2026-04-19T18:54:51.725318Z",
+    "risk": "medium",
+    "source_type": "claude_code",
+    "status": "approved",
+    "step_id": "review",
+    "task_summary": "Review the patch."
   },
   "approval-e582d6c51c2f4102a1257f1d13a515c9": {
     "agent_id": "claude-reviewer",
@@ -915,6 +4649,472 @@
     "status": "approved",
     "step_id": "execute",
     "task_summary": "Review the patch"
+  },
+  "approval-e997ea815b27420492767285b3d5814a": {
+    "agent_id": "workflow-agent",
+    "approval_id": "approval-e997ea815b27420492767285b3d5814a",
+    "execution_kind": "workflow_engine",
+    "metadata": {
+      "approval_origin": "approval_policy",
+      "decision": {
+        "approval_id": "approval-e997ea815b27420492767285b3d5814a",
+        "comment": null,
+        "decided_at": "2026-04-19T19:40:34.539697Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "matched_rules": [
+        "step_metadata_external_side_effect",
+        "high_risk_capability",
+        "workflow_engine_external_side_effect"
+      ],
+      "plan": {
+        "metadata": {},
+        "original_task": {
+          "task_type": "workflow_automation"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Trigger the external workflow.",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "workflow",
+              "external_side_effect": true,
+              "task_type": "workflow_automation"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "workflow.execute"
+            ],
+            "risk": "medium",
+            "step_id": "deploy",
+            "title": "Deploy"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-trace-approval"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "created_agent": null,
+            "policy_decision": {
+              "effect": "allow",
+              "matched_rules": [],
+              "reason": "no_policy_matched",
+              "winning_priority": null,
+              "winning_rule_id": null
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "allow_parallel_group": null,
+                "candidate_agent_ids": [
+                  "workflow-agent"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "inputs_from_steps": [],
+                "neural_policy_source": "deterministic_init",
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "workflow-agent",
+                  "capability_match_score": 1.0,
+                  "display_name": "Workflow Agent",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9979290911994466
+                },
+                "step_id": "deploy"
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "workflow-agent",
+                  "capability_match_score": 1.0,
+                  "display_name": "Workflow Agent",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9979290911994466
+                }
+              ],
+              "required_capabilities": [
+                "workflow.execute"
+              ],
+              "routing_confidence": 0.9979290911994466,
+              "score_gap": 0.0,
+              "selected_agent_id": "workflow-agent",
+              "selected_score": 0.9979290911994466,
+              "task_type": "workflow_automation"
+            },
+            "selected_agent": {
+              "agent_id": "workflow-agent",
+              "availability": "online",
+              "capabilities": [
+                "workflow.execute"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Workflow Agent",
+              "editable_in_flowise": false,
+              "execution_kind": "workflow_engine",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "n8n",
+              "trust_level": "sandboxed"
+            },
+            "step_index": 0,
+            "trace_id": "trace-7f23bd77e2414a85b21566d4594eb392"
+          },
+          "approval_request": {
+            "agent_id": "workflow-agent",
+            "approval_id": "approval-e997ea815b27420492767285b3d5814a",
+            "execution_kind": "workflow_engine",
+            "metadata": {
+              "approval_origin": "approval_policy",
+              "matched_rules": [
+                "step_metadata_external_side_effect",
+                "high_risk_capability",
+                "workflow_engine_external_side_effect"
+              ],
+              "plan": {
+                "metadata": {},
+                "original_task": {
+                  "task_type": "workflow_automation"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Trigger the external workflow.",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "workflow",
+                      "external_side_effect": true,
+                      "task_type": "workflow_automation"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "workflow.execute"
+                    ],
+                    "risk": "medium",
+                    "step_id": "deploy",
+                    "title": "Deploy"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-trace-approval"
+              },
+              "policy_decision": {
+                "effect": "allow",
+                "matched_rules": [],
+                "reason": "no_policy_matched",
+                "winning_priority": null,
+                "winning_rule_id": null
+              },
+              "trace_id": "trace-7f23bd77e2414a85b21566d4594eb392"
+            },
+            "plan_id": "plan-trace-approval",
+            "preview": {
+              "dependencies": [],
+              "required_capabilities": [
+                "workflow.execute"
+              ],
+              "task_type": "workflow_automation"
+            },
+            "proposed_action_summary": "Step deploy (Deploy) via Workflow Agent with capabilities: workflow.execute",
+            "reason": "step_metadata_external_side_effect, high_risk_capability, workflow_engine_external_side_effect",
+            "requested_at": "2026-04-19T19:40:34.462549Z",
+            "risk": "medium",
+            "source_type": "n8n",
+            "status": "pending",
+            "step_id": "deploy",
+            "task_summary": "Trigger the external workflow."
+          },
+          "trace_id": "trace-7f23bd77e2414a85b21566d4594eb392"
+        },
+        "next_step_id": "deploy",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-e997ea815b27420492767285b3d5814a",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "allow",
+        "matched_rules": [],
+        "reason": "no_policy_matched",
+        "winning_priority": null,
+        "winning_rule_id": null
+      },
+      "trace_id": "trace-7f23bd77e2414a85b21566d4594eb392"
+    },
+    "plan_id": "plan-trace-approval",
+    "preview": {
+      "dependencies": [],
+      "required_capabilities": [
+        "workflow.execute"
+      ],
+      "task_type": "workflow_automation"
+    },
+    "proposed_action_summary": "Step deploy (Deploy) via Workflow Agent with capabilities: workflow.execute",
+    "reason": "step_metadata_external_side_effect, high_risk_capability, workflow_engine_external_side_effect",
+    "requested_at": "2026-04-19T19:40:34.462549Z",
+    "risk": "medium",
+    "source_type": "n8n",
+    "status": "approved",
+    "step_id": "deploy",
+    "task_summary": "Trigger the external workflow."
+  },
+  "approval-ea7e71e79d9c40f29bb7098813c77b32": {
+    "agent_id": "workflow-agent",
+    "approval_id": "approval-ea7e71e79d9c40f29bb7098813c77b32",
+    "execution_kind": "workflow_engine",
+    "metadata": {
+      "approval_origin": "approval_policy",
+      "decision": {
+        "approval_id": "approval-ea7e71e79d9c40f29bb7098813c77b32",
+        "comment": null,
+        "decided_at": "2026-04-19T19:32:24.003046Z",
+        "decided_by": "human",
+        "decision": "approved",
+        "metadata": {},
+        "rating": null
+      },
+      "matched_rules": [
+        "step_metadata_external_side_effect",
+        "high_risk_capability",
+        "workflow_engine_external_side_effect"
+      ],
+      "plan": {
+        "metadata": {},
+        "original_task": {
+          "task_type": "workflow_automation"
+        },
+        "steps": [
+          {
+            "allow_parallel_group": null,
+            "description": "Trigger the external workflow.",
+            "inputs_from_steps": [],
+            "metadata": {
+              "domain": "workflow",
+              "external_side_effect": true,
+              "task_type": "workflow_automation"
+            },
+            "preferred_execution_kinds": [],
+            "preferred_source_types": [],
+            "required_capabilities": [
+              "workflow.execute"
+            ],
+            "risk": "medium",
+            "step_id": "deploy",
+            "title": "Deploy"
+          }
+        ],
+        "strategy": "single",
+        "task_id": "plan-trace-approval"
+      },
+      "plan_state": {
+        "metadata": {
+          "approval_context": {
+            "created_agent": null,
+            "policy_decision": {
+              "effect": "allow",
+              "matched_rules": [],
+              "reason": "no_policy_matched",
+              "winning_priority": null,
+              "winning_rule_id": null
+            },
+            "routing_decision": {
+              "confidence_band": "high",
+              "diagnostics": {
+                "allow_parallel_group": null,
+                "candidate_agent_ids": [
+                  "workflow-agent"
+                ],
+                "candidate_filter": {
+                  "candidate_count": 1,
+                  "rejected_count": 0
+                },
+                "inputs_from_steps": [],
+                "neural_policy_source": "deterministic_init",
+                "rejected_agents": [],
+                "selected_candidate": {
+                  "agent_id": "workflow-agent",
+                  "capability_match_score": 1.0,
+                  "display_name": "Workflow Agent",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9979290911994466
+                },
+                "step_id": "deploy"
+              },
+              "ranked_candidates": [
+                {
+                  "agent_id": "workflow-agent",
+                  "capability_match_score": 1.0,
+                  "display_name": "Workflow Agent",
+                  "feature_summary": {
+                    "availability": 0.3333333333333333,
+                    "avg_cost": 1.0,
+                    "avg_latency": 0.9,
+                    "capability_match_score": 1.0,
+                    "success_rate": 0.5,
+                    "trust_level": 0.3333333333333333
+                  },
+                  "model_source": "deterministic_init",
+                  "score": 0.9979290911994466
+                }
+              ],
+              "required_capabilities": [
+                "workflow.execute"
+              ],
+              "routing_confidence": 0.9979290911994466,
+              "score_gap": 0.0,
+              "selected_agent_id": "workflow-agent",
+              "selected_score": 0.9979290911994466,
+              "task_type": "workflow_automation"
+            },
+            "selected_agent": {
+              "agent_id": "workflow-agent",
+              "availability": "online",
+              "capabilities": [
+                "workflow.execute"
+              ],
+              "cost_profile": "unknown",
+              "display_name": "Workflow Agent",
+              "editable_in_flowise": false,
+              "execution_kind": "workflow_engine",
+              "latency_profile": "unknown",
+              "metadata": {},
+              "source_type": "n8n",
+              "trust_level": "sandboxed"
+            },
+            "step_index": 0,
+            "trace_id": "trace-f710a35619dd48638dd62b29519d9dfd"
+          },
+          "approval_request": {
+            "agent_id": "workflow-agent",
+            "approval_id": "approval-ea7e71e79d9c40f29bb7098813c77b32",
+            "execution_kind": "workflow_engine",
+            "metadata": {
+              "approval_origin": "approval_policy",
+              "matched_rules": [
+                "step_metadata_external_side_effect",
+                "high_risk_capability",
+                "workflow_engine_external_side_effect"
+              ],
+              "plan": {
+                "metadata": {},
+                "original_task": {
+                  "task_type": "workflow_automation"
+                },
+                "steps": [
+                  {
+                    "allow_parallel_group": null,
+                    "description": "Trigger the external workflow.",
+                    "inputs_from_steps": [],
+                    "metadata": {
+                      "domain": "workflow",
+                      "external_side_effect": true,
+                      "task_type": "workflow_automation"
+                    },
+                    "preferred_execution_kinds": [],
+                    "preferred_source_types": [],
+                    "required_capabilities": [
+                      "workflow.execute"
+                    ],
+                    "risk": "medium",
+                    "step_id": "deploy",
+                    "title": "Deploy"
+                  }
+                ],
+                "strategy": "single",
+                "task_id": "plan-trace-approval"
+              },
+              "policy_decision": {
+                "effect": "allow",
+                "matched_rules": [],
+                "reason": "no_policy_matched",
+                "winning_priority": null,
+                "winning_rule_id": null
+              },
+              "trace_id": "trace-f710a35619dd48638dd62b29519d9dfd"
+            },
+            "plan_id": "plan-trace-approval",
+            "preview": {
+              "dependencies": [],
+              "required_capabilities": [
+                "workflow.execute"
+              ],
+              "task_type": "workflow_automation"
+            },
+            "proposed_action_summary": "Step deploy (Deploy) via Workflow Agent with capabilities: workflow.execute",
+            "reason": "step_metadata_external_side_effect, high_risk_capability, workflow_engine_external_side_effect",
+            "requested_at": "2026-04-19T19:32:23.943097Z",
+            "risk": "medium",
+            "source_type": "n8n",
+            "status": "pending",
+            "step_id": "deploy",
+            "task_summary": "Trigger the external workflow."
+          },
+          "trace_id": "trace-f710a35619dd48638dd62b29519d9dfd"
+        },
+        "next_step_id": "deploy",
+        "next_step_index": 0,
+        "pending_approval_id": "approval-ea7e71e79d9c40f29bb7098813c77b32",
+        "status": "paused",
+        "step_results": []
+      },
+      "policy_decision": {
+        "effect": "allow",
+        "matched_rules": [],
+        "reason": "no_policy_matched",
+        "winning_priority": null,
+        "winning_rule_id": null
+      },
+      "trace_id": "trace-f710a35619dd48638dd62b29519d9dfd"
+    },
+    "plan_id": "plan-trace-approval",
+    "preview": {
+      "dependencies": [],
+      "required_capabilities": [
+        "workflow.execute"
+      ],
+      "task_type": "workflow_automation"
+    },
+    "proposed_action_summary": "Step deploy (Deploy) via Workflow Agent with capabilities: workflow.execute",
+    "reason": "step_metadata_external_side_effect, high_risk_capability, workflow_engine_external_side_effect",
+    "requested_at": "2026-04-19T19:32:23.943097Z",
+    "risk": "medium",
+    "source_type": "n8n",
+    "status": "approved",
+    "step_id": "deploy",
+    "task_summary": "Trigger the external workflow."
   },
   "approval-ed0ce8b30ab24591b5072526e8a03cb7": {
     "agent_id": "claude-reviewer",
