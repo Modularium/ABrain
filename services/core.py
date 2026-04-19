@@ -2674,3 +2674,102 @@ def get_agent_performance_report(
         agent_ids=agent_ids,
     )
     return report.model_dump(mode="json")
+
+
+# ---------------------------------------------------------------------------
+# ABrain V2 — LabOS Domain Reasoning
+# ---------------------------------------------------------------------------
+# Thin service-layer entry points for the deterministic LabOS
+# reasoning use cases in :mod:`core.reasoning.labos`.  Each function
+# accepts a raw context dict (what the caller pulled from LabOS MCP),
+# validates it into :class:`LabOsContext`, runs the matching
+# reasoner, and returns the Response Shape V2 as a plain dict.
+#
+# Invalid payloads produce ``{"error": "invalid_context", "detail":
+# "..."}`` envelopes so CLI / HTTP / MCP surfaces can all forward the
+# validation message uniformly — same pattern as
+# :func:`get_routing_models`.
+
+_LABOS_REASONING_MODES = (
+    "reactor_daily_overview",
+    "incident_review",
+    "maintenance_suggestions",
+    "schedule_runtime_review",
+    "cross_domain_overview",
+)
+
+
+def _run_labos_reasoner(mode: str, context: Dict[str, Any] | None) -> Dict[str, Any]:
+    """Shared dispatcher for the five LabOS reasoning use cases."""
+    from pydantic import ValidationError
+
+    from core.reasoning.labos import (
+        LabOsContext,
+        cross_domain_overview,
+        incident_review,
+        maintenance_suggestions,
+        reactor_daily_overview,
+        schedule_runtime_review,
+    )
+
+    reasoners = {
+        "reactor_daily_overview": reactor_daily_overview,
+        "incident_review": incident_review,
+        "maintenance_suggestions": maintenance_suggestions,
+        "schedule_runtime_review": schedule_runtime_review,
+        "cross_domain_overview": cross_domain_overview,
+    }
+    if mode not in reasoners:
+        return {
+            "error": "invalid_reasoning_mode",
+            "detail": (
+                f"Unknown LabOS reasoning mode '{mode}'. "
+                f"Valid: {', '.join(_LABOS_REASONING_MODES)}"
+            ),
+        }
+
+    try:
+        parsed = LabOsContext.model_validate(context or {})
+    except ValidationError as exc:
+        return {
+            "error": "invalid_context",
+            "detail": exc.errors(include_input=False, include_url=False),
+        }
+
+    response = reasoners[mode](parsed)
+    return response.model_dump(mode="json")
+
+
+def get_labos_reactor_daily_overview(
+    context: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    """Which reactors need attention today, which are nominal."""
+    return _run_labos_reasoner("reactor_daily_overview", context)
+
+
+def get_labos_incident_review(
+    context: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    """Prioritised review of open/critical LabOS incidents."""
+    return _run_labos_reasoner("incident_review", context)
+
+
+def get_labos_maintenance_suggestions(
+    context: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    """Overdue/due maintenance items and allowed follow-up actions."""
+    return _run_labos_reasoner("maintenance_suggestions", context)
+
+
+def get_labos_schedule_runtime_review(
+    context: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    """Schedules and commands that are failing or blocked."""
+    return _run_labos_reasoner("schedule_runtime_review", context)
+
+
+def get_labos_cross_domain_overview(
+    context: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    """Combined reactor + incident + maintenance + schedule focus list."""
+    return _run_labos_reasoner("cross_domain_overview", context)

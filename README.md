@@ -138,6 +138,51 @@ into:
 
 ---
 
+## 🧠 ABrain V2 — Domain Reasoning for external systems
+
+ABrain V2 adds a deterministic **domain-reasoning layer** that interprets
+external-system context (starting with **LabOS**) and emits structured,
+governance-aware recommendations — without ever executing anything itself.
+
+The reasoner is **input-driven**: the caller (e.g. Smolit-AI-Assistant)
+pulls a snapshot from LabOS MCP, hands it to ABrain, and receives a
+Response Shape V2 it can render. ABrain does **not** call LabOS,
+does **not** invent tool names, and **respects** the LabOS action
+catalogue, approval flags and safety context.
+
+**Canonical boundary:**
+
+```
+Smolit-AI-Assistant → ABrain (Domain Reasoning) → LabOS MCP → LabOS API/DB
+```
+
+**Use cases supported (V1):**
+
+- `labos_reactor_daily_overview` — reactor focus list (attention vs. nominal)
+- `labos_incident_review` — prioritised open-incident review
+- `labos_maintenance_suggestions` — overdue/due calibration + maintenance
+- `labos_schedule_runtime_review` — failing / blocked schedules and commands
+- `labos_cross_domain_overview` — combined operator focus list
+
+**Invariants enforced by the reasoner (pinned by tests):**
+
+1. `no_invented_actions` — actions missing from the supplied
+   `action_catalog` surface as `DeferredAction`, never as
+   `RecommendedAction`.
+2. `respects_approval` — `requires_approval=True` entries route into
+   `approval_required_actions`, never `recommended_actions`.
+3. `respects_safety_context` — targets with a safety alert or an
+   offline reactor defer their actions (except explicitly opt-in
+   diagnostic intents like `open_reactor_detail`).
+
+**Entry points** live on `services/core.py` as
+`get_labos_<usecase>(context)` and are thin delegates of
+`core/reasoning/labos/usecases.py`. See
+[`docs/reviews/phase_v2_labos_reasoning_review.md`](docs/reviews/phase_v2_labos_reasoning_review.md)
+for the full design note.
+
+---
+
 ## 🏗️ Architecture (simplified)
 
 ```mermaid
