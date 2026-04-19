@@ -1,9 +1,10 @@
 # Roadmap
 
-Diese Datei enthält die ausführliche Aufgabenliste. Eine kompakte Übersicht
-steht in `docs/roadmap.md`. Historische Entwürfe finden sich in `Roadmap.md`.
+Diese Datei enthält die ausführliche historische Aufgabenliste. Die aktuelle
+konsolidierte Roadmap steht in `docs/ROADMAP_consolidated.md`. Historische
+Planungsentwürfe finden sich zusätzlich in `Roadmap.md`.
 
-> Status: Historische Arbeits- und Planungsliste. Für den aktuellen gehärteten Stand von ABrain sind `README.md`, `docs/architecture/PROJECT_OVERVIEW.md` und die Review-Dokumente unter `docs/reviews/` maßgeblich.
+> Status: Historische Arbeits- und Planungsliste. Für den aktuellen gehärteten Stand von ABrain sind `docs/ROADMAP_consolidated.md`, `README.md`, `docs/architecture/PROJECT_OVERVIEW.md` und die Review-Dokumente unter `docs/reviews/` maßgeblich.
 
 # TODO-Liste für ABrain Entwicklungsplan
 

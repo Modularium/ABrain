@@ -1,7 +1,7 @@
 Prompt:
-This document contains historic planning notes. The current roadmap is
-maintained in `docs/roadmap.md` with the detailed checklist in
-`ROADMAP.md`.
+This document contains historic planning notes. The canonical roadmap is
+maintained in `docs/ROADMAP_consolidated.md`. The detailed historical
+task list lives in `ROADMAP.md`.
 It is not the canonical status document for the current hardened ABrain branch.
 Thoroughly analyze the GitHub repository EcoSphereNetwork/ABrain. Clone the repository and use the roadmap.md as a step-by-step guide to develop the application. Ensure precise and systematic implementation of each step outlined in the roadmap, aligning with the project's objectives.
 Maintain a detailed record of all changes made during the development process.

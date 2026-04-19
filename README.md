@@ -290,11 +290,14 @@ We welcome contributions — but:
 
 ## 🛣 Roadmap
 
-* [ ] Persistent execution state
-* [ ] Distributed agents
-* [ ] Advanced governance engine
-* [ ] UI for approvals & traces
-* [ ] Plugin system (controlled)
+The canonical, phased roadmap lives in
+[`docs/ROADMAP_consolidated.md`](docs/ROADMAP_consolidated.md). It bundles
+Phase 0 (consolidation), Phase 1 (evaluability), Phase 2 (controlled
+extensibility), Phase 3 (retrieval), Phase 4 (system-level MoE), Phase 5
+(LearningOps), Phase 6 (Brain v1), and Phase 7 (advanced brain).
+
+Historical planning notes are kept in [`ROADMAP.md`](ROADMAP.md) and
+[`Roadmap.md`](Roadmap.md) for archival reference only.
 
 ---
 
