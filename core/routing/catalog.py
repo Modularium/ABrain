@@ -26,6 +26,13 @@ Governance notes
 ----------------
 *   All LOCAL entries declare ``cost_per_1k_tokens=None`` (zero API cost) as
     required by the LOCAL-tier invariant in ``ModelDescriptor``.
+*   All LOCAL entries declare a ``QuantizationProfile`` describing the typical
+    Ollama/llama.cpp GGUF Q4_K_M build, including the unquantized baseline
+    ``model_id``.  ``quality_delta_vs_baseline`` is intentionally unset —
+    operators who have run an eval should re-register with a measured value.
+    The declaration alone is enough to silence the registry's
+    under-documented-lineage advisory and to populate
+    ``abrain routing models`` with real provenance for default deployments.
 *   Latency figures are observed p95 estimates; operators should update them
     via ``registry.deregister`` + re-registration with measured values.
 *   The catalog is purely advisory — it does not auto-register anything.
@@ -35,7 +42,14 @@ Governance notes
 
 from __future__ import annotations
 
-from .models import ModelDescriptor, ModelProvider, ModelPurpose, ModelTier
+from .models import (
+    ModelDescriptor,
+    ModelProvider,
+    ModelPurpose,
+    ModelTier,
+    QuantizationMethod,
+    QuantizationProfile,
+)
 from .registry import ModelRegistry
 
 # ---------------------------------------------------------------------------
@@ -56,6 +70,17 @@ _LOCAL: list[ModelDescriptor] = [
         supports_tool_use=False,
         supports_structured_output=False,
         is_available=False,
+        quantization=QuantizationProfile(
+            method=QuantizationMethod.GGUF_Q4_K_M,
+            bits=4,
+            baseline_model_id="llama-3.2-1b",
+            notes=(
+                "Default Ollama/llama.cpp GGUF Q4_K_M build.  Baseline is the "
+                "unquantized FP16 variant from Meta.  Quality delta unset — "
+                "operators who have run an eval should re-register with a "
+                "measured quality_delta_vs_baseline."
+            ),
+        ),
         notes=(
             "1B parameter Llama model.  Fast on-device classification and "
             "guardrail evaluation.  Not recommended for multi-step planning."
@@ -76,6 +101,17 @@ _LOCAL: list[ModelDescriptor] = [
         supports_tool_use=False,
         supports_structured_output=True,
         is_available=False,
+        quantization=QuantizationProfile(
+            method=QuantizationMethod.GGUF_Q4_K_M,
+            bits=4,
+            baseline_model_id="llama-3.2-3b",
+            notes=(
+                "Default Ollama/llama.cpp GGUF Q4_K_M build.  Baseline is the "
+                "unquantized FP16 variant from Meta.  Quality delta unset — "
+                "operators who have run an eval should re-register with a "
+                "measured quality_delta_vs_baseline."
+            ),
+        ),
         notes=(
             "3B parameter Llama model.  Good balance of local speed and quality "
             "for classification, ranking, and guardrail checks."
@@ -92,6 +128,17 @@ _LOCAL: list[ModelDescriptor] = [
         supports_tool_use=False,
         supports_structured_output=True,
         is_available=False,
+        quantization=QuantizationProfile(
+            method=QuantizationMethod.GGUF_Q4_K_M,
+            bits=4,
+            baseline_model_id="phi-3-mini-4k-instruct",
+            notes=(
+                "Default Ollama/llama.cpp GGUF Q4_K_M build.  Baseline is the "
+                "unquantized FP16 variant from Microsoft.  Quality delta unset "
+                "— operators who have run an eval should re-register with a "
+                "measured quality_delta_vs_baseline."
+            ),
+        ),
         notes=(
             "Microsoft Phi-3 Mini (3.8B).  Efficient on-device model with strong "
             "instruction-following for classification and guardrails."

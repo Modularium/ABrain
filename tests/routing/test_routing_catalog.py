@@ -135,6 +135,33 @@ class TestDefaultModelsList:
         ]
         assert len(hits) >= 1
 
+    def test_all_local_entries_declare_quantization(self):
+        locals_ = [m for m in DEFAULT_MODELS if m.tier == ModelTier.LOCAL]
+        assert locals_, "catalog must carry at least one LOCAL entry"
+        for m in locals_:
+            assert m.quantization is not None, (
+                f"{m.model_id} should declare a QuantizationProfile by default"
+            )
+
+    def test_local_quantization_bits_in_valid_range(self):
+        for m in DEFAULT_MODELS:
+            if m.tier == ModelTier.LOCAL and m.quantization is not None:
+                assert 2 <= m.quantization.bits <= 16
+
+    def test_local_quantization_declares_baseline_model_id(self):
+        for m in DEFAULT_MODELS:
+            if m.tier == ModelTier.LOCAL and m.quantization is not None:
+                assert m.quantization.baseline_model_id is not None
+                assert m.quantization.baseline_model_id != m.model_id
+
+    def test_local_quantization_quality_delta_unset_by_default(self):
+        for m in DEFAULT_MODELS:
+            if m.tier == ModelTier.LOCAL and m.quantization is not None:
+                assert m.quantization.quality_delta_vs_baseline is None, (
+                    f"{m.model_id} should not ship an invented quality delta — "
+                    "operators must re-register with a measured value"
+                )
+
 
 class TestBuildDefaultRegistry:
     def test_default_excludes_local_tier(self):
@@ -189,6 +216,24 @@ class TestBuildDefaultRegistry:
         r2 = build_default_registry()
         r2_ids = {m.model_id for m in r2.list_all()}
         assert r1_ids == r2_ids
+
+    def test_local_registration_does_not_trigger_lineage_advisory(self):
+        """LOCAL default entries must carry enough lineage to silence the
+        under-documented-provenance advisory in ``_advisory_warnings``."""
+        from core.routing.registry import ModelRegistry
+
+        reg = ModelRegistry()
+        for m in DEFAULT_MODELS:
+            if m.tier != ModelTier.LOCAL:
+                continue
+            warnings = reg.register(m)
+            lineage_flags = [
+                w for w in warnings if "quantization nor distillation" in w
+            ]
+            assert not lineage_flags, (
+                f"{m.model_id} should not raise the missing-lineage advisory; "
+                f"got: {warnings}"
+            )
 
 
 class TestDispatchAgainstCatalog:
