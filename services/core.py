@@ -1451,6 +1451,169 @@ def get_knowledge_sources_status() -> Dict[str, Any]:
     }
 
 
+_VALID_ROUTING_TIERS: tuple[str, ...] = ("local", "small", "medium", "large")
+_VALID_ROUTING_PROVIDERS: tuple[str, ...] = (
+    "anthropic",
+    "openai",
+    "google",
+    "local",
+    "custom",
+)
+_VALID_ROUTING_PURPOSES: tuple[str, ...] = (
+    "planning",
+    "classification",
+    "ranking",
+    "retrieval_assist",
+    "local_assist",
+    "specialist",
+)
+
+
+def get_routing_models(
+    *,
+    tier: str | None = None,
+    provider: str | None = None,
+    purpose: str | None = None,
+    available_only: bool = False,
+) -> Dict[str, Any]:
+    """Read-only inventory of the canonical ABrain model/provider catalog.
+
+    Iterates ``core.routing.catalog.DEFAULT_MODELS`` (the canonical
+    declaration of every model/provider variant ABrain knows about) and
+    returns a flat dict payload suitable for operator inspection.
+    Includes the additive quantization/distillation lineage fields so
+    operators can query what provenance LOCAL artefacts declare without
+    joining back to the registry.
+
+    Optional filters are applied case-insensitively.  Unknown filter
+    values return an error payload so that CLI typos surface as a clear
+    `{"error": "invalid_*"}` rather than an empty result list.
+
+    Parameters
+    ----------
+    tier:
+        Restrict to one of ``local``, ``small``, ``medium``, ``large``.
+    provider:
+        Restrict to one of ``anthropic``, ``openai``, ``google``,
+        ``local``, ``custom``.
+    purpose:
+        Restrict to models that include this purpose.  One of the
+        canonical ``ModelPurpose`` values.
+    available_only:
+        When ``True``, drop entries with ``is_available=False``.
+
+    Returns
+    -------
+    dict
+        ``{"total": N, "tiers": {...}, "providers": {...}, "purposes":
+        {...}, "models": [...]}`` — or an ``{"error": ...}`` payload on
+        invalid filter input.
+    """
+    from core.routing.catalog import DEFAULT_MODELS
+
+    tier_norm = tier.strip().lower() if tier else None
+    provider_norm = provider.strip().lower() if provider else None
+    purpose_norm = purpose.strip().lower() if purpose else None
+
+    if tier_norm is not None and tier_norm not in _VALID_ROUTING_TIERS:
+        return {
+            "error": "invalid_tier",
+            "detail": f"Unknown tier '{tier}'. Valid: {', '.join(_VALID_ROUTING_TIERS)}",
+        }
+    if provider_norm is not None and provider_norm not in _VALID_ROUTING_PROVIDERS:
+        return {
+            "error": "invalid_provider",
+            "detail": (
+                f"Unknown provider '{provider}'. "
+                f"Valid: {', '.join(_VALID_ROUTING_PROVIDERS)}"
+            ),
+        }
+    if purpose_norm is not None and purpose_norm not in _VALID_ROUTING_PURPOSES:
+        return {
+            "error": "invalid_purpose",
+            "detail": (
+                f"Unknown purpose '{purpose}'. "
+                f"Valid: {', '.join(_VALID_ROUTING_PURPOSES)}"
+            ),
+        }
+
+    models: list[dict[str, Any]] = []
+    tier_counts: dict[str, int] = {t: 0 for t in _VALID_ROUTING_TIERS}
+    provider_counts: dict[str, int] = {p: 0 for p in _VALID_ROUTING_PROVIDERS}
+    purpose_counts: dict[str, int] = {p: 0 for p in _VALID_ROUTING_PURPOSES}
+
+    for descriptor in DEFAULT_MODELS:
+        if tier_norm is not None and descriptor.tier.value != tier_norm:
+            continue
+        if provider_norm is not None and descriptor.provider.value != provider_norm:
+            continue
+        if purpose_norm is not None and not any(
+            p.value == purpose_norm for p in descriptor.purposes
+        ):
+            continue
+        if available_only and not descriptor.is_available:
+            continue
+
+        tier_counts[descriptor.tier.value] += 1
+        provider_counts[descriptor.provider.value] += 1
+        for p in descriptor.purposes:
+            purpose_counts[p.value] += 1
+
+        quant = descriptor.quantization
+        distill = descriptor.distillation
+        models.append(
+            {
+                "model_id": descriptor.model_id,
+                "display_name": descriptor.display_name,
+                "provider": descriptor.provider.value,
+                "tier": descriptor.tier.value,
+                "purposes": [p.value for p in descriptor.purposes],
+                "context_window": descriptor.context_window,
+                "cost_per_1k_tokens": descriptor.cost_per_1k_tokens,
+                "p95_latency_ms": descriptor.p95_latency_ms,
+                "supports_tool_use": descriptor.supports_tool_use,
+                "supports_structured_output": descriptor.supports_structured_output,
+                "is_available": descriptor.is_available,
+                "quantization": (
+                    {
+                        "method": quant.method.value,
+                        "bits": quant.bits,
+                        "baseline_model_id": quant.baseline_model_id,
+                        "quality_delta_vs_baseline": quant.quality_delta_vs_baseline,
+                        "evaluated_on": quant.evaluated_on,
+                    }
+                    if quant is not None
+                    else None
+                ),
+                "distillation": (
+                    {
+                        "teacher_model_id": distill.teacher_model_id,
+                        "method": distill.method.value,
+                        "quality_delta_vs_teacher": distill.quality_delta_vs_teacher,
+                        "evaluated_on": distill.evaluated_on,
+                    }
+                    if distill is not None
+                    else None
+                ),
+            }
+        )
+
+    return {
+        "total": len(models),
+        "catalog_size": len(DEFAULT_MODELS),
+        "filters": {
+            "tier": tier_norm,
+            "provider": provider_norm,
+            "purpose": purpose_norm,
+            "available_only": available_only,
+        },
+        "tiers": tier_counts,
+        "providers": provider_counts,
+        "purposes": purpose_counts,
+        "models": models,
+    }
+
+
 def _decide_plan_step(
     approval_id: str,
     *,

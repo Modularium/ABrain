@@ -1123,6 +1123,116 @@ def _handle_governance_sources(args: argparse.Namespace) -> int:
     return _emit(payload, _render_governance_sources, json_mode=_json_mode(args))
 
 
+def _render_routing_models(payload: dict[str, Any]) -> str:
+    """Render the read-only model/provider catalog with lineage metadata."""
+    if "error" in payload:
+        detail = payload.get("detail") or ""
+        text = f"[WARN] Routing models unavailable: {payload['error']}"
+        if detail:
+            text += f"\n       detail={detail}"
+        return text
+
+    models = payload.get("models") or []
+    filters = payload.get("filters") or {}
+    tiers = payload.get("tiers") or {}
+    providers = payload.get("providers") or {}
+    purposes = payload.get("purposes") or {}
+
+    lines = [
+        "=== Routing Models Catalog ===",
+        f"Total (filtered):     {payload.get('total', 0)}",
+        f"Catalog size:         {payload.get('catalog_size', 0)}",
+    ]
+
+    active_filters = [
+        f"{key}={value}"
+        for key, value in filters.items()
+        if value not in (None, False)
+    ]
+    if active_filters:
+        lines.append(f"Active filters:       {', '.join(active_filters)}")
+    else:
+        lines.append("Active filters:       (none)")
+
+    tier_summary = ", ".join(
+        f"{tier}={count}" for tier, count in tiers.items() if count
+    ) or "(none)"
+    provider_summary = ", ".join(
+        f"{prov}={count}" for prov, count in providers.items() if count
+    ) or "(none)"
+    purpose_summary = ", ".join(
+        f"{purp}={count}" for purp, count in purposes.items() if count
+    ) or "(none)"
+    lines.extend(
+        [
+            "",
+            f"Tiers:                {tier_summary}",
+            f"Providers:            {provider_summary}",
+            f"Purposes:             {purpose_summary}",
+        ]
+    )
+
+    lines.extend(["", f"Models ({len(models)}):"])
+    if not models:
+        lines.append("  (none)")
+    else:
+        for model in models[:40]:
+            quant = model.get("quantization") or {}
+            distill = model.get("distillation") or {}
+            lineage_parts: list[str] = []
+            if quant:
+                delta = quant.get("quality_delta_vs_baseline")
+                delta_str = f"{delta:+.3f}" if isinstance(delta, (int, float)) else "-"
+                lineage_parts.append(
+                    f"quant={quant.get('method', '-')}"
+                    f"/{quant.get('bits', '-')}b"
+                    f"/Δ={delta_str}"
+                )
+            if distill:
+                delta = distill.get("quality_delta_vs_teacher")
+                delta_str = f"{delta:+.3f}" if isinstance(delta, (int, float)) else "-"
+                lineage_parts.append(
+                    f"distill={distill.get('method', '-')}"
+                    f"<={distill.get('teacher_model_id', '-')}"
+                    f"/Δ={delta_str}"
+                )
+            lineage = "  ".join(lineage_parts) if lineage_parts else "-"
+
+            cost = model.get("cost_per_1k_tokens")
+            cost_str = f"${cost:.4f}/1k" if isinstance(cost, (int, float)) else "-"
+            latency = model.get("p95_latency_ms")
+            latency_str = f"{latency}ms" if isinstance(latency, int) else "-"
+            avail = "OK  " if model.get("is_available") else "OFF "
+
+            lines.append(
+                f"  [{avail}] {model.get('model_id', '-')}"
+                f"  tier={model.get('tier', '-')}"
+                f"  provider={model.get('provider', '-')}"
+                f"  cost={cost_str}"
+                f"  p95={latency_str}"
+            )
+            purposes_list = model.get("purposes") or []
+            if purposes_list:
+                lines.append(f"      purposes: {', '.join(purposes_list)}")
+            if lineage != "-":
+                lines.append(f"      lineage:  {lineage}")
+        if len(models) > 40:
+            lines.append(f"  ... ({len(models) - 40} more)")
+
+    return "\n".join(lines)
+
+
+def _handle_routing_models(args: argparse.Namespace) -> int:
+    core = _load_core()
+    payload = core.get_routing_models(
+        tier=args.tier,
+        provider=args.provider,
+        purpose=args.purpose,
+        available_only=bool(args.available_only),
+    )
+    return _emit(payload, _render_routing_models, json_mode=_json_mode(args))
+
+
 def _handle_governance_pii(args: argparse.Namespace) -> int:
     core = _load_core()
     categories: list[str] | None = None
@@ -1934,6 +2044,48 @@ def build_parser() -> argparse.ArgumentParser:
     )
     gov_sources.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     gov_sources.set_defaults(handler=_handle_governance_sources)
+
+    routing_parser = subparsers.add_parser(
+        "routing",
+        help="Phase-4 Modellrouting-Inspektion (Katalog, Lineage)",
+    )
+    routing_subparsers = routing_parser.add_subparsers(dest="action", required=True)
+    routing_models = routing_subparsers.add_parser(
+        "models",
+        help="Read-only Modell-/Provider-Katalog mit Quant/Distill-Lineage",
+    )
+    routing_models.add_argument(
+        "--tier",
+        choices=["local", "small", "medium", "large"],
+        default=None,
+        help="Nur Modelle eines bestimmten Tiers anzeigen",
+    )
+    routing_models.add_argument(
+        "--provider",
+        choices=["anthropic", "openai", "google", "local", "custom"],
+        default=None,
+        help="Nur Modelle eines bestimmten Providers anzeigen",
+    )
+    routing_models.add_argument(
+        "--purpose",
+        choices=[
+            "planning",
+            "classification",
+            "ranking",
+            "retrieval_assist",
+            "local_assist",
+            "specialist",
+        ],
+        default=None,
+        help="Nur Modelle mit diesem Purpose anzeigen",
+    )
+    routing_models.add_argument(
+        "--available-only",
+        action="store_true",
+        help="Eintraege mit is_available=False ausblenden",
+    )
+    routing_models.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    routing_models.set_defaults(handler=_handle_routing_models)
 
     ops_parser = subparsers.add_parser(
         "ops",
