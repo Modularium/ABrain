@@ -976,6 +976,97 @@ def _render_governance_pii(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_governance_provenance(payload: dict[str, Any]) -> str:
+    """Render a ProvenanceReport for operator review."""
+    if "error" in payload:
+        return (
+            f"[WARN] Provenance report unavailable: {payload['error']}\n"
+            f"       detail={payload.get('detail', '-')}"
+        )
+
+    totals = payload.get("totals") or {}
+    statuses = payload.get("statuses") or []
+    policy = payload.get("policy") or {}
+    registry = payload.get("registry") or {}
+    finding_counts = totals.get("finding_counts") or {}
+
+    lines = [
+        "=== Governance Provenance Report ===",
+        f"Generated at:           {payload.get('generated_at', '-')}",
+        "",
+        "Registry source:",
+        f"  Path:                 {registry.get('path', '-')}",
+        f"  File present:         {registry.get('file_present', False)}",
+        f"  Load warnings:        {len(registry.get('load_warnings') or [])}",
+        f"  Advisory warnings:    {len(registry.get('advisory_warnings') or [])}",
+        "",
+        "Policy:",
+        f"  require_provenance_for:      {', '.join(policy.get('require_provenance_for') or []) or '(none)'}",
+        f"  require_license_for:         {', '.join(policy.get('require_license_for') or []) or '(none)'}",
+        f"  require_retention_for_pii:   {policy.get('require_retention_for_pii', False)}",
+        f"  require_retention_for_all:   {policy.get('require_retention_for_all', False)}",
+        "",
+        "Totals:",
+        f"  Sources scanned:       {totals.get('sources_scanned', 0)}",
+        f"  Compliant sources:     {totals.get('compliant_sources', 0)}",
+        f"  Sources with findings: {totals.get('sources_with_findings', 0)}",
+        "",
+        f"Finding counts ({len(finding_counts)}):",
+    ]
+    if not finding_counts:
+        lines.append("  (none)")
+    else:
+        for kind in sorted(finding_counts):
+            lines.append(f"  - {kind}: {finding_counts[kind]}")
+
+    load_warnings = registry.get("load_warnings") or []
+    if load_warnings:
+        lines.extend(["", f"Load warnings ({len(load_warnings)}):"])
+        for warning in load_warnings[:20]:
+            lines.append(f"  - {warning}")
+        if len(load_warnings) > 20:
+            lines.append(f"  ... ({len(load_warnings) - 20} more)")
+
+    lines.extend(["", f"Sources ({len(statuses)}):"])
+    if not statuses:
+        lines.append("  (none)")
+    else:
+        for status in statuses[:40]:
+            marker = "OK  " if status.get("compliant") else "FAIL"
+            lines.append(
+                f"  [{marker}] {status.get('source_id', '-')}"
+                f"  trust={status.get('trust', '-')}"
+                f"  pii={status.get('pii_risk', False)}"
+                f"  prov={status.get('has_provenance', False)}"
+                f"  lic={status.get('has_license', False)}"
+                f"  retention={status.get('retention_days') if status.get('retention_days') is not None else '-'}"
+            )
+            for finding in status.get("findings") or []:
+                lines.append(
+                    f"      * {finding.get('kind', '-')}: {finding.get('message', '-')}"
+                )
+        if len(statuses) > 40:
+            lines.append(f"  ... ({len(statuses) - 40} more)")
+    return "\n".join(lines)
+
+
+def _handle_governance_provenance(args: argparse.Namespace) -> int:
+    core = _load_core()
+
+    def _split_trust(raw: str | None) -> list[str] | None:
+        if raw is None:
+            return None
+        return [item.strip() for item in raw.split(",") if item.strip()]
+
+    payload = core.get_provenance_report(
+        require_provenance_for=_split_trust(args.require_provenance_for),
+        require_license_for=_split_trust(args.require_license_for),
+        require_retention_for_pii=bool(args.require_retention_for_pii),
+        require_retention_for_all=bool(args.require_retention_for_all),
+    )
+    return _emit(payload, _render_governance_provenance, json_mode=_json_mode(args))
+
+
 def _handle_governance_pii(args: argparse.Namespace) -> int:
     core = _load_core()
     categories: list[str] | None = None
@@ -1554,6 +1645,47 @@ def build_parser() -> argparse.ArgumentParser:
     )
     gov_pii.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     gov_pii.set_defaults(handler=_handle_governance_pii)
+
+    gov_provenance = governance_subparsers.add_parser(
+        "provenance",
+        help="Read-only Provenance-/License-/Retention-Report ueber KnowledgeSourceRegistry",
+    )
+    gov_provenance.add_argument(
+        "--require-provenance-for",
+        dest="require_provenance_for",
+        default=None,
+        help="Komma-Liste von Trust-Levels (trusted,internal,external,untrusted)"
+        " die eine Provenance verlangen (default external,untrusted)",
+    )
+    gov_provenance.add_argument(
+        "--require-license-for",
+        dest="require_license_for",
+        default=None,
+        help="Komma-Liste von Trust-Levels die eine License verlangen"
+        " (default external,untrusted)",
+    )
+    gov_provenance.add_argument(
+        "--require-retention-for-pii",
+        dest="require_retention_for_pii",
+        action="store_true",
+        default=True,
+        help="PII-Quellen ohne retention_days flaggen (default: aktiv)",
+    )
+    gov_provenance.add_argument(
+        "--no-require-retention-for-pii",
+        dest="require_retention_for_pii",
+        action="store_false",
+        help="PII-Retention-Check deaktivieren",
+    )
+    gov_provenance.add_argument(
+        "--require-retention-for-all",
+        dest="require_retention_for_all",
+        action="store_true",
+        default=False,
+        help="Jede Quelle ohne retention_days flaggen (verschaerfte Policy)",
+    )
+    gov_provenance.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    gov_provenance.set_defaults(handler=_handle_governance_provenance)
 
     ops_parser = subparsers.add_parser(
         "ops",

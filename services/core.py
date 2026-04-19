@@ -2005,6 +2005,86 @@ def get_retention_pii_annotation(
     }
 
 
+def get_provenance_report(
+    *,
+    require_provenance_for: list[str] | None = None,
+    require_license_for: list[str] | None = None,
+    require_retention_for_pii: bool = True,
+    require_retention_for_all: bool = False,
+) -> Dict[str, Any]:
+    """Return a read-only provenance / license / retention governance report.
+
+    Runs :class:`core.retrieval.provenance.ProvenanceScanner` over the
+    canonical :class:`core.retrieval.registry.KnowledgeSourceRegistry`
+    populated by :func:`_get_knowledge_registry_state`. The scanner is
+    read-only; no source is mutated. Bootstrap load-time telemetry
+    (missing file, entries skipped at load time) is echoed back in the
+    payload so operators can tell a *clean scan* from a *scan over an
+    empty registry because the source file failed to parse*.
+
+    Trust-level filters default to the policy baked into registration
+    (``[EXTERNAL, UNTRUSTED]`` for both provenance and license). Unknown
+    trust labels in operator input are surfaced as an error payload
+    without running the scanner.
+    """
+    from core.retrieval.models import SourceTrust
+    from core.retrieval.provenance import ProvenancePolicy, ProvenanceScanner
+
+    def _coerce(levels: list[str] | None, default: list[SourceTrust]) -> list[SourceTrust]:
+        if levels is None:
+            return list(default)
+        coerced: list[SourceTrust] = []
+        for raw in levels:
+            try:
+                coerced.append(SourceTrust(raw))
+            except ValueError as exc:
+                raise ValueError(f"unknown trust level: {raw!r}") from exc
+        return coerced
+
+    try:
+        prov_levels = _coerce(
+            require_provenance_for,
+            [SourceTrust.EXTERNAL, SourceTrust.UNTRUSTED],
+        )
+        lic_levels = _coerce(
+            require_license_for,
+            [SourceTrust.EXTERNAL, SourceTrust.UNTRUSTED],
+        )
+    except ValueError as exc:
+        return {
+            "error": "provenance_policy_invalid",
+            "detail": f"{exc.__class__.__name__}: {exc}",
+        }
+
+    try:
+        policy = ProvenancePolicy(
+            require_provenance_for=prov_levels,
+            require_license_for=lic_levels,
+            require_retention_for_pii=bool(require_retention_for_pii),
+            require_retention_for_all=bool(require_retention_for_all),
+        )
+    except Exception as exc:
+        return {
+            "error": "provenance_policy_invalid",
+            "detail": f"{exc.__class__.__name__}: {exc}",
+        }
+
+    registry_state = _get_knowledge_registry_state()
+    registry = registry_state["registry"]
+
+    scanner = ProvenanceScanner(registry=registry, policy=policy)
+    report = scanner.scan()
+
+    payload = report.model_dump(mode="json")
+    payload["registry"] = {
+        "path": registry_state["path"],
+        "file_present": bool(registry_state["file_present"]),
+        "load_warnings": list(registry_state["load_warnings"]),
+        "advisory_warnings": list(registry_state["advisory_warnings"]),
+    }
+    return payload
+
+
 def get_dataset_quality_report(
     *,
     require_routing_decision: bool = True,
