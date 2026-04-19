@@ -1151,6 +1151,78 @@ def _handle_governance_retention(args: argparse.Namespace) -> int:
     return _emit(payload, _render_governance_retention, json_mode=_json_mode(args))
 
 
+def _render_governance_retention_prune(payload: dict[str, Any]) -> str:
+    """Render a RetentionPruneResult for operator review (dry-run or applied)."""
+    if "error" in payload:
+        return (
+            f"[WARN] Retention prune unavailable: {payload['error']}\n"
+            f"       detail={payload.get('trace_store_path', '-')}"
+        )
+
+    applied = bool(payload.get("apply"))
+    header_mode = "APPLIED" if applied and not payload.get("dry_run", True) else "DRY-RUN"
+    report = payload.get("report") or {}
+    report_policy = report.get("policy") or {}
+    report_totals = report.get("totals") or {}
+    outcomes = payload.get("outcomes") or []
+
+    lines = [
+        f"=== Governance Retention Prune ({header_mode}) ===",
+        f"Executed at:              {payload.get('executed_at', '-')}",
+        "",
+        "Policy (from scanner):",
+        f"  trace_retention_days:        {report_policy.get('trace_retention_days', '-')}",
+        f"  approval_retention_days:     {report_policy.get('approval_retention_days', '-')}",
+        f"  keep_open_traces:            {report_policy.get('keep_open_traces', True)}",
+        f"  keep_pending_approvals:      {report_policy.get('keep_pending_approvals', True)}",
+        "",
+        "Scanner totals:",
+        f"  Trace candidates:            {report_totals.get('traces', 0)}",
+        f"  Approval candidates:         {report_totals.get('approvals', 0)}",
+        "",
+        "Prune result:",
+        f"  Trace candidates seen:       {payload.get('trace_candidates', 0)}",
+        f"  Approval candidates seen:    {payload.get('approval_candidates', 0)}",
+        f"  Traces deleted:              {payload.get('traces_deleted', 0)}",
+        f"  Approvals deleted:           {payload.get('approvals_deleted', 0)}",
+        "",
+        f"Outcomes ({len(outcomes)}):",
+    ]
+    if not outcomes:
+        lines.append("  (none)")
+    else:
+        for outcome in outcomes[:40]:
+            marker = "DEL " if outcome.get("deleted") else "SKIP"
+            lines.append(
+                f"  [{marker}] {outcome.get('kind', '-')}:{outcome.get('record_id', '-')}"
+                f"  dry_run={outcome.get('dry_run', True)}"
+            )
+        if len(outcomes) > 40:
+            lines.append(f"  ... ({len(outcomes) - 40} more)")
+
+    if not (applied and not payload.get("dry_run", True)):
+        lines.extend(
+            [
+                "",
+                "Status: dry-run (no record deleted; re-run with --apply to commit)",
+            ]
+        )
+    return "\n".join(lines)
+
+
+def _handle_governance_retention_prune(args: argparse.Namespace) -> int:
+    core = _load_core()
+    payload = core.apply_retention_prune(
+        trace_retention_days=max(1, args.trace_retention_days),
+        approval_retention_days=max(1, args.approval_retention_days),
+        trace_limit=max(1, args.trace_limit),
+        keep_open_traces=not args.include_open_traces,
+        keep_pending_approvals=not args.include_pending_approvals,
+        apply=bool(args.apply),
+    )
+    return _emit(payload, _render_governance_retention_prune, json_mode=_json_mode(args))
+
+
 def _render_ops_cost(payload: dict[str, Any]) -> str:
     """Render an AgentPerformanceReport for operator review."""
     entries = payload.get("entries") or []
@@ -1733,6 +1805,47 @@ def build_parser() -> argparse.ArgumentParser:
     )
     gov_retention.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     gov_retention.set_defaults(handler=_handle_governance_retention)
+
+    gov_retention_prune = governance_subparsers.add_parser(
+        "retention-prune",
+        help="Destruktiver RetentionPruner: Retention-Kandidaten loeschen (dry-run default)",
+    )
+    gov_retention_prune.add_argument(
+        "--trace-retention-days",
+        type=int,
+        default=90,
+        help="Maximale Trace-Aufbewahrung in Tagen (default 90)",
+    )
+    gov_retention_prune.add_argument(
+        "--approval-retention-days",
+        type=int,
+        default=90,
+        help="Maximale Approval-Aufbewahrung in Tagen (default 90)",
+    )
+    gov_retention_prune.add_argument(
+        "--trace-limit",
+        type=int,
+        default=10_000,
+        help="Maximale Trace-Anzahl fuer den Scan (default 10000)",
+    )
+    gov_retention_prune.add_argument(
+        "--include-open-traces",
+        action="store_true",
+        help="Auch Traces ohne ended_at als Kandidaten zulassen",
+    )
+    gov_retention_prune.add_argument(
+        "--include-pending-approvals",
+        action="store_true",
+        help="Auch PENDING-Approvals als Kandidaten zulassen",
+    )
+    gov_retention_prune.add_argument(
+        "--apply",
+        action="store_true",
+        default=False,
+        help="Destruktiv: Kandidaten tatsaechlich loeschen. Ohne Flag: dry-run",
+    )
+    gov_retention_prune.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    gov_retention_prune.set_defaults(handler=_handle_governance_retention_prune)
 
     gov_pii = governance_subparsers.add_parser(
         "pii",

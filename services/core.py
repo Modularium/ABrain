@@ -1935,6 +1935,65 @@ def get_retention_scan(
     return report.model_dump(mode="json")
 
 
+def apply_retention_prune(
+    *,
+    trace_retention_days: int = 90,
+    approval_retention_days: int = 90,
+    trace_limit: int = 10_000,
+    keep_open_traces: bool = True,
+    keep_pending_approvals: bool = True,
+    apply: bool = False,
+) -> Dict[str, Any]:
+    """Delete retention candidates from TraceStore + ApprovalStore.
+
+    Composes the canonical :class:`core.audit.retention.RetentionScanner`
+    with the destructive :class:`core.audit.retention_pruner.RetentionPruner`.
+    Defaults to **dry-run** (``apply=False``): the scanner report and a
+    per-candidate outcome list are returned, but no record is deleted.
+    Passing ``apply=True`` invokes the pruner with ``commit=True``.
+
+    The pruner trusts the scanner report — no policy re-evaluation.
+    Returns an ``error`` payload if the canonical TraceStore is absent.
+    """
+    from core.audit.retention import RetentionPolicy, RetentionScanner
+    from core.audit.retention_pruner import RetentionPruner
+
+    trace_state = _get_trace_state()
+    trace_store = trace_state["store"]
+    if trace_store is None:
+        return {
+            "error": "trace_store_unavailable",
+            "trace_store_path": trace_state["path"],
+        }
+
+    approval_state = _get_approval_state()
+    approval_store = approval_state["store"]
+
+    policy = RetentionPolicy(
+        trace_retention_days=trace_retention_days,
+        approval_retention_days=approval_retention_days,
+        keep_open_traces=keep_open_traces,
+        keep_pending_approvals=keep_pending_approvals,
+    )
+    scanner = RetentionScanner(
+        trace_store=trace_store,
+        approval_store=approval_store,
+        policy=policy,
+    )
+    report = scanner.scan(trace_limit=trace_limit)
+
+    pruner = RetentionPruner(
+        trace_store=trace_store,
+        approval_store=approval_store,
+    )
+    result = pruner.prune(report, commit=bool(apply))
+
+    payload = result.model_dump(mode="json")
+    payload["apply"] = bool(apply)
+    payload["report"] = report.model_dump(mode="json")
+    return payload
+
+
 def get_retention_pii_annotation(
     *,
     trace_retention_days: int = 90,
