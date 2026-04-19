@@ -24,6 +24,12 @@ from .neural_policy import NeuralPolicyModel, ScoredCandidate
 from .plan_builder import PlanBuilder
 from .plan_models import ExecutionPlan, PlanStep, PlanStrategy
 from .performance_history import AgentPerformanceHistory, PerformanceHistoryStore
+from .performance_report import (
+    AgentPerformanceEntry,
+    AgentPerformanceReport,
+    AgentPerformanceReporter,
+    AgentPerformanceTotals,
+)
 from .planner import Planner, PlannerResult
 from .routing_engine import RankedCandidate, RoutingDecision, RoutingEngine, RoutingPreferences
 from .task_intent import TaskIntent
@@ -60,6 +66,10 @@ __all__ = [
     "PlanStep",
     "PlanStrategy",
     "PerformanceHistoryStore",
+    "AgentPerformanceEntry",
+    "AgentPerformanceReport",
+    "AgentPerformanceReporter",
+    "AgentPerformanceTotals",
     "Planner",
     "PlannerResult",
     "RankedCandidate",

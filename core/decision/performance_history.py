@@ -37,6 +37,15 @@ class PerformanceHistoryStore:
     def get(self, agent_id: str) -> AgentPerformanceHistory:
         return self._history.get(agent_id, AgentPerformanceHistory())
 
+    def snapshot(self) -> dict[str, AgentPerformanceHistory]:
+        """Return a shallow copy of all tracked agent histories.
+
+        Read-only consumers (e.g. reporting surfaces) should prefer this
+        over touching ``_history`` directly so the store keeps ownership
+        of its internal mapping.
+        """
+        return dict(self._history)
+
     def get_for_descriptor(self, descriptor: AgentDescriptor) -> AgentPerformanceHistory:
         if descriptor.agent_id in self._history:
             return self._history[descriptor.agent_id]
