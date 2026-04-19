@@ -21,6 +21,12 @@ Recorded KPIs per dispatch
 - ``routing.result.fallback_reason``    which constraint was relaxed, or None
 - ``routing.result.cost_per_1k_tokens`` actual cost if descriptor provided
 - ``routing.result.p95_latency_ms``     actual latency if descriptor provided
+- ``routing.result.quantization.method``  declared quant method (LOCAL only)
+- ``routing.result.quantization.bits``    declared quant bitwidth
+- ``routing.result.quantization.quality_delta_vs_baseline``  evaluated delta
+- ``routing.result.distillation.teacher_model_id``  declared teacher
+- ``routing.result.distillation.method``  declared distillation method
+- ``routing.result.distillation.quality_delta_vs_teacher``   evaluated delta
 
 Design invariants
 -----------------
@@ -161,6 +167,12 @@ class RoutingAuditor:
             "routing.result.fallback_reason": None,
             "routing.result.cost_per_1k_tokens": None,
             "routing.result.p95_latency_ms": None,
+            "routing.result.quantization.method": None,
+            "routing.result.quantization.bits": None,
+            "routing.result.quantization.quality_delta_vs_baseline": None,
+            "routing.result.distillation.teacher_model_id": None,
+            "routing.result.distillation.method": None,
+            "routing.result.distillation.quality_delta_vs_teacher": None,
         }
         return self._emit(
             trace_id=trace_id,
@@ -231,7 +243,14 @@ def _result_attributes(
     """Span finish-time attributes from the routing result.
 
     When a ``ModelDescriptor`` is provided, actual cost and latency values
-    are included for KPI comparison between internal (LOCAL) and external paths.
+    are included for KPI comparison between internal (LOCAL) and external
+    paths.  For LOCAL-tier descriptors that carry declared provenance, the
+    quantization and distillation lineage fields are flattened onto the
+    span so operators can query the audit trail for LOCAL-variant usage
+    without joining back to the registry.
+
+    Keys are always emitted (``None`` when absent) so the span schema
+    stays stable and queryable — same convention as cost/latency.
     """
     attrs: dict[str, Any] = {
         "routing.result.model_id": result.model_id,
@@ -246,4 +265,36 @@ def _result_attributes(
             descriptor.p95_latency_ms if descriptor is not None else None
         ),
     }
+    attrs.update(_lineage_attributes(descriptor))
     return attrs
+
+
+def _lineage_attributes(descriptor: ModelDescriptor | None) -> dict[str, Any]:
+    """Flatten declared quantization/distillation lineage to span attributes.
+
+    Always returns all six keys so the span schema is stable.  Non-LOCAL
+    tiers cannot legally carry lineage (validator enforces this at the
+    model layer), so the keys degrade to ``None`` for hosted models.
+    """
+    quant = descriptor.quantization if descriptor is not None else None
+    distill = descriptor.distillation if descriptor is not None else None
+    return {
+        "routing.result.quantization.method": (
+            str(quant.method) if quant is not None else None
+        ),
+        "routing.result.quantization.bits": (
+            quant.bits if quant is not None else None
+        ),
+        "routing.result.quantization.quality_delta_vs_baseline": (
+            quant.quality_delta_vs_baseline if quant is not None else None
+        ),
+        "routing.result.distillation.teacher_model_id": (
+            distill.teacher_model_id if distill is not None else None
+        ),
+        "routing.result.distillation.method": (
+            str(distill.method) if distill is not None else None
+        ),
+        "routing.result.distillation.quality_delta_vs_teacher": (
+            distill.quality_delta_vs_teacher if distill is not None else None
+        ),
+    }
