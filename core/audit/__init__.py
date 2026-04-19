@@ -27,6 +27,13 @@ from .trace_models import (
     TraceSnapshot,
 )
 from .trace_store import TraceStore
+from .audit_export import (
+    AUDIT_EXPORT_SCHEMA_VERSION,
+    ApprovalExportEntry,
+    AuditExport,
+    AuditExporter,
+    TraceExportEntry,
+)
 
 _audit = AuditLog(log_dir=os.getenv("AUDIT_LOG_DIR", "audit"))
 
@@ -51,12 +58,17 @@ def audit_action(
 
 
 __all__ = [
+    "AUDIT_EXPORT_SCHEMA_VERSION",
+    "ApprovalExportEntry",
+    "AuditExport",
+    "AuditExporter",
     "ExplainabilityRecord",
     "ReplayDescriptor",
     "ReplayStepInput",
     "SpanRecord",
     "TraceContext",
     "TraceEvent",
+    "TraceExportEntry",
     "TraceRecord",
     "TraceSnapshot",
     "TraceStore",

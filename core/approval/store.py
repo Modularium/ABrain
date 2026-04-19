@@ -37,6 +37,15 @@ class ApprovalStore:
             if request.status == ApprovalStatus.PENDING
         ]
 
+    def snapshot(self) -> list[ApprovalRequest]:
+        """Return all tracked approvals, ordered by ``requested_at``.
+
+        Read-only consumers (audit exports, reporting surfaces) should
+        prefer this over touching ``_requests`` directly so the store
+        keeps ownership of its internal mapping.
+        """
+        return sorted(self._requests.values(), key=lambda item: item.requested_at)
+
     def record_decision(
         self,
         approval_id: str,
