@@ -23,6 +23,7 @@ from api_gateway.schemas import (
     GovernanceListResponse,
     PlanListResponse,
     PlanRunResponse,
+    RoutingModelsResponse,
     TaskRunResponse,
     TraceDetailResponse,
     TraceListResponse,
@@ -322,6 +323,65 @@ async def control_plane_governance(
     from services.core import list_recent_governance_decisions
 
     return list_recent_governance_decisions(limit=limit)
+
+
+@api_route(version="dev")
+@app.get(
+    "/control-plane/routing/models",
+    response_model=RoutingModelsResponse,
+    tags=["Routing"],
+    summary="List the canonical routing-model catalog",
+    description=(
+        "Return the read-only routing-model catalog with quantization and "
+        "distillation lineage plus per-model energy profile, projected from "
+        "`services.core.get_routing_models` without duplicating the catalog. "
+        "Unknown filter values surface as HTTP 400 `invalid_tier` / "
+        "`invalid_provider` / `invalid_purpose` so operator typos fail loud."
+    ),
+    responses={
+        **COMMON_ERROR_RESPONSES,
+        400: {
+            "model": ApiErrorResponse,
+            "description": "A filter value is not part of the canonical enum.",
+        },
+    },
+)
+@limiter.limit(RATE_LIMIT)
+async def control_plane_routing_models(
+    request: Request,
+    tier: str | None = Query(
+        default=None,
+        description="Restrict to one of local, small, medium, large.",
+    ),
+    provider: str | None = Query(
+        default=None,
+        description="Restrict to one of anthropic, openai, google, local, custom.",
+    ),
+    purpose: str | None = Query(
+        default=None,
+        description="Restrict to models that include this ModelPurpose value.",
+    ),
+    available_only: bool = Query(
+        default=False,
+        description="Drop entries with is_available=False when set.",
+    ),
+) -> dict:
+    """Return the canonical routing-model catalog with lineage and energy metadata."""
+    check_scope(request, "agents:read")
+    from services.core import get_routing_models
+
+    payload = get_routing_models(
+        tier=tier,
+        provider=provider,
+        purpose=purpose,
+        available_only=available_only,
+    )
+    if "error" in payload:
+        raise HTTPException(
+            status_code=400,
+            detail=payload.get("detail") or payload["error"],
+        )
+    return payload
 
 
 @api_route(version="dev")

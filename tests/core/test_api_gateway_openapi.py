@@ -51,6 +51,7 @@ def test_openapi_exposes_only_canonical_control_plane_surface():
     assert "/control-plane/plans" in paths
     assert "/control-plane/tasks/run" in paths
     assert "/control-plane/plans/run" in paths
+    assert "/control-plane/routing/models" in paths
 
     assert "/chat" not in paths
     assert "/chat/feedback" not in paths
@@ -61,7 +62,7 @@ def test_openapi_exposes_only_canonical_control_plane_surface():
     assert "/metrics" not in paths
 
     tags = {tag["name"] for tag in payload["tags"]}
-    assert {"Control Plane", "Agents", "Traces", "Approvals", "Plans", "Tasks"} <= tags
+    assert {"Control Plane", "Agents", "Traces", "Approvals", "Plans", "Tasks", "Routing"} <= tags
 
 
 def test_openapi_documents_control_plane_request_and_response_models():
@@ -225,3 +226,219 @@ def test_control_plane_task_run_http_route_returns_documented_shape(monkeypatch)
     assert payload["decision"]["selected_agent_id"] == "adminbot-agent"
     assert payload["execution"]["success"] is True
     assert payload["trace"]["trace_id"] == "trace-task-1"
+
+
+# ---------------------------------------------------------------------------
+# Routing surface (Turn 17)
+# ---------------------------------------------------------------------------
+
+
+def _sample_routing_payload() -> dict:
+    return {
+        "total": 2,
+        "catalog_size": 5,
+        "filters": {
+            "tier": None,
+            "provider": None,
+            "purpose": None,
+            "available_only": False,
+        },
+        "tiers": {"local": 1, "small": 1, "medium": 0, "large": 0},
+        "providers": {
+            "anthropic": 1,
+            "openai": 0,
+            "google": 0,
+            "local": 1,
+            "custom": 0,
+        },
+        "purposes": {
+            "planning": 0,
+            "classification": 0,
+            "ranking": 0,
+            "retrieval_assist": 0,
+            "local_assist": 2,
+            "specialist": 0,
+        },
+        "models": [
+            {
+                "model_id": "llama-3-8b-local-q4",
+                "display_name": "Llama 3 8B local Q4",
+                "provider": "local",
+                "tier": "local",
+                "purposes": ["local_assist"],
+                "context_window": 8192,
+                "cost_per_1k_tokens": None,
+                "p95_latency_ms": 800,
+                "supports_tool_use": False,
+                "supports_structured_output": False,
+                "is_available": True,
+                "quantization": {
+                    "method": "gguf_q4_k_m",
+                    "bits": 4,
+                    "baseline_model_id": "llama-3-8b",
+                    "quality_delta_vs_baseline": -0.03,
+                    "evaluated_on": "abrain-routing-eval-v3",
+                },
+                "distillation": None,
+                "energy_profile": {
+                    "avg_power_watts": 15.0,
+                    "source": "measured",
+                },
+            },
+            {
+                "model_id": "claude-haiku-4-5",
+                "display_name": "Claude Haiku 4.5",
+                "provider": "anthropic",
+                "tier": "small",
+                "purposes": ["local_assist"],
+                "context_window": 200000,
+                "cost_per_1k_tokens": 0.001,
+                "p95_latency_ms": 500,
+                "supports_tool_use": True,
+                "supports_structured_output": True,
+                "is_available": True,
+                "quantization": None,
+                "distillation": None,
+                "energy_profile": None,
+            },
+        ],
+    }
+
+
+def test_openapi_documents_routing_models_schema():
+    gateway = _gateway_module()
+    payload = anyio.run(_request, gateway.app, "GET", "/openapi.json").json()
+    operation = payload["paths"]["/control-plane/routing/models"]["get"]
+
+    response_schema = operation["responses"]["200"]["content"]["application/json"]["schema"]
+    assert response_schema["$ref"].endswith("/RoutingModelsResponse")
+
+    components = payload["components"]["schemas"]
+    assert "RoutingModelsResponse" in components
+    assert "RoutingModelEntry" in components
+    assert "RoutingEnergyProfileEntry" in components
+    assert "RoutingQuantizationEntry" in components
+    assert "RoutingDistillationEntry" in components
+
+    parameters = {p["name"] for p in operation.get("parameters", [])}
+    assert {"tier", "provider", "purpose", "available_only"} <= parameters
+
+
+def test_routing_models_http_route_returns_documented_shape(monkeypatch):
+    gateway = _gateway_module()
+    captured: dict = {}
+
+    def fake_get(**kwargs):
+        captured.update(kwargs)
+        return _sample_routing_payload()
+
+    monkeypatch.setattr("services.core.get_routing_models", fake_get)
+
+    response = anyio.run(
+        _request, gateway.app, "GET", "/control-plane/routing/models"
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total"] == 2
+    assert payload["catalog_size"] == 5
+    assert payload["filters"]["available_only"] is False
+    # Lineage + energy keys exposed verbatim from the canonical service.
+    first = payload["models"][0]
+    assert first["quantization"]["method"] == "gguf_q4_k_m"
+    assert first["energy_profile"] == {
+        "avg_power_watts": 15.0,
+        "source": "measured",
+    }
+    # `None` energy profile flows through as JSON null — operators can
+    # distinguish "no profile" from "zero-watt profile" downstream.
+    assert payload["models"][1]["energy_profile"] is None
+    # Service was called with default filters (None + available_only=False).
+    assert captured == {
+        "tier": None,
+        "provider": None,
+        "purpose": None,
+        "available_only": False,
+    }
+
+
+def test_routing_models_http_route_forwards_filters(monkeypatch):
+    gateway = _gateway_module()
+    captured: dict = {}
+
+    def fake_get(**kwargs):
+        captured.update(kwargs)
+        return _sample_routing_payload()
+
+    monkeypatch.setattr("services.core.get_routing_models", fake_get)
+
+    response = anyio.run(
+        partial(
+            _request,
+            gateway.app,
+            "GET",
+            "/control-plane/routing/models",
+            params={
+                "tier": "local",
+                "provider": "local",
+                "purpose": "local_assist",
+                "available_only": "true",
+            },
+        )
+    )
+
+    assert response.status_code == 200
+    assert captured == {
+        "tier": "local",
+        "provider": "local",
+        "purpose": "local_assist",
+        "available_only": True,
+    }
+
+
+def test_routing_models_http_route_surfaces_invalid_filter_as_400(monkeypatch):
+    gateway = _gateway_module()
+    monkeypatch.setattr(
+        "services.core.get_routing_models",
+        lambda **_: {
+            "error": "invalid_tier",
+            "detail": "Unknown tier 'xxl'. Valid: local, small, medium, large",
+        },
+    )
+
+    response = anyio.run(
+        partial(
+            _request,
+            gateway.app,
+            "GET",
+            "/control-plane/routing/models",
+            params={"tier": "xxl"},
+        )
+    )
+
+    assert response.status_code == 400
+    assert "xxl" in response.json()["detail"]
+
+
+def test_routing_models_http_route_returns_real_catalog():
+    """End-to-end smoke against the real services/core.get_routing_models path.
+
+    Guards the wiring from api_gateway → services.core → DEFAULT_MODELS
+    without stubbing, so a future schema drift (e.g. a new required key
+    on ModelDescriptor) surfaces here instead of only in unit tests.
+    """
+    gateway = _gateway_module()
+    response = anyio.run(
+        _request, gateway.app, "GET", "/control-plane/routing/models"
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["catalog_size"] >= 1
+    assert payload["total"] == payload["catalog_size"]
+    # Every entry must carry the stable-schema lineage + energy keys.
+    for model in payload["models"]:
+        assert "quantization" in model
+        assert "distillation" in model
+        assert "energy_profile" in model
+    # DEFAULT_MODELS honesty rule: no baked-in energy profile.
+    assert all(m["energy_profile"] is None for m in payload["models"])

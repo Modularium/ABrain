@@ -68,6 +68,10 @@ OPENAPI_TAGS = [
         "name": "Tasks",
         "description": "Single-task launch through the canonical core execution pipeline.",
     },
+    {
+        "name": "Routing",
+        "description": "Read-only inspection of the canonical routing-model catalog with lineage and energy metadata.",
+    },
 ]
 
 
@@ -398,3 +402,97 @@ class PlanRunResponse(BaseModel):
     plan: ExecutionPlan
     result: PlanExecutionResult
     trace: TraceRecord
+
+
+# ---------------------------------------------------------------------------
+# Routing-model catalog (read-only mirror of `services.core.get_routing_models`)
+# ---------------------------------------------------------------------------
+
+
+class RoutingQuantizationEntry(BaseModel):
+    """Quantization lineage projection for one catalog entry."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    method: str
+    bits: int
+    baseline_model_id: str
+    quality_delta_vs_baseline: float | None = None
+    evaluated_on: str | None = None
+
+
+class RoutingDistillationEntry(BaseModel):
+    """Distillation lineage projection for one catalog entry."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    teacher_model_id: str
+    method: str
+    quality_delta_vs_teacher: float | None = None
+    evaluated_on: str | None = None
+
+
+class RoutingEnergyProfileEntry(BaseModel):
+    """Per-model energy profile declaration.
+
+    Mirrors ``core.decision.energy_report.EnergyProfile`` — ``source`` is
+    the declared fidelity (``measured`` / ``vendor_spec`` / ``estimated``).
+    ``None`` at the outer level means the catalog has not registered
+    wattage yet (honesty rule — operators register real profiles at
+    runtime, catalog ships with ``None``).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    avg_power_watts: float = Field(ge=0.0)
+    source: str
+
+
+class RoutingModelEntry(BaseModel):
+    """One routing-catalog entry projected for external consumers.
+
+    Lineage and energy fields use the "always emit, null when absent"
+    convention mirroring the auditor span schema and the CLI surface.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    model_id: str
+    display_name: str
+    provider: str
+    tier: str
+    purposes: list[str] = Field(default_factory=list)
+    context_window: int | None = None
+    cost_per_1k_tokens: float | None = None
+    p95_latency_ms: int | None = None
+    supports_tool_use: bool
+    supports_structured_output: bool
+    is_available: bool
+    quantization: RoutingQuantizationEntry | None = None
+    distillation: RoutingDistillationEntry | None = None
+    energy_profile: RoutingEnergyProfileEntry | None = None
+
+
+class RoutingModelsFilters(BaseModel):
+    """Echoed filter parameters applied by the service."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    tier: str | None = None
+    provider: str | None = None
+    purpose: str | None = None
+    available_only: bool = False
+
+
+class RoutingModelsResponse(BaseModel):
+    """Read-only routing-catalog response envelope."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    total: int = Field(ge=0)
+    catalog_size: int = Field(ge=0)
+    filters: RoutingModelsFilters
+    tiers: dict[str, int] = Field(default_factory=dict)
+    providers: dict[str, int] = Field(default_factory=dict)
+    purposes: dict[str, int] = Field(default_factory=dict)
+    models: list[RoutingModelEntry] = Field(default_factory=list)
