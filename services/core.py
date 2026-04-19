@@ -1324,6 +1324,133 @@ def _get_trace_state() -> dict[str, Any]:
     return _get_trace_state._state
 
 
+def _get_knowledge_registry_state() -> dict[str, Any]:
+    """Return the process-local canonical KnowledgeSourceRegistry.
+
+    On first call the registry is populated from a JSON file if one
+    exists at ``ABRAIN_KNOWLEDGE_SOURCES_PATH`` (default
+    ``runtime/abrain_knowledge_sources.json``). The file must be a JSON
+    list of ``KnowledgeSource`` objects. Non-fatal problems (missing
+    file, unreadable JSON, schema-invalid entries, duplicate / governance
+    -violating registrations) are captured as structured strings in
+    ``load_warnings`` so operators can see exactly which entries were
+    skipped; advisory warnings returned by ``KnowledgeSourceRegistry
+    .register`` (PII without retention, etc.) are captured in
+    ``advisory_warnings``. The registry itself remains the sole source of
+    truth — this is a pure bootstrap loader, not a second registry.
+    """
+    if not hasattr(_get_knowledge_registry_state, "_state"):
+        from core.retrieval.models import KnowledgeSource
+        from core.retrieval.registry import (
+            KnowledgeSourceRegistry,
+            RegistrationError,
+        )
+
+        path = os.getenv(
+            "ABRAIN_KNOWLEDGE_SOURCES_PATH",
+            "runtime/abrain_knowledge_sources.json",
+        )
+        registry = KnowledgeSourceRegistry()
+        load_warnings: list[str] = []
+        advisory_warnings: list[str] = []
+
+        raw: Any = None
+        file_present = os.path.exists(path)
+        if file_present:
+            try:
+                with open(path, "r", encoding="utf-8") as handle:
+                    raw = json.load(handle)
+            except (OSError, json.JSONDecodeError) as exc:
+                load_warnings.append(
+                    f"knowledge_sources_unreadable: "
+                    f"{exc.__class__.__name__}: {exc}"
+                )
+                raw = None
+
+        if raw is not None:
+            if not isinstance(raw, list):
+                load_warnings.append(
+                    "knowledge_sources_schema_invalid: top-level JSON must be a list"
+                )
+            else:
+                for idx, entry in enumerate(raw):
+                    if not isinstance(entry, dict):
+                        load_warnings.append(
+                            f"entry_{idx}_schema_invalid: entry is not a JSON object"
+                        )
+                        continue
+                    try:
+                        source = KnowledgeSource(**entry)
+                    except Exception as exc:
+                        load_warnings.append(
+                            f"entry_{idx}_validation_failed: "
+                            f"{exc.__class__.__name__}: {exc}"
+                        )
+                        continue
+                    try:
+                        advisory_warnings.extend(registry.register(source))
+                    except RegistrationError as exc:
+                        load_warnings.append(
+                            f"entry_{idx}_registration_failed: {exc}"
+                        )
+                        continue
+
+        if load_warnings:
+            logger.warning(
+                json.dumps(
+                    {
+                        "event": "knowledge_registry_load_warnings",
+                        "path": path,
+                        "warnings": load_warnings,
+                    },
+                    sort_keys=True,
+                )
+            )
+
+        _get_knowledge_registry_state._state = {
+            "registry": registry,
+            "path": path,
+            "file_present": file_present,
+            "load_warnings": load_warnings,
+            "advisory_warnings": advisory_warnings,
+        }
+    return _get_knowledge_registry_state._state
+
+
+def get_knowledge_sources_status() -> Dict[str, Any]:
+    """Return a read-only status snapshot of the canonical registry.
+
+    Exposes ``ABRAIN_KNOWLEDGE_SOURCES_PATH`` bootstrap telemetry so
+    operators can verify that the registry loaded as intended (expected
+    count, zero load_warnings, known advisory_warnings). Does not mutate
+    the registry; a later governance surface will wrap the registry for
+    ``ProvenanceScanner`` reports.
+    """
+    state = _get_knowledge_registry_state()
+    registry = state["registry"]
+    sources = [
+        {
+            "source_id": source.source_id,
+            "display_name": source.display_name,
+            "trust": source.trust.value,
+            "source_type": source.source_type,
+            "pii_risk": source.pii_risk,
+            "has_provenance": source.provenance is not None,
+            "has_license": source.license is not None,
+            "retention_days": source.retention_days,
+        }
+        for source in registry.list_all()
+    ]
+    return {
+        "path": state["path"],
+        "file_present": bool(state["file_present"]),
+        "source_count": len(registry),
+        "load_warnings": list(state["load_warnings"]),
+        "advisory_warnings": list(state["advisory_warnings"]),
+        "sources": sources,
+    }
+
+
 def _decide_plan_step(
     approval_id: str,
     *,
