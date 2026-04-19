@@ -10,6 +10,7 @@ from .handlers import (
     ExplainHandler,
     GetTraceHandler,
     ListPendingApprovalsHandler,
+    ListRoutingModelsHandler,
     RejectHandler,
     RunPlanHandler,
     RunTaskHandler,
@@ -75,6 +76,12 @@ TOOLS: dict[str, ExposedTool] = {
         description=ExplainHandler.description,
         input_model=ExplainHandler.input_model,
         handler=ExplainHandler(),
+    ),
+    ListRoutingModelsHandler.name: ExposedTool(
+        name=ListRoutingModelsHandler.name,
+        description=ListRoutingModelsHandler.description,
+        input_model=ListRoutingModelsHandler.input_model,
+        handler=ListRoutingModelsHandler(),
     ),
 }
 

@@ -94,6 +94,7 @@ def test_tools_list_contains_only_static_v2_tools():
         "abrain.list_pending_approvals",
         "abrain.get_trace",
         "abrain.explain",
+        "abrain.list_routing_models",
     ]
 
 
