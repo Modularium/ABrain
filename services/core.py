@@ -1481,9 +1481,10 @@ def get_routing_models(
     Iterates ``core.routing.catalog.DEFAULT_MODELS`` (the canonical
     declaration of every model/provider variant ABrain knows about) and
     returns a flat dict payload suitable for operator inspection.
-    Includes the additive quantization/distillation lineage fields so
-    operators can query what provenance LOCAL artefacts declare without
-    joining back to the registry.
+    Includes the additive quantization/distillation lineage fields and
+    the optional per-model ``energy_profile`` so operators can query
+    what provenance LOCAL artefacts declare, and what wattage was
+    declared for any tier, without joining back to the registry.
 
     Optional filters are applied case-insensitively.  Unknown filter
     values return an error payload so that CLI typos surface as a clear
@@ -1561,6 +1562,7 @@ def get_routing_models(
 
         quant = descriptor.quantization
         distill = descriptor.distillation
+        energy = descriptor.energy_profile
         models.append(
             {
                 "model_id": descriptor.model_id,
@@ -1593,6 +1595,14 @@ def get_routing_models(
                         "evaluated_on": distill.evaluated_on,
                     }
                     if distill is not None
+                    else None
+                ),
+                "energy_profile": (
+                    {
+                        "avg_power_watts": energy.avg_power_watts,
+                        "source": energy.source,
+                    }
+                    if energy is not None
                     else None
                 ),
             }

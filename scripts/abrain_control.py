@@ -1179,6 +1179,7 @@ def _render_routing_models(payload: dict[str, Any]) -> str:
         for model in models[:40]:
             quant = model.get("quantization") or {}
             distill = model.get("distillation") or {}
+            energy = model.get("energy_profile") or {}
             lineage_parts: list[str] = []
             if quant:
                 delta = quant.get("quality_delta_vs_baseline")
@@ -1198,6 +1199,13 @@ def _render_routing_models(payload: dict[str, Any]) -> str:
                 )
             lineage = "  ".join(lineage_parts) if lineage_parts else "-"
 
+            if energy:
+                watts = energy.get("avg_power_watts")
+                watts_str = f"{watts:.1f}W" if isinstance(watts, (int, float)) else "-"
+                energy_str = f"{watts_str}/{energy.get('source', '-')}"
+            else:
+                energy_str = "-"
+
             cost = model.get("cost_per_1k_tokens")
             cost_str = f"${cost:.4f}/1k" if isinstance(cost, (int, float)) else "-"
             latency = model.get("p95_latency_ms")
@@ -1216,6 +1224,8 @@ def _render_routing_models(payload: dict[str, Any]) -> str:
                 lines.append(f"      purposes: {', '.join(purposes_list)}")
             if lineage != "-":
                 lines.append(f"      lineage:  {lineage}")
+            if energy_str != "-":
+                lines.append(f"      energy:   {energy_str}")
         if len(models) > 40:
             lines.append(f"  ... ({len(models) - 40} more)")
 

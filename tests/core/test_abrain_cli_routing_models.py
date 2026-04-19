@@ -354,10 +354,125 @@ class TestServiceIntegration:
         report = core_module.get_routing_models()
         assert report["models"], "catalog should not be empty"
         model = report["models"][0]
-        # Both lineage keys are always present (None when absent) —
+        # Lineage + energy keys are always present (None when absent) —
         # mirrors the auditor's stable-schema convention.
         assert "quantization" in model
         assert "distillation" in model
+        assert "energy_profile" in model
         assert "cost_per_1k_tokens" in model
         assert "p95_latency_ms" in model
         assert "supports_tool_use" in model
+
+    def test_service_default_catalog_has_no_energy_profile_yet(self):
+        """DEFAULT_MODELS ships with energy_profile=None — honesty rule.
+
+        Operators register real wattage at runtime; the catalog must
+        not invent estimates.  Mirrors the None-baseline for
+        quality_delta_vs_baseline / quality_delta_vs_teacher.
+        """
+        import services.core as core_module
+
+        report = core_module.get_routing_models()
+        for model in report["models"]:
+            assert model["energy_profile"] is None, (
+                f"{model['model_id']} declares a baked-in energy_profile; "
+                "registration must happen operator-side, not in the catalog"
+            )
+
+
+# ---------------------------------------------------------------------------
+# Energy profile surface (Turn 16)
+# ---------------------------------------------------------------------------
+
+
+def _payload_with_energy(
+    *,
+    avg_power_watts: float | None = 15.0,
+    source: str | None = "measured",
+) -> dict:
+    payload = _sample_payload()
+    if avg_power_watts is None:
+        payload["models"][0]["energy_profile"] = None
+    else:
+        payload["models"][0]["energy_profile"] = {
+            "avg_power_watts": avg_power_watts,
+            "source": source,
+        }
+    return payload
+
+
+class TestEnergyProfileRendering:
+    def test_renders_known_energy(self):
+        module = _module()
+        text = module._render_routing_models(
+            _payload_with_energy(avg_power_watts=15.0, source="measured")
+        )
+        assert "energy:   15.0W/measured" in text
+
+    def test_renders_vendor_spec_energy(self):
+        module = _module()
+        text = module._render_routing_models(
+            _payload_with_energy(avg_power_watts=700.0, source="vendor_spec")
+        )
+        assert "energy:   700.0W/vendor_spec" in text
+
+    def test_omits_energy_line_when_profile_is_none(self):
+        module = _module()
+        text = module._render_routing_models(_payload_with_energy(avg_power_watts=None))
+        assert "energy:" not in text
+
+    def test_renders_integer_watts_as_float(self):
+        module = _module()
+        text = module._render_routing_models(
+            _payload_with_energy(avg_power_watts=50, source="estimated")
+        )
+        assert "energy:   50.0W/estimated" in text
+
+
+class TestEnergyProfileServiceIntegration:
+    def test_service_emits_energy_profile_when_registered(self):
+        """Descriptor carrying an energy_profile surfaces in the payload.
+
+        Exercises the real ``get_routing_models`` serialization path
+        (not a mocked payload) against a synthesized descriptor to
+        confirm the service flattens ``avg_power_watts`` + ``source``
+        verbatim.
+        """
+        import services.core as core_module
+        from core.decision.energy_report import EnergyProfile
+        from core.routing import catalog as catalog_mod
+        from core.routing.models import (
+            ModelDescriptor,
+            ModelProvider,
+            ModelPurpose,
+            ModelTier,
+        )
+
+        demo = ModelDescriptor(
+            model_id="demo-energy-model",
+            display_name="Demo Energy Model",
+            provider=ModelProvider.LOCAL,
+            tier=ModelTier.LOCAL,
+            purposes=(ModelPurpose.LOCAL_ASSIST,),
+            context_window=4096,
+            cost_per_1k_tokens=None,
+            p95_latency_ms=600,
+            supports_tool_use=False,
+            supports_structured_output=False,
+            is_available=True,
+            energy_profile=EnergyProfile(avg_power_watts=42.5, source="measured"),
+        )
+
+        original = catalog_mod.DEFAULT_MODELS
+        catalog_mod.DEFAULT_MODELS = (*original, demo)
+        try:
+            report = core_module.get_routing_models()
+            match = next(
+                m for m in report["models"] if m["model_id"] == "demo-energy-model"
+            )
+            assert match["energy_profile"] == {
+                "avg_power_watts": 42.5,
+                "source": "measured",
+            }
+        finally:
+            catalog_mod.DEFAULT_MODELS = original
