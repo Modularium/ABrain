@@ -1067,6 +1067,62 @@ def _handle_governance_provenance(args: argparse.Namespace) -> int:
     return _emit(payload, _render_governance_provenance, json_mode=_json_mode(args))
 
 
+def _render_governance_sources(payload: dict[str, Any]) -> str:
+    """Render the KnowledgeSourceRegistry bootstrap status for operators."""
+    load_warnings = payload.get("load_warnings") or []
+    advisory_warnings = payload.get("advisory_warnings") or []
+    sources = payload.get("sources") or []
+
+    lines = [
+        "=== Knowledge Sources Registry ===",
+        f"Path:                 {payload.get('path', '-')}",
+        f"File present:         {payload.get('file_present', False)}",
+        f"Source count:         {payload.get('source_count', 0)}",
+        f"Load warnings:        {len(load_warnings)}",
+        f"Advisory warnings:    {len(advisory_warnings)}",
+    ]
+
+    if load_warnings:
+        lines.extend(["", f"Load warnings ({len(load_warnings)}):"])
+        for warning in load_warnings[:20]:
+            lines.append(f"  - {warning}")
+        if len(load_warnings) > 20:
+            lines.append(f"  ... ({len(load_warnings) - 20} more)")
+
+    if advisory_warnings:
+        lines.extend(["", f"Advisory warnings ({len(advisory_warnings)}):"])
+        for warning in advisory_warnings[:20]:
+            lines.append(f"  - {warning}")
+        if len(advisory_warnings) > 20:
+            lines.append(f"  ... ({len(advisory_warnings) - 20} more)")
+
+    lines.extend(["", f"Sources ({len(sources)}):"])
+    if not sources:
+        lines.append("  (none)")
+    else:
+        for source in sources[:40]:
+            retention = source.get("retention_days")
+            lines.append(
+                f"  - {source.get('source_id', '-')}"
+                f"  name={source.get('display_name', '-')}"
+                f"  trust={source.get('trust', '-')}"
+                f"  type={source.get('source_type', '-')}"
+                f"  pii={source.get('pii_risk', False)}"
+                f"  prov={source.get('has_provenance', False)}"
+                f"  lic={source.get('has_license', False)}"
+                f"  retention={retention if retention is not None else '-'}"
+            )
+        if len(sources) > 40:
+            lines.append(f"  ... ({len(sources) - 40} more)")
+    return "\n".join(lines)
+
+
+def _handle_governance_sources(args: argparse.Namespace) -> int:
+    core = _load_core()
+    payload = core.get_knowledge_sources_status()
+    return _emit(payload, _render_governance_sources, json_mode=_json_mode(args))
+
+
 def _handle_governance_pii(args: argparse.Namespace) -> int:
     core = _load_core()
     categories: list[str] | None = None
@@ -1686,6 +1742,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     gov_provenance.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     gov_provenance.set_defaults(handler=_handle_governance_provenance)
+
+    gov_sources = governance_subparsers.add_parser(
+        "sources",
+        help="Read-only KnowledgeSourceRegistry-Bootstrap-Status (Pfad, Eintraege, Warnungen)",
+    )
+    gov_sources.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    gov_sources.set_defaults(handler=_handle_governance_sources)
 
     ops_parser = subparsers.add_parser(
         "ops",
