@@ -21,7 +21,16 @@ Public surface:
 from .auditor import RoutingAuditor
 from .catalog import DEFAULT_MODELS, build_default_registry
 from .dispatcher import ModelDispatcher, ModelRoutingRequest, ModelRoutingResult, NoModelAvailableError
-from .models import ModelDescriptor, ModelProvider, ModelPurpose, ModelTier
+from .models import (
+    DistillationLineage,
+    DistillationMethod,
+    ModelDescriptor,
+    ModelProvider,
+    ModelPurpose,
+    ModelTier,
+    QuantizationMethod,
+    QuantizationProfile,
+)
 from .registry import ModelRegistry, RegistrationError
 
 __all__ = [
@@ -29,6 +38,10 @@ __all__ = [
     "ModelTier",
     "ModelProvider",
     "ModelDescriptor",
+    "QuantizationMethod",
+    "QuantizationProfile",
+    "DistillationMethod",
+    "DistillationLineage",
     "ModelRegistry",
     "RegistrationError",
     "ModelRoutingRequest",

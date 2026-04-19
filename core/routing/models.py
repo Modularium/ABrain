@@ -101,6 +101,153 @@ class ModelProvider(StrEnum):
     CUSTOM = "custom"
 
 
+class QuantizationMethod(StrEnum):
+    """Declared quantization method of a local model artefact.
+
+    These are declared facts about the artefact the operator placed on
+    disk / in Ollama / in llama.cpp — ABrain does not run the conversion
+    itself.  The enum covers the set of methods seen in practice for
+    LOCAL-tier models; use ``CUSTOM`` for anything not covered.
+
+    FP16 / INT8 / INT4
+        Generic bitwidth labels (framework-agnostic).
+    GGUF_Q4_K_M / GGUF_Q5_K_M / GGUF_Q8_0
+        llama.cpp GGUF quantization schemes.
+    AWQ / GPTQ
+        Activation-aware / post-training weight quantization methods
+        common in the vLLM/transformers ecosystem.
+    CUSTOM
+        Any other method; the ``notes`` field should describe it.
+    """
+
+    FP16 = "fp16"
+    INT8 = "int8"
+    INT4 = "int4"
+    GGUF_Q4_K_M = "gguf_q4_k_m"
+    GGUF_Q5_K_M = "gguf_q5_k_m"
+    GGUF_Q8_0 = "gguf_q8_0"
+    AWQ = "awq"
+    GPTQ = "gptq"
+    CUSTOM = "custom"
+
+
+class DistillationMethod(StrEnum):
+    """Declared distillation method used to produce a local model artefact.
+
+    KD
+        Standard knowledge distillation from a larger teacher.
+    FITNETS
+        FitNets-style intermediate-layer distillation.
+    SELF_DISTILL
+        Self-distillation (teacher and student share architecture).
+    CUSTOM
+        Any other method; the ``notes`` field should describe it.
+    """
+
+    KD = "kd"
+    FITNETS = "fitnets"
+    SELF_DISTILL = "self_distill"
+    CUSTOM = "custom"
+
+
+class QuantizationProfile(BaseModel):
+    """Declared quantization lineage for a LOCAL-tier model artefact.
+
+    Attached to ``ModelDescriptor.quantization``.  Pure declaration — no
+    conversion or evaluation happens here.
+
+    Attributes
+    ----------
+    method:
+        Which quantization method produced this artefact.
+    bits:
+        Effective bitwidth (2–16).  For mixed-precision schemes declare
+        the dominant weight bitwidth.
+    baseline_model_id:
+        Optional ``model_id`` of the unquantized baseline used as the
+        quality-delta reference.  Does not have to be registered.
+    quality_delta_vs_baseline:
+        Observed quality change relative to ``baseline_model_id`` on
+        ``evaluated_on``.  In [-1.0, 1.0]; negative values indicate a
+        regression.  ``None`` means not yet evaluated.
+    evaluated_on:
+        Free-text slug identifying the eval set that produced the delta
+        (e.g. ``"abrain-routing-eval-v3"``).
+    notes:
+        Free-text operator notes.  Not used for routing logic.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    method: QuantizationMethod
+    bits: int = Field(ge=2, le=16)
+    baseline_model_id: str | None = Field(default=None, min_length=1, max_length=128)
+    quality_delta_vs_baseline: float | None = Field(default=None, ge=-1.0, le=1.0)
+    evaluated_on: str | None = Field(default=None, max_length=128)
+    notes: str | None = Field(default=None, max_length=1024)
+
+    @field_validator("baseline_model_id", "evaluated_on")
+    @classmethod
+    def _strip_optional(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("value must not be empty or whitespace-only")
+        return stripped
+
+
+class DistillationLineage(BaseModel):
+    """Declared distillation lineage for a LOCAL-tier model artefact.
+
+    Attached to ``ModelDescriptor.distillation``.  Pure declaration — no
+    training happens here.
+
+    Attributes
+    ----------
+    teacher_model_id:
+        ``model_id`` of the teacher model used to distil this artefact.
+        Required — a distillation lineage without a named teacher carries
+        no provenance value.
+    method:
+        Which distillation method was used.
+    quality_delta_vs_teacher:
+        Observed quality change relative to the teacher on
+        ``evaluated_on``.  In [-1.0, 1.0]; negative values indicate the
+        student underperforms the teacher (usually expected).
+    evaluated_on:
+        Free-text slug identifying the eval set that produced the delta.
+    notes:
+        Free-text operator notes.  Not used for routing logic.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    teacher_model_id: str = Field(min_length=1, max_length=128)
+    method: DistillationMethod
+    quality_delta_vs_teacher: float | None = Field(default=None, ge=-1.0, le=1.0)
+    evaluated_on: str | None = Field(default=None, max_length=128)
+    notes: str | None = Field(default=None, max_length=1024)
+
+    @field_validator("teacher_model_id")
+    @classmethod
+    def _strip_teacher(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("teacher_model_id must not be empty or whitespace-only")
+        return stripped
+
+    @field_validator("evaluated_on")
+    @classmethod
+    def _strip_evaluated_on(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("evaluated_on must not be empty or whitespace-only")
+        return stripped
+
+
 class ModelDescriptor(BaseModel):
     """Declared facts about a single model/provider variant.
 
@@ -135,6 +282,12 @@ class ModelDescriptor(BaseModel):
     is_available:
         Operator toggle — set to False to remove from routing without
         deregistering.
+    quantization:
+        Optional declared quantization profile.  Non-LOCAL tiers must not
+        declare one (hosted models are not quantized by the operator).
+    distillation:
+        Optional declared distillation lineage.  Non-LOCAL tiers must not
+        declare one.
     notes:
         Free-text operator notes.  Not used for routing logic.
     """
@@ -152,6 +305,8 @@ class ModelDescriptor(BaseModel):
     supports_tool_use: bool = False
     supports_structured_output: bool = False
     is_available: bool = True
+    quantization: QuantizationProfile | None = None
+    distillation: DistillationLineage | None = None
     notes: str | None = Field(default=None, max_length=1024)
 
     @field_validator("model_id", "display_name")
@@ -180,4 +335,19 @@ class ModelDescriptor(BaseModel):
                 "LOCAL tier models must not declare cost_per_1k_tokens "
                 "(they run on local infrastructure with no API cost)."
             )
+        return self
+
+    @model_validator(mode="after")
+    def _lineage_restricted_to_local_tier(self) -> ModelDescriptor:
+        if self.tier != ModelTier.LOCAL:
+            if self.quantization is not None:
+                raise ValueError(
+                    "quantization may only be declared on LOCAL tier models "
+                    "(hosted models are not quantized by the operator)."
+                )
+            if self.distillation is not None:
+                raise ValueError(
+                    "distillation may only be declared on LOCAL tier models "
+                    "(hosted models are not distilled by the operator)."
+                )
         return self

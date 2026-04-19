@@ -167,4 +167,14 @@ class ModelRegistry:
                 f"Model '{descriptor.model_id}' has no p95_latency_ms declared.  "
                 f"Latency-aware routing will use tier ordering as a proxy."
             )
+        if (
+            descriptor.tier == ModelTier.LOCAL
+            and descriptor.quantization is None
+            and descriptor.distillation is None
+        ):
+            warnings.append(
+                f"Model '{descriptor.model_id}' is LOCAL tier but declares neither "
+                f"quantization nor distillation.  Local model provenance will be "
+                f"under-documented in the audit trail."
+            )
         return warnings
