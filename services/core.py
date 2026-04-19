@@ -1878,6 +1878,59 @@ def get_retention_pii_annotation(
     }
 
 
+def get_energy_report(
+    *,
+    default_watts: float,
+    default_source: str = "estimated",
+    profiles: Dict[str, Dict[str, Any]] | None = None,
+    sort_key: str = "total_energy_joules",
+    descending: bool = True,
+    min_executions: int = 0,
+    agent_ids: list[str] | None = None,
+) -> Dict[str, Any]:
+    """Return a per-agent energy estimate report.
+
+    Read-only consumer of the canonical ``PerformanceHistoryStore`` (same
+    instance the routing engine sees).  Wraps
+    :class:`core.decision.energy_report.EnergyEstimator` with an
+    :class:`EnergyEstimatorConfig` built from CLI-supplied wattage
+    inputs — operators own the wattage numbers, the service stays pure
+    composition.  No second history, no second profile truth.
+    """
+    from core.decision.energy_report import (
+        EnergyEstimator,
+        EnergyEstimatorConfig,
+        EnergyProfile,
+    )
+
+    default_profile = EnergyProfile(
+        avg_power_watts=default_watts,
+        source=default_source,  # type: ignore[arg-type]
+    )
+    profile_map: dict[str, EnergyProfile] = {}
+    if profiles:
+        for agent_id, raw in profiles.items():
+            profile_map[agent_id] = EnergyProfile(
+                avg_power_watts=float(raw["avg_power_watts"]),
+                source=raw.get("source", "estimated"),
+            )
+    config = EnergyEstimatorConfig(
+        default_profile=default_profile,
+        profiles=profile_map,
+    )
+
+    state = _get_learning_state()
+    store = state["perf_history"]
+    estimator = EnergyEstimator(store=store, config=config)
+    report = estimator.generate(
+        sort_key=sort_key,  # type: ignore[arg-type]
+        descending=descending,
+        min_executions=min_executions,
+        agent_ids=agent_ids,
+    )
+    return report.model_dump(mode="json")
+
+
 def get_agent_performance_report(
     *,
     sort_key: str = "avg_cost",

@@ -1042,6 +1042,99 @@ def _render_ops_cost(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _render_ops_energy(payload: dict[str, Any]) -> str:
+    """Render an EnergyReport for operator review."""
+    if "error" in payload:
+        return (
+            f"[WARN] Energy report unavailable: {payload['error']}\n"
+            f"       detail={payload.get('detail', '-')}"
+        )
+
+    entries = payload.get("entries") or []
+    totals = payload.get("totals") or {}
+    fallback = payload.get("fallback_agents") or []
+
+    lines = [
+        "=== Ops Energy Report (per agent) ===",
+        f"Generated at:     {payload.get('generated_at', '-')}",
+        f"Sort key:         {payload.get('sort_key', '-')}"
+        f"  descending={payload.get('descending', '-')}",
+        f"Min executions:   {payload.get('min_executions', 0)}",
+        "",
+        "Totals:",
+        f"  Agents reported:           {totals.get('agents', 0)}",
+        f"  Total executions:          {totals.get('total_executions', 0)}",
+        f"  Total energy (J):          {totals.get('total_energy_joules', 0.0):.4f}",
+        f"  Total energy (Wh):         {totals.get('total_energy_wh', 0.0):.4f}",
+        f"  Weighted avg_power_watts:  {totals.get('weighted_avg_power_watts', 0.0):.4f}",
+        "",
+        f"Fallback agents ({len(fallback)}):",
+    ]
+    if not fallback:
+        lines.append("  (none)")
+    else:
+        for agent_id in fallback[:20]:
+            lines.append(f"  - {agent_id}")
+        if len(fallback) > 20:
+            lines.append(f"  ... ({len(fallback) - 20} more)")
+
+    lines.extend(["", f"Entries ({len(entries)}):"])
+    if not entries:
+        lines.append("  (none)")
+    else:
+        for entry in entries[:20]:
+            lines.append(
+                f"  - {entry.get('agent_id', '-')}"
+                f"  execs={entry.get('execution_count', 0)}"
+                f"  watts={entry.get('avg_power_watts', 0.0):.2f}"
+                f"  avg_J={entry.get('avg_energy_joules', 0.0):.4f}"
+                f"  total_J={entry.get('total_energy_joules', 0.0):.4f}"
+                f"  total_Wh={entry.get('total_energy_wh', 0.0):.4f}"
+                f"  src={entry.get('profile_source', '-')}"
+                f"{'  (fallback)' if entry.get('used_default_profile') else ''}"
+            )
+        if len(entries) > 20:
+            lines.append(f"  ... ({len(entries) - 20} more)")
+    return "\n".join(lines)
+
+
+def _handle_ops_energy(args: argparse.Namespace) -> int:
+    core = _load_core()
+    agent_ids: list[str] | None = None
+    if args.agents:
+        agent_ids = [item.strip() for item in args.agents.split(",") if item.strip()]
+
+    profiles_map: dict[str, dict[str, Any]] | None = None
+    if args.profiles:
+        try:
+            with open(args.profiles, "r", encoding="utf-8") as handle:
+                raw = json.load(handle)
+        except (OSError, json.JSONDecodeError) as exc:
+            payload = {
+                "error": "profiles_unreadable",
+                "detail": f"{exc.__class__.__name__}: {exc}",
+            }
+            return _emit(payload, _render_ops_energy, json_mode=_json_mode(args))
+        if not isinstance(raw, dict):
+            payload = {
+                "error": "profiles_schema_invalid",
+                "detail": "profiles JSON must be an object mapping agent_id to {avg_power_watts, source?}",
+            }
+            return _emit(payload, _render_ops_energy, json_mode=_json_mode(args))
+        profiles_map = raw
+
+    payload = core.get_energy_report(
+        default_watts=max(0.0, args.default_watts),
+        default_source=args.default_source,
+        profiles=profiles_map,
+        sort_key=args.sort_key,
+        descending=not args.ascending,
+        min_executions=max(0, args.min_executions),
+        agent_ids=agent_ids,
+    )
+    return _emit(payload, _render_ops_energy, json_mode=_json_mode(args))
+
+
 def _handle_ops_cost(args: argparse.Namespace) -> int:
     core = _load_core()
     agent_ids: list[str] | None = None
@@ -1364,6 +1457,58 @@ def build_parser() -> argparse.ArgumentParser:
     )
     ops_cost.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     ops_cost.set_defaults(handler=_handle_ops_cost)
+
+    ops_energy = ops_subparsers.add_parser(
+        "energy",
+        help="Read-only Energie-Report pro Agent aus PerformanceHistoryStore",
+    )
+    ops_energy.add_argument(
+        "--default-watts",
+        type=float,
+        required=True,
+        help="Default-Wattage fuer Agenten ohne expliziten Profileintrag",
+    )
+    ops_energy.add_argument(
+        "--default-source",
+        choices=["measured", "vendor_spec", "estimated"],
+        default="estimated",
+        help="Herkunft der Default-Wattage (default estimated)",
+    )
+    ops_energy.add_argument(
+        "--profiles",
+        default=None,
+        help="JSON-Datei: {agent_id: {avg_power_watts, source?}}",
+    )
+    ops_energy.add_argument(
+        "--sort-key",
+        choices=[
+            "total_energy_joules",
+            "avg_energy_joules",
+            "avg_power_watts",
+            "execution_count",
+            "agent_id",
+        ],
+        default="total_energy_joules",
+        help="Sortierschluessel fuer die Eintraege (default total_energy_joules)",
+    )
+    ops_energy.add_argument(
+        "--ascending",
+        action="store_true",
+        help="Aufsteigend sortieren (default: absteigend)",
+    )
+    ops_energy.add_argument(
+        "--min-executions",
+        type=int,
+        default=0,
+        help="Mindestanzahl Ausfuehrungen je Agent (default 0)",
+    )
+    ops_energy.add_argument(
+        "--agents",
+        default=None,
+        help="Komma-Liste expliziter Agent-IDs (default: alle registrierten)",
+    )
+    ops_energy.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    ops_energy.set_defaults(handler=_handle_ops_energy)
 
     health_parser = subparsers.add_parser("health", help="Kernstatus, Governance und Startpfade anzeigen")
     health_parser.add_argument("--limit", type=int, default=5, help="Maximale Anzahl fuer Listenabschnitte")
