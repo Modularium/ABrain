@@ -34,6 +34,13 @@ from .audit_export import (
     AuditExporter,
     TraceExportEntry,
 )
+from .retention import (
+    RetentionCandidate,
+    RetentionPolicy,
+    RetentionReport,
+    RetentionScanner,
+    RetentionTotals,
+)
 
 _audit = AuditLog(log_dir=os.getenv("AUDIT_LOG_DIR", "audit"))
 
@@ -65,6 +72,11 @@ __all__ = [
     "ExplainabilityRecord",
     "ReplayDescriptor",
     "ReplayStepInput",
+    "RetentionCandidate",
+    "RetentionPolicy",
+    "RetentionReport",
+    "RetentionScanner",
+    "RetentionTotals",
     "SpanRecord",
     "TraceContext",
     "TraceEvent",
