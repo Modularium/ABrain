@@ -401,7 +401,7 @@ ABrain schrittweise von einem reinen Routing-Modell zu einem breiteren Entscheid
 ## 6.2 Dokumentation
 
 - [x] klare Trennung: historisch / aktuell / experimentell — *§6.2 this turn: `phase_doc_audit_inventory.md`*
-- [ ] Architekturdiagramme für Kernpfad, Plugin-Pfad, LearningOps
+- [x] Architekturdiagramme für Kernpfad, Plugin-Pfad, LearningOps — 3 Mermaid-Flows auf `docs/architecture/ARCHITECTURE_DIAGRAMS.md` ☑ (`phase_doc_architecture_diagrams_review.md`)
 - [x] Dokumentation pro kanonischem Pfad (`docs/architecture/*`, `docs/guides/*`)
 - [x] Experimente explizit als solche kennzeichnen — *§6.2 this turn: historische Docs getaggt, experimentelle Docs müssen künftig `**Status:** Experimental` tragen*
 - [x] falsche oder veraltete Implementierungsbehauptungen entfernen (`post_cleanup_readme_setup_onboarding_audit.md`, `phaseO_canonicalization_cleanup_review.md`)
