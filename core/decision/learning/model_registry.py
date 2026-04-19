@@ -27,15 +27,24 @@ import hashlib
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..neural_policy import NeuralPolicyModel
+from ..scoring_models import MLPScoringModel
 from .offline_trainer import OfflineTrainingResult, TrainingJobConfig
 from .persistence import load_model
 from .trainer import TrainingMetrics
+
+if TYPE_CHECKING:
+    from ..brain.trainer import BrainTrainingJobConfig, BrainTrainingResult
+
+# Canonical model_kind constants — keep stable, used both at registration time
+# and by consumers (ShadowEvaluator, BrainShadowRunner) when filtering.
+MODEL_KIND_NEURAL_POLICY = "neural_policy"
+MODEL_KIND_BRAIN_V1 = "brain_v1"
 
 
 class ModelVersionEntry(BaseModel):
@@ -57,6 +66,14 @@ class ModelVersionEntry(BaseModel):
     registered_at: str = Field(description="ISO 8601 registration timestamp")
     is_active: bool = False
     notes: str | None = None
+    model_kind: str = Field(
+        default=MODEL_KIND_NEURAL_POLICY,
+        description=(
+            "Artefact category — 'neural_policy' (production scoring model) or "
+            "'brain_v1' (offline Brain shadow model).  Exactly one entry per "
+            "model_kind may be active at a time."
+        ),
+    )
 
 
 class ModelRegistry:
@@ -117,12 +134,49 @@ class ModelRegistry:
             registered_at=_utcnow_iso(),
             is_active=False,
             notes=notes,
+            model_kind=MODEL_KIND_NEURAL_POLICY,
         )
         self._entries.append(entry)
         if activate:
             self._set_active(version_id)
         self._save()
         return self._get_entry(version_id)  # return updated (is_active may have flipped)
+
+    def register_brain(
+        self,
+        result: "BrainTrainingResult",
+        config: "BrainTrainingJobConfig",
+        *,
+        notes: str | None = None,
+        activate: bool = True,
+    ) -> ModelVersionEntry:
+        """Register a Brain v1 training artefact under ``model_kind='brain_v1'``.
+
+        Activation is scoped to the same ``model_kind``: registering an active
+        Brain entry never deactivates the production neural-policy entry, and
+        vice versa.
+        """
+        version_id = _short_id()
+        entry = ModelVersionEntry(
+            version_id=version_id,
+            artifact_path=result.artifact_path,
+            dataset_path=str(config.brain_records_path),
+            schema_version=f"brain-v1:{len(result.feature_names)}",
+            training_config_hash=_brain_config_hash(config),
+            records_accepted=result.records_accepted,
+            records_rejected=result.records_rejected,
+            samples_converted=result.samples_converted,
+            training_metrics=result.training_metrics,
+            registered_at=_utcnow_iso(),
+            is_active=False,
+            notes=notes,
+            model_kind=MODEL_KIND_BRAIN_V1,
+        )
+        self._entries.append(entry)
+        if activate:
+            self._set_active(version_id)
+        self._save()
+        return self._get_entry(version_id)
 
     def activate(self, version_id: str) -> ModelVersionEntry:
         """Make *version_id* the active version.
@@ -142,26 +196,49 @@ class ModelRegistry:
     # Read API
     # ------------------------------------------------------------------
 
-    def get_active(self) -> ModelVersionEntry | None:
-        """Return the currently active entry, or ``None`` if the registry is empty."""
+    def get_active(
+        self, *, model_kind: str = MODEL_KIND_NEURAL_POLICY
+    ) -> ModelVersionEntry | None:
+        """Return the currently active entry of ``model_kind``, or ``None``.
+
+        Defaults to ``model_kind='neural_policy'`` so existing callers behave
+        unchanged.
+        """
         for entry in self._entries:
-            if entry.is_active:
+            if entry.is_active and entry.model_kind == model_kind:
                 return entry
         return None
 
-    def get_active_model(self) -> NeuralPolicyModel | None:
+    def get_active_model(
+        self, *, model_kind: str = MODEL_KIND_NEURAL_POLICY
+    ) -> NeuralPolicyModel | None:
         """Load and return the ``NeuralPolicyModel`` for the active entry.
 
-        Returns ``None`` when the registry has no active entry or the artefact
-        file does not exist.
+        Returns ``None`` when the registry has no active entry of that kind or
+        the artefact file does not exist.
         """
-        entry = self.get_active()
+        entry = self.get_active(model_kind=model_kind)
         if entry is None:
             return None
         artifact = Path(entry.artifact_path)
         if not artifact.exists():
             return None
         return load_model(artifact)
+
+    def get_active_brain_mlp(self) -> MLPScoringModel | None:
+        """Load the active Brain ``MLPScoringModel`` artefact, or ``None``.
+
+        The Brain feature schema is incompatible with the production
+        ``NeuralPolicyModel`` encoder, so we return the raw scorer and let the
+        Brain shadow runner feed it pre-encoded 13-dim feature vectors.
+        """
+        entry = self.get_active(model_kind=MODEL_KIND_BRAIN_V1)
+        if entry is None:
+            return None
+        artifact = Path(entry.artifact_path)
+        if not artifact.exists():
+            return None
+        return MLPScoringModel.load_json(artifact)
 
     def get_version(self, version_id: str) -> ModelVersionEntry | None:
         """Return the entry for *version_id*, or ``None``."""
@@ -182,16 +259,18 @@ class ModelRegistry:
     # ------------------------------------------------------------------
 
     def _set_active(self, version_id: str) -> None:
+        target = next((e for e in self._entries if e.version_id == version_id), None)
+        if target is None:
+            return
+        target_kind = target.model_kind
         updated: list[ModelVersionEntry] = []
         for entry in self._entries:
             if entry.version_id == version_id:
                 updated.append(entry.model_copy(update={"is_active": True}))
+            elif entry.is_active and entry.model_kind == target_kind:
+                updated.append(entry.model_copy(update={"is_active": False}))
             else:
-                updated.append(
-                    entry.model_copy(update={"is_active": False})
-                    if entry.is_active
-                    else entry
-                )
+                updated.append(entry)
         self._entries = updated
 
     def _get_entry(self, version_id: str) -> ModelVersionEntry:
@@ -245,6 +324,25 @@ def _config_hash(config: TrainingJobConfig) -> str:
         "min_samples": config.min_samples,
         "require_outcome": config.require_outcome,
         "require_routing_decision": config.require_routing_decision,
+    }
+    payload = json.dumps(hyper, sort_keys=True)
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+def _brain_config_hash(config: "BrainTrainingJobConfig") -> str:
+    """SHA-256 of the hyperparameter-only fields of a Brain training config.
+
+    Paths are excluded so identical hyperparameters against different datasets
+    still hash the same.
+    """
+    hyper: dict[str, Any] = {
+        "batch_size": config.batch_size,
+        "cost_scale_usd": config.cost_scale_usd,
+        "epochs": config.epochs,
+        "latency_scale_ms": config.latency_scale_ms,
+        "learning_rate": config.learning_rate,
+        "min_samples": config.min_samples,
+        "require_outcome": config.require_outcome,
     }
     payload = json.dumps(hyper, sort_keys=True)
     return hashlib.sha256(payload.encode()).hexdigest()

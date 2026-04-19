@@ -34,7 +34,7 @@ from ..learning.persistence import save_model
 from ..learning.reward_model import RewardModel
 from ..learning.trainer import NeuralTrainer, TrainingMetrics
 from ..neural_policy import NeuralPolicyModel
-from .state import BrainRecord
+from .state import BrainAgentSignal, BrainRecord, BrainState
 
 # ---------------------------------------------------------------------------
 # Fixed Brain feature schema — must stay stable across training runs so that
@@ -62,6 +62,72 @@ _BRAIN_FEATURE_NAMES: list[str] = [
 
 _NUM_CANDIDATES_SCALE = 10.0
 _RECENT_FAILURES_SCALE = 5.0
+
+
+# Public access to the canonical Brain feature schema for downstream
+# consumers (e.g. BrainShadowRunner) — must match the order in
+# ``_BRAIN_FEATURE_NAMES``.
+BRAIN_FEATURE_NAMES: tuple[str, ...] = tuple(_BRAIN_FEATURE_NAMES)
+
+
+def encode_brain_features(
+    state: BrainState,
+    candidate: BrainAgentSignal | None,
+    *,
+    latency_scale_s: float,
+    cost_scale_usd: float,
+) -> list[float]:
+    """Build the 13-dim Brain feature vector for one candidate.
+
+    This is the single source of truth for the Brain feature schema; both the
+    offline trainer (treating the selected agent as the candidate) and the
+    Brain shadow runner (scoring each candidate in turn) call it.
+
+    When ``candidate`` is ``None`` the per-agent slots fall back to the same
+    neutral defaults used by the trainer for empty candidate lists.
+    """
+    routing_confidence = (
+        state.routing_confidence if state.routing_confidence is not None else 0.0
+    )
+    score_gap = state.score_gap if state.score_gap is not None else 0.0
+    num_candidates_norm = min(state.num_candidates / _NUM_CANDIDATES_SCALE, 1.0)
+    has_policy_effect = 1.0 if state.policy.has_policy_effect else 0.0
+    approval_required = 1.0 if state.policy.approval_required else 0.0
+
+    if candidate is not None:
+        cap_match_score = candidate.capability_match_score
+        success_rate = candidate.success_rate
+        avg_latency_norm = min(candidate.avg_latency_s / max(latency_scale_s, 1e-9), 1.0)
+        avg_cost_norm = min(candidate.avg_cost_usd / max(cost_scale_usd, 1e-9), 1.0)
+        recent_failures_norm = min(candidate.recent_failures / _RECENT_FAILURES_SCALE, 1.0)
+        load_factor = candidate.load_factor
+        trust_level_ord = candidate.trust_level_ord
+        availability_ord = candidate.availability_ord
+    else:
+        cap_match_score = 0.0
+        success_rate = 0.5
+        avg_latency_norm = 1.0
+        avg_cost_norm = 0.0
+        recent_failures_norm = 0.0
+        load_factor = 0.0
+        trust_level_ord = 0.0
+        availability_ord = 0.5
+
+    return [
+        routing_confidence,
+        score_gap,
+        num_candidates_norm,
+        has_policy_effect,
+        approval_required,
+        cap_match_score,
+        success_rate,
+        avg_latency_norm,
+        avg_cost_norm,
+        recent_failures_norm,
+        load_factor,
+        trust_level_ord,
+        availability_ord,
+    ]
 
 
 class BrainTrainingJobConfig(BaseModel):
@@ -235,51 +301,14 @@ def _brain_record_to_sample(
     state = record.state
     target = record.target
 
-    # Routing confidence signals
-    routing_confidence = state.routing_confidence if state.routing_confidence is not None else 0.0
-    score_gap = state.score_gap if state.score_gap is not None else 0.0
-    num_candidates_norm = min(state.num_candidates / _NUM_CANDIDATES_SCALE, 1.0)
-
-    # Policy signals
-    has_policy_effect = 1.0 if state.policy.has_policy_effect else 0.0
-    approval_required = 1.0 if state.policy.approval_required else 0.0
-
-    # Top-1 candidate signals (selected agent)
-    if state.candidates:
-        top = state.candidates[0]
-        cap_match_score = top.capability_match_score
-        success_rate = top.success_rate
-        avg_latency_norm = min(top.avg_latency_s / max(latency_scale_s, 1e-9), 1.0)
-        avg_cost_norm = min(top.avg_cost_usd / max(cost_scale_usd, 1e-9), 1.0)
-        recent_failures_norm = min(top.recent_failures / _RECENT_FAILURES_SCALE, 1.0)
-        load_factor = top.load_factor
-        trust_level_ord = top.trust_level_ord
-        availability_ord = top.availability_ord
-    else:
-        cap_match_score = 0.0
-        success_rate = 0.5
-        avg_latency_norm = 1.0
-        avg_cost_norm = 0.0
-        recent_failures_norm = 0.0
-        load_factor = 0.0
-        trust_level_ord = 0.0
-        availability_ord = 0.5
-
-    feature_vector = [
-        routing_confidence,
-        score_gap,
-        num_candidates_norm,
-        has_policy_effect,
-        approval_required,
-        cap_match_score,
-        success_rate,
-        avg_latency_norm,
-        avg_cost_norm,
-        recent_failures_norm,
-        load_factor,
-        trust_level_ord,
-        availability_ord,
-    ]
+    top = state.candidates[0] if state.candidates else None
+    feature_vector = encode_brain_features(
+        state,
+        top,
+        latency_scale_s=latency_scale_s,
+        cost_scale_usd=cost_scale_usd,
+    )
+    cap_match_score = top.capability_match_score if top is not None else 0.0
 
     # Reward from outcome
     success_f = float(target.outcome_success) if target.outcome_success is not None else 0.5
