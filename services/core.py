@@ -2258,6 +2258,110 @@ def get_dataset_split(
     return payload
 
 
+def export_learning_dataset(
+    *,
+    require_routing_decision: bool = True,
+    require_outcome: bool = False,
+    require_approval_outcome: bool = False,
+    min_quality_score: float = 0.0,
+    limit: int = 1000,
+    output_dir: str | None = None,
+    filename: str | None = None,
+    apply: bool = False,
+) -> Dict[str, Any]:
+    """Export filtered LearningRecords to a versioned JSONL file.
+
+    Composes :class:`core.decision.learning.DatasetBuilder` (over canonical
+    ``TraceStore`` + ``ApprovalStore``) with
+    :class:`core.decision.learning.DataQualityFilter` and
+    :class:`core.decision.learning.DatasetExporter`. This is a **destructive
+    write** when ``apply=True`` — a new JSONL file is created under
+    ``output_dir``; existing files are never modified.
+
+    Defaults to ``apply=False`` (dry-run): no file is written; the return
+    payload reports what *would* be written (record count, target path,
+    filter policy, violation histogram). The caller can then re-run with
+    ``apply=True`` to persist.
+
+    The output directory resolves to ``output_dir`` if provided, else the
+    ``ABRAIN_LEARNING_EXPORTS_DIR`` env var, else ``runtime/learning_exports``.
+    """
+    from datetime import UTC, datetime
+    from pathlib import Path
+
+    from core.decision.learning import (
+        DataQualityFilter,
+        DatasetBuilder,
+        DatasetExporter,
+    )
+
+    trace_state = _get_trace_state()
+    trace_store = trace_state["store"]
+    if trace_store is None:
+        return {
+            "error": "trace_store_unavailable",
+            "trace_store_path": trace_state["path"],
+        }
+    approval_state = _get_approval_state()
+    approval_store = approval_state["store"]
+
+    clamped_min = max(0.0, min(1.0, float(min_quality_score)))
+    policy_filter = DataQualityFilter(
+        require_routing_decision=require_routing_decision,
+        require_outcome=require_outcome,
+        require_approval_outcome=require_approval_outcome,
+        min_quality_score=clamped_min,
+    )
+
+    builder = DatasetBuilder(trace_store=trace_store, approval_store=approval_store)
+    records = builder.build(limit=max(1, limit))
+    accepted, rejected = policy_filter.filter_with_report(records)
+
+    violations_by_field: Dict[str, int] = {}
+    for _record, violations in rejected:
+        for violation in violations:
+            violations_by_field[violation.field] = (
+                violations_by_field.get(violation.field, 0) + 1
+            )
+
+    resolved_dir = Path(
+        output_dir
+        or os.getenv("ABRAIN_LEARNING_EXPORTS_DIR")
+        or "runtime/learning_exports"
+    )
+    exporter = DatasetExporter(resolved_dir)
+
+    payload: Dict[str, Any] = {
+        "generated_at": datetime.now(UTC).isoformat(),
+        "apply": bool(apply),
+        "policy": {
+            "require_routing_decision": bool(require_routing_decision),
+            "require_outcome": bool(require_outcome),
+            "require_approval_outcome": bool(require_approval_outcome),
+            "min_quality_score": clamped_min,
+        },
+        "totals": {
+            "total": len(records),
+            "accepted": len(accepted),
+            "rejected": len(rejected),
+        },
+        "violations_by_field": violations_by_field,
+        "output_dir": str(resolved_dir),
+    }
+
+    if not apply:
+        payload["written"] = False
+        payload["planned_filename"] = filename or "<auto>"
+        return payload
+
+    written_path = exporter.export(accepted, filename=filename)
+    payload["written"] = True
+    payload["written_path"] = str(written_path)
+    payload["written_filename"] = written_path.name
+    payload["record_count"] = len(accepted)
+    return payload
+
+
 def get_energy_report(
     *,
     default_watts: float,

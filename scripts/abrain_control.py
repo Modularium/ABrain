@@ -1413,6 +1413,78 @@ def _handle_learningops_split(args: argparse.Namespace) -> int:
     return _emit(payload, _render_learningops_split, json_mode=_json_mode(args))
 
 
+def _render_learningops_export(payload: dict[str, Any]) -> str:
+    """Render a LearningOps dataset-export summary (dry-run or applied)."""
+    if "error" in payload:
+        return (
+            f"[WARN] Dataset export unavailable: {payload['error']}\n"
+            f"       detail={payload.get('trace_store_path', '-')}"
+        )
+
+    policy = payload.get("policy") or {}
+    totals = payload.get("totals") or {}
+    violations = payload.get("violations_by_field") or {}
+    applied = bool(payload.get("apply"))
+    written = bool(payload.get("written"))
+
+    header_mode = "APPLIED" if applied and written else "DRY-RUN"
+    lines = [
+        f"=== LearningOps Dataset Export ({header_mode}) ===",
+        f"Generated at:           {payload.get('generated_at', '-')}",
+        "",
+        "Policy:",
+        f"  require_routing_decision:    {policy.get('require_routing_decision', True)}",
+        f"  require_outcome:             {policy.get('require_outcome', False)}",
+        f"  require_approval_outcome:    {policy.get('require_approval_outcome', False)}",
+        f"  min_quality_score:           {policy.get('min_quality_score', 0.0)}",
+        "",
+        "Totals:",
+        f"  Total records:         {totals.get('total', 0)}",
+        f"  Accepted:              {totals.get('accepted', 0)}",
+        f"  Rejected:              {totals.get('rejected', 0)}",
+        "",
+        f"Violations by field ({len(violations)}):",
+    ]
+    if not violations:
+        lines.append("  (none)")
+    else:
+        for field in sorted(violations):
+            lines.append(f"  - {field}: {violations[field]}")
+
+    lines.extend(["", "Output:", f"  Directory:             {payload.get('output_dir', '-')}"])
+    if applied and written:
+        lines.extend(
+            [
+                f"  Written path:          {payload.get('written_path', '-')}",
+                f"  Written filename:      {payload.get('written_filename', '-')}",
+                f"  Record count written:  {payload.get('record_count', 0)}",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                f"  Planned filename:      {payload.get('planned_filename', '<auto>')}",
+                "  Status:                dry-run (no file written; re-run with --apply to persist)",
+            ]
+        )
+    return "\n".join(lines)
+
+
+def _handle_learningops_export(args: argparse.Namespace) -> int:
+    core = _load_core()
+    payload = core.export_learning_dataset(
+        require_routing_decision=bool(args.require_routing_decision),
+        require_outcome=bool(args.require_outcome),
+        require_approval_outcome=bool(args.require_approval_outcome),
+        min_quality_score=args.min_quality_score,
+        limit=max(1, args.limit),
+        output_dir=args.output_dir,
+        filename=args.filename,
+        apply=bool(args.apply),
+    )
+    return _emit(payload, _render_learningops_export, json_mode=_json_mode(args))
+
+
 def _handle_ops_cost(args: argparse.Namespace) -> int:
     core = _load_core()
     agent_ids: list[str] | None = None
@@ -1944,6 +2016,71 @@ def build_parser() -> argparse.ArgumentParser:
     )
     lo_filter.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     lo_filter.set_defaults(handler=_handle_learningops_filter)
+
+    lo_export = learningops_subparsers.add_parser(
+        "export",
+        help="DatasetExporter-Wrapper: gefilterte LearningRecords als JSONL schreiben (dry-run default)",
+    )
+    lo_export.add_argument(
+        "--require-routing-decision",
+        dest="require_routing_decision",
+        action="store_true",
+        default=True,
+        help="Records ohne Routing-Entscheidung verwerfen (default: aktiv)",
+    )
+    lo_export.add_argument(
+        "--no-require-routing-decision",
+        dest="require_routing_decision",
+        action="store_false",
+        help="Auch Records ohne Routing-Entscheidung zulassen",
+    )
+    lo_export.add_argument(
+        "--require-outcome",
+        dest="require_outcome",
+        action="store_true",
+        default=False,
+        help="Nur Records mit bekanntem Ergebnis (success) zulassen",
+    )
+    lo_export.add_argument(
+        "--require-approval-outcome",
+        dest="require_approval_outcome",
+        action="store_true",
+        default=False,
+        help="Nur Records mit aufgeloester Approval zulassen",
+    )
+    lo_export.add_argument(
+        "--min-quality-score",
+        dest="min_quality_score",
+        type=float,
+        default=0.0,
+        help="Minimal geforderter quality_score in [0.0, 1.0] (default 0.0)",
+    )
+    lo_export.add_argument(
+        "--limit",
+        type=int,
+        default=1000,
+        help="Maximale Anzahl Traces, aus denen LearningRecords gebaut werden",
+    )
+    lo_export.add_argument(
+        "--output-dir",
+        dest="output_dir",
+        default=None,
+        help="Zielverzeichnis fuer JSONL-Dateien (default: $ABRAIN_LEARNING_EXPORTS_DIR "
+        "oder runtime/learning_exports)",
+    )
+    lo_export.add_argument(
+        "--filename",
+        default=None,
+        help="Optionaler Dateiname; default: learning_records_<ts>_v<schema>.jsonl",
+    )
+    lo_export.add_argument(
+        "--apply",
+        action="store_true",
+        default=False,
+        help="Destruktiv: tatsaechlich schreiben. Ohne Flag: dry-run",
+    )
+    lo_export.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    lo_export.set_defaults(handler=_handle_learningops_export)
 
     health_parser = subparsers.add_parser("health", help="Kernstatus, Governance und Startpfade anzeigen")
     health_parser.add_argument("--limit", type=int, default=5, help="Maximale Anzahl fuer Listenabschnitte")
