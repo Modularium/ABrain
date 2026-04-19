@@ -9,6 +9,8 @@ __all__ = [
     "BrainBaselineReport",
     "BrainBudget",
     "BrainOfflineTrainer",
+    "BrainOperationsReport",
+    "BrainOperationsReporter",
     "BrainPolicySignals",
     "BrainRecord",
     "BrainRecordBuilder",
@@ -129,5 +131,12 @@ def __getattr__(name: str):
             "BrainSuggestionEntry": BrainSuggestionEntry,
             "BrainSuggestionFeed": BrainSuggestionFeed,
             "BrainSuggestionFeedBuilder": BrainSuggestionFeedBuilder,
+        }[name]
+    if name in {"BrainOperationsReport", "BrainOperationsReporter"}:
+        from .operations_report import BrainOperationsReport, BrainOperationsReporter
+
+        return {
+            "BrainOperationsReport": BrainOperationsReport,
+            "BrainOperationsReporter": BrainOperationsReporter,
         }[name]
     raise AttributeError(name)
