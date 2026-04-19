@@ -419,7 +419,7 @@ ABrain schrittweise von einem reinen Routing-Modell zu einem breiteren Entscheid
 - [x] Provenienz und Lizenzstatus je Datenquelle — scanner over `KnowledgeSourceRegistry` ☑ (`phase_gov_provenance_scanner_review.md`)
 - [x] PII-Strategie — detector + retention-annotation surface ☑ (`phase_gov_pii_strategy_review.md`)
 - [x] Retention- und Löschkonzept — Scanner ☑ (`phase_gov_retention_scanner_review.md`, commit `31f315fb`), Pruner ☑ (`phase_gov_retention_pruner_review.md`)
-- [ ] reproduzierbare Datensplits
+- [x] reproduzierbare Datensplits — deterministic splitter + reproducibility manifest ☑ (`phase5_dataset_splitter_review.md`)
 
 ## 6.5 Effizienz und Green AI
 

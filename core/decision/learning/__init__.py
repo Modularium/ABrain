@@ -14,6 +14,9 @@ __all__ = [
     "NeuralTrainer",
     # Phase 5 – LearningOps offline schema
     "DatasetBuilder",
+    "DatasetSplit",
+    "DatasetSplitConfig",
+    "DatasetSplitter",
     "DataQualityFilter",
     "DatasetExporter",
     "ExportManifest",
@@ -25,6 +28,7 @@ __all__ = [
     "QualityViolation",
     "ShadowComparison",
     "ShadowEvaluator",
+    "SplitManifest",
     "TrainingJobConfig",
 ]
 
@@ -87,4 +91,18 @@ def __getattr__(name: str):
         from .shadow_evaluator import ShadowComparison, ShadowEvaluator
 
         return {"ShadowComparison": ShadowComparison, "ShadowEvaluator": ShadowEvaluator}[name]
+    if name in {"DatasetSplit", "DatasetSplitConfig", "DatasetSplitter", "SplitManifest"}:
+        from .splitter import (
+            DatasetSplit,
+            DatasetSplitConfig,
+            DatasetSplitter,
+            SplitManifest,
+        )
+
+        return {
+            "DatasetSplit": DatasetSplit,
+            "DatasetSplitConfig": DatasetSplitConfig,
+            "DatasetSplitter": DatasetSplitter,
+            "SplitManifest": SplitManifest,
+        }[name]
     raise AttributeError(name)
