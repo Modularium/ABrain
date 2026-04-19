@@ -2,13 +2,18 @@
 
 __all__ = [
     "BRAIN_FEATURE_NAMES",
+    "BRAIN_SHADOW_SPAN_TYPE",
     "BrainAgentSignal",
+    "BrainBaselineAggregator",
+    "BrainBaselineMetrics",
+    "BrainBaselineReport",
     "BrainBudget",
     "BrainOfflineTrainer",
     "BrainPolicySignals",
     "BrainRecord",
     "BrainRecordBuilder",
     "BrainShadowComparison",
+    "BrainShadowEvalSummary",
     "BrainShadowRunner",
     "BrainState",
     "BrainStateEncoder",
@@ -83,5 +88,27 @@ def __getattr__(name: str):
         return {
             "BrainShadowComparison": BrainShadowComparison,
             "BrainShadowRunner": BrainShadowRunner,
+        }[name]
+    if name in {
+        "BRAIN_SHADOW_SPAN_TYPE",
+        "BrainBaselineAggregator",
+        "BrainBaselineMetrics",
+        "BrainBaselineReport",
+        "BrainShadowEvalSummary",
+    }:
+        from .baseline_aggregator import (
+            BRAIN_SHADOW_SPAN_TYPE,
+            BrainBaselineAggregator,
+            BrainBaselineMetrics,
+            BrainBaselineReport,
+            BrainShadowEvalSummary,
+        )
+
+        return {
+            "BRAIN_SHADOW_SPAN_TYPE": BRAIN_SHADOW_SPAN_TYPE,
+            "BrainBaselineAggregator": BrainBaselineAggregator,
+            "BrainBaselineMetrics": BrainBaselineMetrics,
+            "BrainBaselineReport": BrainBaselineReport,
+            "BrainShadowEvalSummary": BrainShadowEvalSummary,
         }[name]
     raise AttributeError(name)
