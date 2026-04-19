@@ -1878,6 +1878,87 @@ def get_retention_pii_annotation(
     }
 
 
+def get_dataset_split(
+    *,
+    train_ratio: float,
+    val_ratio: float,
+    test_ratio: float,
+    seed: int,
+    group_by: str = "trace_id",
+    limit: int = 1000,
+    include_sample_trace_ids: bool = False,
+) -> Dict[str, Any]:
+    """Return a deterministic train/val/test split over canonical LearningRecords.
+
+    Read-only consumer of the canonical ``TraceStore`` + ``ApprovalStore``:
+    records are assembled via :class:`core.decision.learning.DatasetBuilder`
+    and partitioned via :class:`core.decision.learning.DatasetSplitter`.
+    No trace or approval is mutated; the split is a pure function of the
+    inputs and the ``seed``/``group_by`` choice. Operators can therefore
+    re-derive byte-identical splits across runs.
+
+    Returns an ``error`` payload if the canonical TraceStore is not
+    available or if splitter validation rejects the record set.
+    """
+    from core.decision.learning import (
+        DatasetBuilder,
+        DatasetSplitConfig,
+        DatasetSplitter,
+    )
+
+    trace_state = _get_trace_state()
+    trace_store = trace_state["store"]
+    if trace_store is None:
+        return {
+            "error": "trace_store_unavailable",
+            "trace_store_path": trace_state["path"],
+        }
+    approval_state = _get_approval_state()
+    approval_store = approval_state["store"]
+
+    try:
+        config = DatasetSplitConfig(
+            train_ratio=train_ratio,
+            val_ratio=val_ratio,
+            test_ratio=test_ratio,
+            seed=seed,
+            group_by=group_by,  # type: ignore[arg-type]
+        )
+    except Exception as exc:  # pydantic ValidationError or ValueError
+        return {
+            "error": "split_config_invalid",
+            "detail": f"{exc.__class__.__name__}: {exc}",
+        }
+
+    builder = DatasetBuilder(trace_store=trace_store, approval_store=approval_store)
+    records = builder.build(limit=limit)
+
+    splitter = DatasetSplitter(config=config)
+    try:
+        split, manifest = splitter.split(records)
+    except ValueError as exc:
+        return {
+            "error": "split_invalid",
+            "detail": f"{exc.__class__.__name__}: {exc}",
+        }
+
+    payload: Dict[str, Any] = {
+        "manifest": manifest.model_dump(mode="json"),
+        "sizes": {
+            "train": len(split.train),
+            "val": len(split.val),
+            "test": len(split.test),
+        },
+    }
+    if include_sample_trace_ids:
+        payload["sample_trace_ids"] = {
+            "train": [r.trace_id for r in split.train[:20]],
+            "val": [r.trace_id for r in split.val[:20]],
+            "test": [r.trace_id for r in split.test[:20]],
+        }
+    return payload
+
+
 def get_energy_report(
     *,
     default_watts: float,

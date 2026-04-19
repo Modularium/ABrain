@@ -1135,6 +1135,66 @@ def _handle_ops_energy(args: argparse.Namespace) -> int:
     return _emit(payload, _render_ops_energy, json_mode=_json_mode(args))
 
 
+def _render_learningops_split(payload: dict[str, Any]) -> str:
+    """Render a DatasetSplit manifest for operator review."""
+    if "error" in payload:
+        return (
+            f"[WARN] Dataset split unavailable: {payload['error']}\n"
+            f"       detail={payload.get('detail', payload.get('trace_store_path', '-'))}"
+        )
+
+    manifest = payload.get("manifest") or {}
+    sizes = payload.get("sizes") or {}
+    config = manifest.get("config") or {}
+    sample = payload.get("sample_trace_ids")
+
+    lines = [
+        "=== LearningOps Dataset Split ===",
+        f"Generated at:        {manifest.get('generated_at', '-')}",
+        f"Group by:            {config.get('group_by', '-')}",
+        f"Seed:                {config.get('seed', '-')}",
+        f"Ratios:              train={config.get('train_ratio', 0.0):.4f}"
+        f"  val={config.get('val_ratio', 0.0):.4f}"
+        f"  test={config.get('test_ratio', 0.0):.4f}",
+        "",
+        "Totals:",
+        f"  Total records:     {manifest.get('total_records', 0)}",
+        f"  Total groups:      {manifest.get('total_groups', 0)}",
+        f"  Ungrouped records: {manifest.get('ungrouped_records', 0)}",
+        f"  Fingerprint:       {manifest.get('dataset_fingerprint', '-')}",
+        "",
+        "Split sizes:",
+        f"  train:             {sizes.get('train', 0)}",
+        f"  val:               {sizes.get('val', 0)}",
+        f"  test:              {sizes.get('test', 0)}",
+    ]
+    if sample is not None:
+        lines.extend(["", "Sample trace_ids (first 20 per bucket):"])
+        for bucket in ("train", "val", "test"):
+            ids = sample.get(bucket) or []
+            lines.append(f"  {bucket} ({len(ids)}):")
+            if not ids:
+                lines.append("    (none)")
+            else:
+                for trace_id in ids:
+                    lines.append(f"    - {trace_id}")
+    return "\n".join(lines)
+
+
+def _handle_learningops_split(args: argparse.Namespace) -> int:
+    core = _load_core()
+    payload = core.get_dataset_split(
+        train_ratio=args.train,
+        val_ratio=args.val,
+        test_ratio=args.test,
+        seed=max(0, args.seed),
+        group_by=args.group_by,
+        limit=max(1, args.limit),
+        include_sample_trace_ids=bool(args.show_trace_ids),
+    )
+    return _emit(payload, _render_learningops_split, json_mode=_json_mode(args))
+
+
 def _handle_ops_cost(args: argparse.Namespace) -> int:
     core = _load_core()
     agent_ids: list[str] | None = None
@@ -1509,6 +1569,61 @@ def build_parser() -> argparse.ArgumentParser:
     )
     ops_energy.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
     ops_energy.set_defaults(handler=_handle_ops_energy)
+
+    learningops_parser = subparsers.add_parser(
+        "learningops",
+        help="Phase-5 LearningOps-Operator-Surface (Dataset-Splits, Training-Jobs)",
+    )
+    learningops_subparsers = learningops_parser.add_subparsers(
+        dest="action", required=True
+    )
+    lo_split = learningops_subparsers.add_parser(
+        "split",
+        help="Deterministischer Train/Val/Test-Split ueber kanonische LearningRecords",
+    )
+    lo_split.add_argument(
+        "--train",
+        type=float,
+        required=True,
+        help="Train-Ratio (exklusiv 0..1)",
+    )
+    lo_split.add_argument(
+        "--val",
+        type=float,
+        required=True,
+        help="Val-Ratio (0..1)",
+    )
+    lo_split.add_argument(
+        "--test",
+        type=float,
+        required=True,
+        help="Test-Ratio (0..1); train+val+test muss 1.0 ergeben",
+    )
+    lo_split.add_argument(
+        "--seed",
+        type=int,
+        required=True,
+        help="Seed fuer die deterministische Bucket-Zuordnung",
+    )
+    lo_split.add_argument(
+        "--group-by",
+        choices=["trace_id", "task_type", "workflow_name"],
+        default="trace_id",
+        help="Gruppierungsschluessel zur Vermeidung von Group-Leakage",
+    )
+    lo_split.add_argument(
+        "--limit",
+        type=int,
+        default=1000,
+        help="Maximale Anzahl Traces, aus denen LearningRecords gebaut werden",
+    )
+    lo_split.add_argument(
+        "--show-trace-ids",
+        action="store_true",
+        help="Erste 20 trace_ids je Bucket im Payload ausgeben",
+    )
+    lo_split.add_argument("--json", action="store_true", help="Maschinenlesbare JSON-Ausgabe")
+    lo_split.set_defaults(handler=_handle_learningops_split)
 
     health_parser = subparsers.add_parser("health", help="Kernstatus, Governance und Startpfade anzeigen")
     health_parser.add_argument("--limit", type=int, default=5, help="Maximale Anzahl fuer Listenabschnitte")
