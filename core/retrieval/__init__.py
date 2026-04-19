@@ -35,6 +35,15 @@ from .models import (
     RetrievalScope,
     SourceTrust,
 )
+from .provenance import (
+    ProvenanceFinding,
+    ProvenanceFindingKind,
+    ProvenancePolicy,
+    ProvenanceReport,
+    ProvenanceScanner,
+    ProvenanceSourceStatus,
+    ProvenanceTotals,
+)
 from .registry import KnowledgeSourceRegistry, RegistrationError
 from .retriever import InMemoryRetriever, RetrievalPort, SQLiteRetriever
 
@@ -57,4 +66,11 @@ __all__ = [
     "IngestionResult",
     "IngestionPipeline",
     "RetrievalAuditor",
+    "ProvenanceFinding",
+    "ProvenanceFindingKind",
+    "ProvenancePolicy",
+    "ProvenanceReport",
+    "ProvenanceScanner",
+    "ProvenanceSourceStatus",
+    "ProvenanceTotals",
 ]
