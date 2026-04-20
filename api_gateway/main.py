@@ -25,6 +25,7 @@ from api_gateway.schemas import (
     PlanListResponse,
     PlanRunResponse,
     RoutingModelsResponse,
+    StrategyDecisionResponse,
     TaskRunResponse,
     TraceDetailResponse,
     TraceListResponse,
@@ -576,6 +577,30 @@ async def control_plane_run_plan(payload: ControlPlaneRunRequest, request: Reque
     from services.core import run_task_plan
 
     return run_task_plan(payload.to_core_payload())
+
+
+@api_route(version="dev")
+@app.post(
+    "/control-plane/decide",
+    response_model=StrategyDecisionResponse,
+    tags=["Control Plane"],
+    summary="Run the deterministic strategy engine for a task",
+    description=(
+        "Observable-only endpoint that returns the top-level StrategyDecision "
+        "(reject / request_approval / plan_and_execute / direct_execution) "
+        "without triggering execution, routing or approvals. The decision is "
+        "recorded as a DECISION_CREATED trace event and persisted into the "
+        "trace metadata as `strategy_decision`."
+    ),
+    responses=COMMON_ERROR_RESPONSES,
+)
+@limiter.limit(RATE_LIMIT)
+async def control_plane_decide(payload: ControlPlaneRunRequest, request: Request) -> dict:
+    """Return the deterministic strategy verdict for the submitted task."""
+    check_scope(request, "chat:read")
+    from services.core import decide_strategy
+
+    return decide_strategy(payload.to_core_payload())
 
 
 @api_route(version="dev")

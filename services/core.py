@@ -18,6 +18,7 @@ from core.tools import build_default_registry
 __all__ = [
     "approve_plan_step",
     "compute_evaluation_baselines",
+    "decide_strategy",
     "evaluate_trace",
     "execute_tool",
     "get_control_plane_overview",
@@ -557,6 +558,115 @@ def run_task_plan(
     return {
         "plan": plan.model_dump(mode="json"),
         "result": result.model_dump(mode="json"),
+        "trace": trace_context.summary(),
+    }
+
+
+def decide_strategy(
+    task: Any,
+    *,
+    planner: Any | None = None,
+    plan_builder: Any | None = None,
+    policy_engine: Any | None = None,
+    trace_store: Any | None = None,
+) -> Dict[str, Any]:
+    """Run the deterministic strategy engine and record a DECISION_CREATED trace event.
+
+    Observable-only — does not execute, does not create approvals, does not
+    touch the plan state store.  The serialized :class:`StrategyDecision` is
+    persisted into the trace metadata under ``strategy_decision`` so
+    downstream consumers can read it via the existing trace endpoints.
+    """
+    from core.audit import (
+        add_span_event,
+        create_trace_context,
+        finish_span,
+        record_error,
+        start_child_span,
+    )
+    from core.audit.event_types import DECISION_CREATED
+    from core.decision import StrategyEngine
+
+    governance_state = _get_governance_state()
+    policy_engine = policy_engine or governance_state["engine"]
+    engine = StrategyEngine(
+        planner=planner,
+        plan_builder=plan_builder,
+        policy_engine=policy_engine,
+    )
+
+    trace_state = _get_trace_state()
+    trace_store = trace_store if trace_store is not None else trace_state["store"]
+    task_mapping = _as_mapping(task)
+    trace_context = create_trace_context(
+        trace_store,
+        workflow_name="decide_strategy",
+        task_id=_resolve_trace_task_id(task_mapping, default_prefix="decision"),
+        metadata={
+            "entrypoint": "decide_strategy",
+            "task_type": str(task_mapping.get("task_type") or ""),
+        },
+    )
+
+    decision_span = start_child_span(
+        trace_context,
+        span_type="decision",
+        name="strategy_decision",
+        attributes={"task_type": str(task_mapping.get("task_type") or "analysis")},
+    )
+    try:
+        decision = engine.decide(task, trace_id=getattr(trace_context, "trace_id", None))
+    except Exception as exc:
+        record_error(
+            trace_context,
+            decision_span,
+            exc,
+            message="strategy_decision_failed",
+            payload={"task_type": str(task_mapping.get("task_type") or "analysis")},
+        )
+        trace_context.finish_trace(
+            status="failed",
+            metadata={"failed_stage": "strategy_decision"},
+        )
+        raise
+
+    decision_payload = decision.model_dump(mode="json")
+    add_span_event(
+        trace_context,
+        decision_span,
+        event_type=DECISION_CREATED,
+        message=f"strategy decided: {decision.selected_strategy.value}",
+        payload={
+            "decision_id": decision.decision_id,
+            "selected_strategy": decision.selected_strategy.value,
+            "policy_effect": decision.policy_effect,
+            "requires_approval": decision.requires_approval,
+            "allowed": decision.allowed,
+            "risk": decision.risk.value,
+            "confidence": decision.confidence,
+            "matched_policy_rules": list(decision.matched_policy_rules),
+        },
+    )
+    finish_span(
+        trace_context,
+        decision_span,
+        status="completed",
+        attributes={
+            "selected_strategy": decision.selected_strategy.value,
+            "allowed": decision.allowed,
+            "requires_approval": decision.requires_approval,
+        },
+    )
+    trace_context.finish_trace(
+        status="completed",
+        metadata={
+            "strategy_decision": decision_payload,
+            "selected_strategy": decision.selected_strategy.value,
+            "policy_effect": decision.policy_effect,
+        },
+    )
+    return {
+        "decision": decision_payload,
         "trace": trace_context.summary(),
     }
 

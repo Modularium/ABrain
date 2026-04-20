@@ -19,6 +19,7 @@ from core.decision.agent_descriptor import AgentDescriptor
 from core.decision.agent_quality import AgentQualitySummary
 from core.decision.plan_models import ExecutionPlan
 from core.decision.routing_engine import RoutingDecision
+from core.decision.strategy_decision import StrategyDecision
 from core.execution.adapters.base import ExecutionResult
 from core.execution.provider_capabilities import ExecutionCapabilities
 from core.governance.policy_models import PolicyDecision
@@ -410,6 +411,19 @@ class PlanRunResponse(BaseModel):
     plan: ExecutionPlan
     result: PlanExecutionResult
     trace: TraceRecord
+
+
+class StrategyDecisionResponse(BaseModel):
+    """Strategy decision response emitted by ``POST /control-plane/decide``.
+
+    Observable-only: no execution is attempted.  ``trace`` mirrors the
+    ``TraceContext.summary()`` payload returned by ``services.core``.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    decision: StrategyDecision
+    trace: dict[str, Any] = Field(default_factory=dict)
 
 
 # ---------------------------------------------------------------------------

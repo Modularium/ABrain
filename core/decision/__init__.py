@@ -40,6 +40,8 @@ from .energy_report import (
 )
 from .planner import Planner, PlannerResult
 from .routing_engine import RankedCandidate, RoutingDecision, RoutingEngine, RoutingPreferences
+from .strategy_decision import StrategyChoice, StrategyDecision
+from .strategy_engine import StrategyEngine
 from .task_intent import TaskIntent
 
 __all__ = [
@@ -91,6 +93,9 @@ __all__ = [
     "RoutingEngine",
     "RoutingPreferences",
     "ScoredCandidate",
+    "StrategyChoice",
+    "StrategyDecision",
+    "StrategyEngine",
     "TaskIntent",
     "TrainingDataset",
     "TrainingMetrics",
