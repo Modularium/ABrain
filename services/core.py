@@ -2696,6 +2696,12 @@ LABOS_REASONING_MODES: tuple[str, ...] = (
     "maintenance_suggestions",
     "schedule_runtime_review",
     "cross_domain_overview",
+    # RobotOps V1 — module-scoped reasoning.
+    "module_daily_overview",
+    "module_incident_review",
+    "module_coordination_review",
+    "module_capability_risk_review",
+    "robotops_cross_domain_overview",
 )
 _LABOS_REASONING_MODES = LABOS_REASONING_MODES
 
@@ -2722,7 +2728,12 @@ def _run_labos_reasoner(mode: str, context: Dict[str, Any] | None) -> Dict[str, 
         cross_domain_overview,
         incident_review,
         maintenance_suggestions,
+        module_capability_risk_review,
+        module_coordination_review,
+        module_daily_overview,
+        module_incident_review,
         reactor_daily_overview,
+        robotops_cross_domain_overview,
         schedule_runtime_review,
     )
 
@@ -2732,6 +2743,11 @@ def _run_labos_reasoner(mode: str, context: Dict[str, Any] | None) -> Dict[str, 
         "maintenance_suggestions": maintenance_suggestions,
         "schedule_runtime_review": schedule_runtime_review,
         "cross_domain_overview": cross_domain_overview,
+        "module_daily_overview": module_daily_overview,
+        "module_incident_review": module_incident_review,
+        "module_coordination_review": module_coordination_review,
+        "module_capability_risk_review": module_capability_risk_review,
+        "robotops_cross_domain_overview": robotops_cross_domain_overview,
     }
     if mode not in reasoners:
         return {
@@ -2787,3 +2803,38 @@ def get_labos_cross_domain_overview(
 ) -> Dict[str, Any]:
     """Combined reactor + incident + maintenance + schedule focus list."""
     return _run_labos_reasoner("cross_domain_overview", context)
+
+
+def get_labos_module_daily_overview(
+    context: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    """RobotOps V1 — which modules are nominal / attention / offline."""
+    return _run_labos_reasoner("module_daily_overview", context)
+
+
+def get_labos_module_incident_review(
+    context: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    """RobotOps V1 — modules with open incidents / capability impact."""
+    return _run_labos_reasoner("module_incident_review", context)
+
+
+def get_labos_module_coordination_review(
+    context: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    """RobotOps V1 — blocked/impacted module dependency edges."""
+    return _run_labos_reasoner("module_coordination_review", context)
+
+
+def get_labos_module_capability_risk_review(
+    context: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    """RobotOps V1 — modules with missing/degraded critical capabilities."""
+    return _run_labos_reasoner("module_capability_risk_review", context)
+
+
+def get_labos_robotops_cross_domain_overview(
+    context: Dict[str, Any] | None = None,
+) -> Dict[str, Any]:
+    """RobotOps V1 — combined ReactorOps + RobotOps focus list."""
+    return _run_labos_reasoner("robotops_cross_domain_overview", context)

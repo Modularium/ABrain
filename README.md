@@ -156,13 +156,24 @@ catalogue, approval flags and safety context.
 Smolit-AI-Assistant → ABrain (Domain Reasoning) → LabOS MCP → LabOS API/DB
 ```
 
-**Use cases supported (V1):**
+**Use cases supported:**
+
+ReactorOps V1:
 
 - `labos_reactor_daily_overview` — reactor focus list (attention vs. nominal)
 - `labos_incident_review` — prioritised open-incident review
 - `labos_maintenance_suggestions` — overdue/due calibration + maintenance
 - `labos_schedule_runtime_review` — failing / blocked schedules and commands
 - `labos_cross_domain_overview` — combined operator focus list
+
+RobotOps V1 (module-scoped reasoning — reactor modules, hydro /
+sampling / dosing / vision modules, workshop machines, mobile robots):
+
+- `labos_module_daily_overview` — module focus list (attention / offline / disabled / nominal)
+- `labos_module_incident_review` — modules with open incidents or capability impact
+- `labos_module_coordination_review` — blocked/impacted module dependency edges
+- `labos_module_capability_risk_review` — modules with missing/degraded critical capabilities + autonomy-level signals
+- `labos_robotops_cross_domain_overview` — combined ReactorOps + RobotOps focus list
 
 **Invariants enforced by the reasoner (pinned by tests):**
 

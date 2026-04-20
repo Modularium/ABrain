@@ -85,6 +85,38 @@ class DeferralReason(str, Enum):
     UNHEALTHY_TARGET = "unhealthy_target"
 
 
+class ModuleAutonomyLevel(str, Enum):
+    """Autonomy level ABrain recognises on a LabOS module.
+
+    Mirrors the RobotOps V1 autonomy taxonomy.  ABrain uses the level
+    only to inform recommendation phrasing and priority nudges — it
+    never escalates a module's autonomy on its own.
+    """
+
+    UNKNOWN = "unknown"
+    MANUAL = "manual"
+    ASSISTED = "assisted"
+    SEMI_AUTONOMOUS = "semi_autonomous"
+    AUTONOMOUS = "autonomous"
+
+
+class CapabilityStatus(str, Enum):
+    """Normalised capability status on a LabOS module."""
+
+    OK = "ok"
+    DEGRADED = "degraded"
+    MISSING = "missing"
+    UNKNOWN = "unknown"
+
+
+class ModuleDependencyKind(str, Enum):
+    """Relationship ABrain recognises between two modules."""
+
+    UPSTREAM = "upstream"
+    DOWNSTREAM = "downstream"
+    COUPLED = "coupled"
+
+
 # ---------------------------------------------------------------------------
 # Input — LabOS context snapshot
 # ---------------------------------------------------------------------------
@@ -181,6 +213,71 @@ class LabOsSafetyAlert(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class LabOsModuleCapability(BaseModel):
+    """One capability entry on a LabOS module.
+
+    Capabilities are declared by LabOS RobotOps V1; ABrain does not
+    invent capability names.  ``status`` is normalised so reasoners
+    can detect missing / degraded capabilities uniformly.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    capability_name: str = Field(min_length=1, max_length=128)
+    status: CapabilityStatus = CapabilityStatus.UNKNOWN
+    critical: bool = False
+    risk_level: RiskLevel = RiskLevel.MEDIUM
+    detail: str | None = None
+
+
+class LabOsModule(BaseModel):
+    """Normalised LabOS module / autonomous unit (RobotOps V1).
+
+    Represents reactor modules, hydro modules, sampling modules,
+    dosing modules, vision modules, workshop machines and — later —
+    mobile robots under one reasoning-friendly shape.  ``module_class``
+    is the LabOS-declared class; ABrain keeps it as a free-form string
+    so new classes can be added upstream without an ABrain release.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    module_id: str = Field(min_length=1, max_length=128)
+    display_name: str | None = None
+    module_class: str = Field(min_length=1, max_length=64)
+    status: HealthStatus = HealthStatus.UNKNOWN
+    autonomy_level: ModuleAutonomyLevel = ModuleAutonomyLevel.UNKNOWN
+    offline: bool = False
+    disabled: bool = False
+    maintenance_mode: bool = False
+    open_incident_count: int = Field(default=0, ge=0)
+    capabilities: list[LabOsModuleCapability] = Field(default_factory=list)
+    linked_reactor_id: str | None = None
+    linked_asset_id: str | None = None
+    linked_device_id: str | None = None
+    attention_reasons: list[str] = Field(default_factory=list)
+    last_update: datetime | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class LabOsModuleDependency(BaseModel):
+    """A declared relationship between two LabOS modules.
+
+    ABrain uses the dependency graph only to surface coordination
+    bottlenecks (``blocked=True`` or a blocked/offline counterpart).
+    The graph is interpretation-only — ABrain does not derive new
+    edges from correlations in the snapshot.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    source_module_id: str = Field(min_length=1, max_length=128)
+    target_module_id: str = Field(min_length=1, max_length=128)
+    dependency_kind: ModuleDependencyKind = ModuleDependencyKind.COUPLED
+    blocked: bool = False
+    detail: str | None = None
+
+
 class LabOsActionCatalogEntry(BaseModel):
     """Single action ABrain is allowed to recommend.
 
@@ -217,6 +314,8 @@ class LabOsContext(BaseModel):
     schedules: list[LabOsScheduleEntry] = Field(default_factory=list)
     commands: list[LabOsCommand] = Field(default_factory=list)
     safety_alerts: list[LabOsSafetyAlert] = Field(default_factory=list)
+    modules: list[LabOsModule] = Field(default_factory=list)
+    module_dependencies: list[LabOsModuleDependency] = Field(default_factory=list)
     action_catalog: list[LabOsActionCatalogEntry] = Field(default_factory=list)
     context_timestamp: datetime | None = None
 

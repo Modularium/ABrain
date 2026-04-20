@@ -54,6 +54,13 @@ def _target_is_unsafe(
         view = normalized.reactor_health.get(entity_id)
         if view is not None and view.effective_status == HealthStatus.OFFLINE:
             return True, "reactor offline"
+    if entity_type == "module":
+        module_view = normalized.module_health.get(entity_id)
+        if module_view is not None:
+            if module_view.module.offline:
+                return True, "module offline"
+            if module_view.effective_status == HealthStatus.INCIDENT:
+                return True, "module in incident state"
     return False, None
 
 

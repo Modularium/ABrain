@@ -391,6 +391,12 @@ _LABOS_REASONING_ENDPOINT_SUMMARIES: dict[str, str] = {
     "maintenance_suggestions": "Overdue/due maintenance items and allowed follow-up actions.",
     "schedule_runtime_review": "Schedules and commands that are failing or blocked.",
     "cross_domain_overview": "Combined reactor + incident + maintenance + schedule focus list.",
+    # RobotOps V1 — module-scoped reasoning.
+    "module_daily_overview": "RobotOps V1 — which modules are nominal / attention / offline.",
+    "module_incident_review": "RobotOps V1 — modules with open incidents / capability impact.",
+    "module_coordination_review": "RobotOps V1 — blocked/impacted module dependency edges.",
+    "module_capability_risk_review": "RobotOps V1 — modules with missing/degraded critical capabilities.",
+    "robotops_cross_domain_overview": "RobotOps V1 — combined ReactorOps + RobotOps focus list.",
 }
 
 

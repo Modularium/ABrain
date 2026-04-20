@@ -100,6 +100,11 @@ def test_tools_list_contains_only_static_v2_tools():
         "abrain.reason_labos_maintenance_suggestions",
         "abrain.reason_labos_schedule_runtime_review",
         "abrain.reason_labos_cross_domain_overview",
+        "abrain.reason_labos_module_daily_overview",
+        "abrain.reason_labos_module_incident_review",
+        "abrain.reason_labos_module_coordination_review",
+        "abrain.reason_labos_module_capability_risk_review",
+        "abrain.reason_labos_robotops_cross_domain_overview",
     ]
 
 

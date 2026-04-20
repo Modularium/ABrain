@@ -66,6 +66,32 @@ _LABOS_REASONING_TOOL_DESCRIPTIONS: dict[str, str] = {
         "incident + maintenance + schedule focus list. Input: LabOS "
         "context snapshot; output: Response Shape V2."
     ),
+    "module_daily_overview": (
+        "Run ABrain V2 RobotOps reasoning — which LabOS modules need "
+        "attention today, which are offline/disabled, which are nominal. "
+        "Input: LabOS context snapshot; output: Response Shape V2."
+    ),
+    "module_incident_review": (
+        "Run ABrain V2 RobotOps reasoning for modules with open incidents "
+        "or critical capability impact. Input: LabOS context snapshot; "
+        "output: Response Shape V2."
+    ),
+    "module_coordination_review": (
+        "Run ABrain V2 RobotOps reasoning over module dependency edges — "
+        "blocked links and upstream-impacted counterparts. Input: LabOS "
+        "context snapshot; output: Response Shape V2."
+    ),
+    "module_capability_risk_review": (
+        "Run ABrain V2 RobotOps reasoning for modules with missing or "
+        "degraded critical capabilities, plus manual/assisted autonomy "
+        "signals. Input: LabOS context snapshot; output: Response Shape V2."
+    ),
+    "robotops_cross_domain_overview": (
+        "Run ABrain V2 combined ReactorOps + RobotOps reasoning — one "
+        "prioritised focus list across reactors, modules, incidents, "
+        "maintenance, schedules and safety signals. Input: LabOS context "
+        "snapshot; output: Response Shape V2."
+    ),
 }
 
 
@@ -114,6 +140,17 @@ ReasonLabosIncidentReviewHandler = _make_handler_class("incident_review")
 ReasonLabosMaintenanceSuggestionsHandler = _make_handler_class("maintenance_suggestions")
 ReasonLabosScheduleRuntimeReviewHandler = _make_handler_class("schedule_runtime_review")
 ReasonLabosCrossDomainOverviewHandler = _make_handler_class("cross_domain_overview")
+ReasonLabosModuleDailyOverviewHandler = _make_handler_class("module_daily_overview")
+ReasonLabosModuleIncidentReviewHandler = _make_handler_class("module_incident_review")
+ReasonLabosModuleCoordinationReviewHandler = _make_handler_class(
+    "module_coordination_review"
+)
+ReasonLabosModuleCapabilityRiskReviewHandler = _make_handler_class(
+    "module_capability_risk_review"
+)
+ReasonLabosRobotopsCrossDomainOverviewHandler = _make_handler_class(
+    "robotops_cross_domain_overview"
+)
 
 
 LABOS_REASONING_HANDLERS: tuple[type[_LabOsReasoningHandlerBase], ...] = (
@@ -122,6 +159,11 @@ LABOS_REASONING_HANDLERS: tuple[type[_LabOsReasoningHandlerBase], ...] = (
     ReasonLabosMaintenanceSuggestionsHandler,
     ReasonLabosScheduleRuntimeReviewHandler,
     ReasonLabosCrossDomainOverviewHandler,
+    ReasonLabosModuleDailyOverviewHandler,
+    ReasonLabosModuleIncidentReviewHandler,
+    ReasonLabosModuleCoordinationReviewHandler,
+    ReasonLabosModuleCapabilityRiskReviewHandler,
+    ReasonLabosRobotopsCrossDomainOverviewHandler,
 )
 
 
@@ -133,4 +175,9 @@ __all__ = [
     "ReasonLabosMaintenanceSuggestionsHandler",
     "ReasonLabosScheduleRuntimeReviewHandler",
     "ReasonLabosCrossDomainOverviewHandler",
+    "ReasonLabosModuleDailyOverviewHandler",
+    "ReasonLabosModuleIncidentReviewHandler",
+    "ReasonLabosModuleCoordinationReviewHandler",
+    "ReasonLabosModuleCapabilityRiskReviewHandler",
+    "ReasonLabosRobotopsCrossDomainOverviewHandler",
 ]

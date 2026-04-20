@@ -11,12 +11,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .context_normalizer import NormalizedLabOsContext, ReactorHealthView
+from .context_normalizer import (
+    ModuleHealthView,
+    NormalizedLabOsContext,
+    ReactorHealthView,
+)
 from .schemas import (
     IncidentSeverity,
     LabOsIncident,
     LabOsMaintenanceItem,
     LabOsScheduleEntry,
+    ModuleAutonomyLevel,
     PrioritizedEntity,
     PriorityBucket,
 )
@@ -162,17 +167,98 @@ def _schedule_candidate(schedule: LabOsScheduleEntry) -> PrioritizedEntity:
     )
 
 
+def _module_candidate(view: ModuleHealthView) -> PrioritizedEntity:
+    reasons: list[str] = []
+    signals: list[str] = []
+    if view.module.offline:
+        reasons.append("module offline")
+        signals.append("module_offline")
+    if view.module.disabled:
+        reasons.append("module disabled")
+        signals.append("module_disabled")
+    if view.module.maintenance_mode:
+        reasons.append("maintenance mode")
+        signals.append("module_maintenance_mode")
+    if view.missing_critical_capabilities:
+        reasons.append(
+            f"missing critical capability "
+            f"({', '.join(view.missing_critical_capabilities)})"
+        )
+        signals.append("module_missing_critical_capability")
+    if view.degraded_critical_capabilities:
+        reasons.append(
+            f"degraded critical capability "
+            f"({', '.join(view.degraded_critical_capabilities)})"
+        )
+        signals.append("module_degraded_critical_capability")
+    if view.worst_incident_severity == IncidentSeverity.CRITICAL:
+        reasons.append("open critical incident")
+        signals.append("module_critical_incident")
+    elif view.worst_incident_severity == IncidentSeverity.WARNING:
+        reasons.append("open warning incident")
+        signals.append("module_warning_incident")
+    if view.has_overdue_maintenance:
+        reasons.append("overdue maintenance")
+        signals.append("module_overdue_maintenance")
+    if view.has_safety_alert:
+        reasons.append("active safety alert")
+        signals.append("module_safety_alert")
+    if view.has_blocked_dependency:
+        reasons.append("blocked dependency")
+        signals.append("module_blocked_dependency")
+    if not reasons:
+        reasons.append(f"module status {view.effective_status.value}")
+        signals.append(f"module_status_{view.effective_status.value}")
+    # autonomy_level is surfaced as a metadata-only signal so rendering
+    # can annotate semi/autonomous modules without changing ranks.
+    if view.module.autonomy_level != ModuleAutonomyLevel.UNKNOWN:
+        signals.append(f"module_autonomy_{view.module.autonomy_level.value}")
+    return PrioritizedEntity(
+        entity_type="module",
+        entity_id=view.module.module_id,
+        display_name=view.module.display_name,
+        priority_rank=1,
+        priority_bucket=view.health_bucket,
+        priority_reason="; ".join(reasons),
+        contributing_signals=signals,
+        metadata={
+            "module_class": view.module.module_class,
+            "autonomy_level": view.module.autonomy_level.value,
+            "effective_status": view.effective_status.value,
+            "open_incident_count": view.open_incident_count,
+            "missing_critical_capabilities": list(
+                view.missing_critical_capabilities
+            ),
+            "degraded_critical_capabilities": list(
+                view.degraded_critical_capabilities
+            ),
+            "linked_reactor_id": view.module.linked_reactor_id,
+            "linked_asset_id": view.module.linked_asset_id,
+            "linked_device_id": view.module.linked_device_id,
+        },
+    )
+
+
 def _score(entity: PrioritizedEntity) -> int:
     base = _BUCKET_BASE_SCORE[entity.priority_bucket]
     # within a bucket, stable ordering is guided by a small per-signal bump
     bump = 0
     for signal in entity.contributing_signals:
-        if signal in {"critical_incident", "safety_alert"}:
+        if signal in {"critical_incident", "safety_alert", "module_critical_incident"}:
             bump += 5
-        elif signal in {"overdue_maintenance"}:
+        elif signal in {
+            "overdue_maintenance",
+            "module_offline",
+            "module_missing_critical_capability",
+            "module_safety_alert",
+        }:
             bump += 3
-        elif signal == "schedule_blocked":
-            bump += 3
+        elif signal in {
+            "schedule_blocked",
+            "module_blocked_dependency",
+            "module_degraded_critical_capability",
+        }:
+            bump += 2
     return base + bump
 
 
@@ -196,15 +282,17 @@ def prioritize(
     include_incidents: bool = True,
     include_maintenance: bool = True,
     include_schedules: bool = True,
+    include_modules: bool = False,
     include_nominal_reactors: bool = False,
+    include_nominal_modules: bool = False,
 ) -> list[PrioritizedEntity]:
     """Return a deterministic, fully-ranked list of prioritised entities.
 
     The ``include_*`` flags let use cases narrow the surface (e.g. the
     incident-review use case only needs incidents and the reactors
-    they touch).  ``include_nominal_reactors`` defaults off so callers
-    who want an operator-facing "focus list" don't get noise — set to
-    ``True`` for the full daily overview.
+    they touch).  ``include_nominal_reactors`` / ``include_nominal_modules``
+    default off so callers who want an operator-facing "focus list"
+    don't get noise — set to ``True`` for full daily overviews.
     """
     candidates: list[PrioritizedEntity] = []
 
@@ -230,5 +318,14 @@ def prioritize(
         for schedule in normalized.blocked_schedules:
             if schedule not in normalized.failed_schedules:
                 candidates.append(_schedule_candidate(schedule))
+
+    if include_modules:
+        for view in normalized.module_health.values():
+            if (
+                not include_nominal_modules
+                and view.health_bucket == PriorityBucket.NOMINAL
+            ):
+                continue
+            candidates.append(_module_candidate(view))
 
     return _assign_ranks(candidates)

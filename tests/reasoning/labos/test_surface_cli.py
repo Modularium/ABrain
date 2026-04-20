@@ -35,6 +35,11 @@ _MODES = (
     "maintenance_suggestions",
     "schedule_runtime_review",
     "cross_domain_overview",
+    "module_daily_overview",
+    "module_incident_review",
+    "module_coordination_review",
+    "module_capability_risk_review",
+    "robotops_cross_domain_overview",
 )
 
 

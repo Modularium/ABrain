@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from .schemas import (
+    CapabilityStatus,
     HealthStatus,
     IncidentSeverity,
     LabOsActionCatalogEntry,
@@ -19,10 +20,14 @@ from .schemas import (
     LabOsContext,
     LabOsIncident,
     LabOsMaintenanceItem,
+    LabOsModule,
+    LabOsModuleDependency,
     LabOsReactor,
     LabOsSafetyAlert,
     LabOsScheduleEntry,
+    ModuleAutonomyLevel,
     PriorityBucket,
+    RiskLevel,
 )
 
 
@@ -35,6 +40,29 @@ class ReactorHealthView:
     worst_incident_severity: IncidentSeverity | None
     has_overdue_maintenance: bool
     has_safety_alert: bool
+    effective_status: HealthStatus
+    health_bucket: PriorityBucket
+
+
+@dataclass(frozen=True)
+class ModuleHealthView:
+    """Per-module derived health projection (RobotOps V1).
+
+    Effective status is the LabOS-declared status escalated by
+    surrounding signals (safety alert, missing/degraded critical
+    capability, overdue maintenance, explicit ``offline`` /
+    ``disabled`` / ``maintenance_mode`` flags).  ABrain never
+    downgrades the LabOS-declared status.
+    """
+
+    module: LabOsModule
+    open_incident_count: int
+    worst_incident_severity: IncidentSeverity | None
+    has_overdue_maintenance: bool
+    has_safety_alert: bool
+    missing_critical_capabilities: tuple[str, ...]
+    degraded_critical_capabilities: tuple[str, ...]
+    has_blocked_dependency: bool
     effective_status: HealthStatus
     health_bucket: PriorityBucket
 
@@ -66,6 +94,12 @@ class NormalizedLabOsContext:
     safety_alerts_by_target: dict[tuple[str, str], list[LabOsSafetyAlert]] = field(
         default_factory=dict
     )
+
+    modules_by_id: dict[str, LabOsModule] = field(default_factory=dict)
+    module_health: dict[str, ModuleHealthView] = field(default_factory=dict)
+    modules_by_class: dict[str, list[str]] = field(default_factory=dict)
+    module_dependencies: list[LabOsModuleDependency] = field(default_factory=list)
+    blocked_dependencies: list[LabOsModuleDependency] = field(default_factory=list)
 
     action_catalog_by_name: dict[str, LabOsActionCatalogEntry] = field(
         default_factory=dict
@@ -137,6 +171,76 @@ def _escalate_from_signals(
     if rank[candidate] > rank[promoted]:
         promoted = candidate
     return promoted
+
+
+def _escalate_module_status(
+    base: HealthStatus,
+    *,
+    worst_severity: IncidentSeverity | None,
+    has_overdue_maintenance: bool,
+    has_safety_alert: bool,
+    offline: bool,
+    disabled: bool,
+    maintenance_mode: bool,
+    has_missing_critical: bool,
+    has_degraded_critical: bool,
+) -> HealthStatus:
+    """Escalate a module's declared status from surrounding RobotOps signals.
+
+    ABrain promotes ``unknown``/``nominal`` up when evidence warrants
+    it but never demotes an already-declared status.  ``offline`` and
+    ``disabled`` outrank all reactor-style escalation paths.
+    """
+    if offline:
+        candidate = HealthStatus.OFFLINE
+    elif has_safety_alert or worst_severity == IncidentSeverity.CRITICAL:
+        candidate = HealthStatus.INCIDENT
+    elif has_missing_critical:
+        candidate = HealthStatus.WARNING
+    elif worst_severity == IncidentSeverity.WARNING or has_overdue_maintenance:
+        candidate = HealthStatus.WARNING
+    elif disabled or maintenance_mode or has_degraded_critical:
+        candidate = HealthStatus.ATTENTION
+    else:
+        candidate = base
+
+    rank = {
+        HealthStatus.UNKNOWN: 0,
+        HealthStatus.NOMINAL: 1,
+        HealthStatus.ATTENTION: 2,
+        HealthStatus.WARNING: 3,
+        HealthStatus.OFFLINE: 3,
+        HealthStatus.INCIDENT: 4,
+    }
+    promoted = base
+    if rank[candidate] > rank[promoted]:
+        promoted = candidate
+    return promoted
+
+
+def _critical_capability_flags(
+    module: LabOsModule,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Split a module's capabilities into missing / degraded critical sets.
+
+    A capability is treated as critical when ``critical=True`` OR its
+    ``risk_level`` is ``high``/``critical``.  Non-critical capabilities
+    do not escalate the module's health.
+    """
+    missing: list[str] = []
+    degraded: list[str] = []
+    for cap in module.capabilities:
+        is_critical = cap.critical or cap.risk_level in {
+            RiskLevel.HIGH,
+            RiskLevel.CRITICAL,
+        }
+        if not is_critical:
+            continue
+        if cap.status == CapabilityStatus.MISSING:
+            missing.append(cap.capability_name)
+        elif cap.status == CapabilityStatus.DEGRADED:
+            degraded.append(cap.capability_name)
+    return tuple(missing), tuple(degraded)
 
 
 def normalize_labos_context(ctx: LabOsContext) -> NormalizedLabOsContext:
@@ -224,6 +328,75 @@ def normalize_labos_context(ctx: LabOsContext) -> NormalizedLabOsContext:
             worst_incident_severity=worst,
             has_overdue_maintenance=has_overdue,
             has_safety_alert=has_safety,
+            effective_status=effective,
+            health_bucket=_bucket_from_health(effective),
+        )
+
+    # ---- modules (RobotOps V1)
+    incidents_by_module: dict[str, list[LabOsIncident]] = {}
+    maintenance_overdue_module_ids: set[str] = set()
+    for incident in ctx.incidents:
+        # Incidents carry asset/reactor refs today; if a caller maps a
+        # module-scoped incident here, bucket it by asset_id.
+        target_module = incident.metadata.get("module_id") if isinstance(
+            incident.metadata, dict
+        ) else None
+        if isinstance(target_module, str) and target_module:
+            incidents_by_module.setdefault(target_module, []).append(incident)
+    for item in ctx.maintenance:
+        if item.target_type == "module" and item.overdue:
+            maintenance_overdue_module_ids.add(item.target_id)
+
+    if ctx.modules:
+        result.used_context_sections.append("modules")
+    for module in ctx.modules:
+        result.modules_by_id[module.module_id] = module
+        result.modules_by_class.setdefault(module.module_class, []).append(
+            module.module_id
+        )
+
+    if ctx.module_dependencies:
+        result.used_context_sections.append("module_dependencies")
+    for dep in ctx.module_dependencies:
+        result.module_dependencies.append(dep)
+        if dep.blocked:
+            result.blocked_dependencies.append(dep)
+
+    blocked_sources = {dep.source_module_id for dep in result.blocked_dependencies}
+
+    for module_id, module in result.modules_by_id.items():
+        module_incidents = [
+            incident
+            for incident in incidents_by_module.get(module_id, [])
+            if incident.is_open
+        ]
+        worst = _worst_severity(module_incidents)
+        has_overdue = module_id in maintenance_overdue_module_ids
+        has_safety = ("module", module_id) in result.safety_alerts_by_target
+        missing_critical, degraded_critical = _critical_capability_flags(module)
+        has_blocked_dep = module_id in blocked_sources
+
+        effective = _escalate_module_status(
+            module.status,
+            worst_severity=worst,
+            has_overdue_maintenance=has_overdue,
+            has_safety_alert=has_safety,
+            offline=module.offline,
+            disabled=module.disabled,
+            maintenance_mode=module.maintenance_mode,
+            has_missing_critical=bool(missing_critical),
+            has_degraded_critical=bool(degraded_critical),
+        )
+
+        result.module_health[module_id] = ModuleHealthView(
+            module=module,
+            open_incident_count=module.open_incident_count or len(module_incidents),
+            worst_incident_severity=worst,
+            has_overdue_maintenance=has_overdue,
+            has_safety_alert=has_safety,
+            missing_critical_capabilities=missing_critical,
+            degraded_critical_capabilities=degraded_critical,
+            has_blocked_dependency=has_blocked_dep,
             effective_status=effective,
             health_bucket=_bucket_from_health(effective),
         )
